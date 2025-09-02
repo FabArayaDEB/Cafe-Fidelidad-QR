@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Marco exterior -->
+    <path
+        android:pathData="M20,20 L60,20 L60,30 L30,30 L30,60 L20,60 Z"
+        android:fillColor="@color/coffee_primary"
+        android:strokeWidth="2"
+        android:strokeColor="@color/coffee_primary" />
+    
+    <path
+        android:pathData="M140,20 L180,20 L180,60 L170,60 L170,30 L140,30 Z"
+        android:fillColor="@color/coffee_primary"
+        android:strokeWidth="2"
+        android:strokeColor="@color/coffee_primary" />
+    
+    <path
+        android:pathData="M20,140 L30,140 L30,170 L60,170 L60,180 L20,180 Z"
+        android:fillColor="@color/coffee_primary"
+        android:strokeWidth="2"
+        android:strokeColor="@color/coffee_primary" />
+    
+    <path
+        android:pathData="M170,140 L180,140 L180,180 L140,180 L140,170 L170,170 Z"
+        android:fillColor="@color/coffee_primary"
+        android:strokeWidth="2"
+        android:strokeColor="@color/coffee_primary" />
+    
+    <!-- Línea de escaneo -->
+    <path
+        android:pathData="M40,100 L160,100"
+        android:strokeWidth="3"
+        android:strokeColor="@color/gold_accent" />
+        
+</vector>
