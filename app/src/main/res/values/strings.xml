@@ -1,34 +1,80 @@
 <resources>
-    <string name="app_name">Cafe Fidelidad QR</string>
-    <string name="cafe_name">cafe_normal</string>
-    <string name="cafe_precio">$1500</string>
+    <string name="app_name">Café Fidelidad QR</string>
+    <string name="default_web_client_id">464976623071-mdmjkfmvibimuqtejhchmodhsj36dhta.apps.googleusercontent.com</string>
 
-    <string-array name="tipos_de_cafes">
-        <item>cafe_normal</item>
-        <item>awa</item>
-        <item>uwu</item>
-        <item>cafe_con_leche</item>
-        <item>espresso</item>
-        <item>capuchino</item>
-        <item>latte</item>
-        <item>mocha</item>
-        <item>frappe</item>
-        <item>te</item>
-        <item>cafe_con_leche2</item>
-    </string-array>
+    <string name="item_perfil">Mi Perfil</string>
+    <string name="item_usuarios">Puntos</string>
+    <string name="item_chat">Escanear QR</string>
+    <string name="item_puntos">Puntos</string>
+    <string name="item_qr">Escanear QR</string>
 
-    <string-array name="precios_de_cafes">
-        <item>$1500</item>
-        <item>$2000</item>
-        <item>$1800</item>
-        <item>$2200</item>
-        <item>$2100</item>
-        <item>$2500</item>
-        <item>$2300</item>
-        <item>$2400</item>
-        <item>$2600</item>
-        <item>$2700</item>
-        <item>$2800</item>
-    </string-array>
+    <string name="tv_Titulo">Titulo</string>
+
+    <string name="typeEmail">Continuar con Email</string>
+    <string name="typeGoogle">Continuar con Google</string>
+
+    <string name="txt_login">Iniciar Sesión en Café Fidelidad</string>
+    <string name="lb_Email">Correo Electrónico</string>
+    <string name="lb_pass">Contraseña</string>
+    <string name="btn_Login">Ingresar</string>
+    <string name="btn_newA">¿No tienes una cuenta de fidelidad?</string>
+    <string name="btn_Register">Crear cuenta</string>
+    <string name="txt_ForgotPass">¿Olvidaste tu contraseña? <b> Recuperar</b></string>
+
+    <string name="txt_Register">Crear Cuenta de Fidelidad</string>
+    <string name="lb_Name">Nombre Completo</string>
+    <string name="lb_NewPass">Repetir Contraseña</string>
+    <string name="btn_Registro">Crear Cuenta</string>
+
+    <string name="txt_nombres">Nombre: </string>
+    <string name="tv_nombres"> -- </string>
+    <string name="txt_email">Email: </string>
+    <string name="txt_proveedor">Proveedor: </string>
+    <string name="tv_proveedor"> -- </string>
+    <string name="txt_registro">Cuenta Creada: </string>
+    <string name="tv_registro"> -- </string>
+
+    <string name="txt_edit_title">Editar Perfil</string>
+    <string name="btn_update">Actualizar</string>
+
+    <string name="btn_UpdateUserData">Actualizar Datos</string>
+    <string name="btn_Logout">Cerrar Sesión</string>
+
+    <string name="txt_forgotPass">Recuperar Contraseña</string>
+    <string name="txt_SendCode">Ingrese su correo para enviar las instrucciones de recuperación</string>
+    <string name="btn_SendCode">Enviar</string>
+    
+    <!-- Nuevos strings para funcionalidades de cafetería -->
+    <string name="txt_puntos_actuales">Puntos Actuales:</string>
+    <string name="txt_escanear_qr">Escanear Código QR</string>
+    <string name="txt_historial_puntos">Historial de Puntos</string>
+    <string name="txt_promociones">Promociones Disponibles</string>
+    <string name="txt_canjear_puntos">Canjear Puntos</string>
+    <string name="txt_bienvenido_cafe">¡Bienvenido a Café Fidelidad!</string>
+    <string name="txt_programa_fidelidad">Acumula puntos con cada compra y disfruta de increíbles beneficios</string>
+    <string name="txt_unete_cafe">Únete a nuestro programa de fidelidad</string>
+    <string name="txt_nivel_fidelidad">Nivel de Fidelidad:</string>
+    <string name="txt_total_compras">Total de Compras:</string>
+    <string name="txt_puntos_siguiente_nivel">Puntos para siguiente nivel:</string>
+    <string name="txt_ultima_visita">Última Visita:</string>
+    <string name="txt_sin_transacciones">No hay transacciones registradas</string>
+    <string name="txt_puntos_ganados">Puntos Ganados</string>
+    <string name="txt_monto_compra">Monto de Compra:</string>
+    <string name="txt_fecha_transaccion">Fecha:</string>
+    <string name="txt_camara_no_disponible">Cámara no disponible</string>
+    <string name="txt_iniciar_escaneo">Iniciar Escaneo</string>
+    <string name="txt_ultima_transaccion">Última Transacción</string>
+    <string name="txt_escanea_qr_puntos">Escanea códigos QR para ganar puntos</string>
+    <string name="txt_para_siguiente">para siguiente nivel</string>
+    <string name="txt_nivel_actual">Nivel Actual:</string>
+    <string name="txt_compras_totales">Compras Totales:</string>
+    <string name="txt_mis_puntos">Mis Puntos</string>
+    <string name="txt_nivel_lealtad">Nivel de Lealtad:</string>
+    <string name="txt_monto">Monto:</string>
+    <string name="txt_fecha">Fecha:</string>
+    <string name="btn_iniciar_escaner">Iniciar Escáner</string>
+    <string name="txt_instrucciones_qr">Apunta la cámara hacia el código QR para escanearlo</string>
+    <string name="txt_bienvenida_cafe">¡Bienvenido a nuestro programa de fidelidad!</string>
+
 
 </resources>

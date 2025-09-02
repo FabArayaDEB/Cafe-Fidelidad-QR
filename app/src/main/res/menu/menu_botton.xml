@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/item_perfil"
+        android:title="@string/item_perfil"
+        android:icon="@drawable/ic_perfil"/>
+    <item
+        android:id="@+id/item_puntos"
+        android:title="@string/item_puntos"
+        android:icon="@drawable/ic_puntos"/>
+    <item
+        android:id="@+id/item_qr"
+        android:title="@string/item_qr"
+        android:icon="@drawable/ic_qr"/>
+</menu>
