@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "464976623071",
+    "firebase_url": "https://cafe-fidelidad-qr-default-rtdb.firebaseio.com",
+    "project_id": "cafe-fidelidad-qr",
+    "storage_bucket": "cafe-fidelidad-qr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:464976623071:android:d4587d5e390b0c141d806a",
+        "android_client_info": {
+          "package_name": "com.example.cafefidelidadqr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "464976623071-3mve9g4ngvbn9feij80b6o73um6lseiu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cafefidelidadqr",
+            "certificate_hash": "44f11eb33399dd21a3c451741a76b10f0014e8dd"
+          }
+        },
+        {
+          "client_id": "464976623071-mdmjkfmvibimuqtejhchmodhsj36dhta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKqkLEy_pcfaIf2BRNba4mzCQGlCkOJp4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "464976623071-mdmjkfmvibimuqtejhchmodhsj36dhta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

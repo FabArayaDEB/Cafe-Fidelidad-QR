@@ -1,3 +1,55 @@
 <resources>
-    <string name="app_name">CafeFidelidadQR</string>
+    <string name="app_name">Café Fidelidad QR</string>
+    <string name="default_web_client_id">464976623071-3mve9g4ngvbn9feij80b6o73um6lseiu.apps.googleusercontent.com</string>
+
+    <string name="item_perfil">Mi Perfil</string>
+    <string name="item_usuarios">Puntos</string>
+    <string name="item_chat">Escanear QR</string>
+    <string name="item_puntos">Puntos</string>
+    <string name="item_qr">Escanear QR</string>
+
+    <string name="tv_Titulo">Titulo</string>
+
+    <string name="typeEmail">Continuar con Email</string>
+    <string name="typeGoogle">Continuar con Google</string>
+
+    <string name="txt_login">Iniciar Sesión</string>
+    <string name="lb_Email">Correo Electrónico</string>
+    <string name="lb_pass">Contraseña</string>
+    <string name="btn_Login">Ingresar</string>
+    <string name="btn_newA">¿No tienes una cuenta?</string>
+    <string name="btn_Register">Crear cuenta</string>
+    <string name="txt_ForgotPass">¿Olvidaste tu contraseña? <b> Recuperar</b></string>
+
+    <string name="txt_Register">Crear Cuenta de Fidelidad</string>
+    <string name="lb_Name">Nombre Completo</string>
+    <string name="lb_NewPass">Repetir Contraseña</string>
+    <string name="btn_Registro">Crear Cuenta</string>
+
+    <string name="txt_nombres">Nombre: </string>
+    <string name="tv_nombres"> -- </string>
+    <string name="txt_email">Email: </string>
+    <string name="txt_proveedor">Proveedor: </string>
+    <string name="tv_proveedor"> -- </string>
+    <string name="txt_registro">Cuenta Creada: </string>
+    <string name="tv_registro"> -- </string>
+
+    <string name="txt_edit_title">Editar Perfil</string>
+    <string name="btn_update">Actualizar</string>
+
+    <string name="btn_UpdateUserData">Actualizar Datos</string>
+    <string name="btn_Logout">Cerrar Sesión</string>
+
+    <string name="txt_forgotPass">Recuperar Contraseña</string>
+    <string name="txt_SendCode">Ingrese su correo para enviar las instrucciones de recuperación</string>
+    <string name="btn_SendCode">Enviar</string>
+    
+    <!-- Strings básicos para el perfil -->
+     <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
+     
+     <!-- Strings necesarios para layouts de login -->
+      <string name="txt_programa_fidelidad">Sistema de autenticación seguro</string>
+      <string name="txt_unete_cafe">Únete</string>
+      <string name="txt_bienvenido_cafe">¡Bienvenido!</string>
+
 </resources>
