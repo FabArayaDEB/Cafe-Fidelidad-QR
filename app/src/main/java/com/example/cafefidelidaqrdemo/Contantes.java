@@ -68,4 +68,11 @@ public class Contantes {
             return 0; // Ya está en el nivel máximo
         }
     }
+    
+    // Formatear fecha para mostrar en el historial
+    public static String formatearFecha(long timestamp) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timestamp);
+        return android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", calendar).toString();
+    }
 }

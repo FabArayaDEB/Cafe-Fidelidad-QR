@@ -59,11 +59,49 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+        <!-- Teléfono -->
+        <TextView
+            android:id="@+id/txt_telefono"
+            android:text="@string/txt_telefono"
+            android:layout_below="@+id/tv_email"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_telefono"
+            android:text="--"
+            android:layout_below="@+id/txt_telefono"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- Fecha de Nacimiento -->
+        <TextView
+            android:id="@+id/txt_fecha_nacimiento"
+            android:text="@string/txt_fecha_nacimiento"
+            android:layout_below="@+id/tv_telefono"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_fecha_nacimiento"
+            android:text="--"
+            android:layout_below="@+id/txt_fecha_nacimiento"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <!-- Puntos Actuales -->
         <TextView
             android:id="@+id/txt_puntos"
             android:text="@string/txt_puntos_actuales"
-            android:layout_below="@+id/tv_email"
+            android:layout_below="@+id/tv_fecha_nacimiento"
             android:layout_marginTop="20dp"
             android:textStyle="bold"
             android:textSize="16sp"
@@ -188,11 +226,22 @@
             android:layout_height="wrap_content" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_historial"
+            android:text="@string/historial"
+            android:textAllCaps="true"
+            app:cornerRadius="30dp"
+            android:layout_below="@+id/UpdateUserData"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="15dp"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.button.MaterialButton
             app:cornerRadius="30dp"
             android:id="@+id/btn_Logout"
             android:text="@string/btn_Logout"
             android:textAllCaps="true"
-            android:layout_below="@+id/UpdateUserData"
+            android:layout_below="@+id/btn_historial"
             android:layout_marginTop="15dp"
             android:layout_centerInParent="true"
             android:layout_gravity="center"

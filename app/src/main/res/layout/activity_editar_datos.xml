@@ -96,13 +96,59 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/TILTelefono"
+                android:layout_below="@+id/TILNombres"
+                android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/et_telefono"
+                    android:hint="Teléfono"
+                    android:inputType="phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                </EditText>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/TILFechaNacimiento"
+                android:layout_below="@+id/TILTelefono"
+                android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/et_fecha_nacimiento"
+                    android:hint="Fecha de Nacimiento (DD/MM/AAAA)"
+                    android:inputType="date"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                </EditText>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_update"
                 android:text="@string/btn_update"
                 android:textAllCaps="true"
                 app:cornerRadius="8dp"
                 android:layout_marginTop="15dp"
-                android:layout_below="@+id/TILNombres"
+                android:layout_below="@+id/TILFechaNacimiento"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 

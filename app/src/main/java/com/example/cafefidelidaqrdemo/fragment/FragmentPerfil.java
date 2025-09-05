@@ -10,10 +10,12 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.Contantes;
 import com.example.cafefidelidaqrdemo.EditarPerfilActivity;
+import com.example.cafefidelidaqrdemo.HistorialActivity;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentProfBinding;
@@ -32,6 +34,7 @@ public class FragmentPerfil extends Fragment {
     private FragmentProfBinding binding;
     private Context mContext;
     private FirebaseAuth firebaseAuth;
+    private TextView tv_puntos, tv_nivel, tv_compras_totales, tv_puntos_siguiente, tv_ultima_visita, tv_registro, tv_telefono, tv_fecha_nacimiento, tv_nombres, tv_email;
 
     public void onAttach(Context context) {
         mContext = context;
@@ -55,6 +58,18 @@ public class FragmentPerfil extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        
+        // Inicializar vistas
+        tv_nombres = binding.tvNombres;
+        tv_email = binding.tvEmail;
+        tv_telefono = binding.tvTelefono;
+        tv_fecha_nacimiento = binding.tvFechaNacimiento;
+        tv_puntos = binding.tvPuntos;
+        tv_nivel = binding.tvNivel;
+        tv_compras_totales = binding.tvComprasTotales;
+        tv_puntos_siguiente = binding.tvPuntosSiguiente;
+        tv_ultima_visita = binding.tvUltimaVisita;
+        tv_registro = binding.tvRegistro;
 
         binding.UpdateUserData.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,6 +77,16 @@ public class FragmentPerfil extends Fragment {
                 startActivity(new Intent(mContext, EditarPerfilActivity.class));
             }
         });
+        
+        // Botón para ver historial
+        if (binding.btnHistorial != null) {
+            binding.btnHistorial.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(mContext, HistorialActivity.class));
+                }
+            });
+        }
 
         // Cargar información del usuario en tiempo real
         loadUserInfo();
@@ -98,11 +123,15 @@ public class FragmentPerfil extends Fragment {
                         }
                         
                         String nombres = snapshot.child("names").getValue() != null ? 
-                            snapshot.child("names").getValue().toString() : "Usuario";
-                        String email = snapshot.child("email").getValue() != null ? 
-                            snapshot.child("email").getValue().toString() : "";
-                        String proveedor = snapshot.child("proveedor").getValue() != null ? 
-                            snapshot.child("proveedor").getValue().toString() : "";
+            snapshot.child("names").getValue().toString() : "Usuario";
+        String email = snapshot.child("email").getValue() != null ? 
+            snapshot.child("email").getValue().toString() : "";
+        String telefono = snapshot.child("telefono").getValue() != null ? 
+            snapshot.child("telefono").getValue().toString() : "";
+        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue() != null ? 
+            snapshot.child("fechaNacimiento").getValue().toString() : "";
+        String proveedor = snapshot.child("proveedor").getValue() != null ? 
+            snapshot.child("proveedor").getValue().toString() : "";
                         Object registroObj = snapshot.child("date").getValue();
                         String imagen = snapshot.child("imagen").getValue() != null ? 
                             snapshot.child("imagen").getValue().toString() : "";
@@ -166,6 +195,12 @@ public class FragmentPerfil extends Fragment {
                         // Establecer valores en la UI
                         binding.tvNombres.setText(nombres);
                         binding.tvEmail.setText(email);
+                        if (binding.tvTelefono != null) {
+                            binding.tvTelefono.setText(telefono.isEmpty() ? "No especificado" : telefono);
+                        }
+                        if (binding.tvFechaNacimiento != null) {
+                            binding.tvFechaNacimiento.setText(fechaNacimiento.isEmpty() ? "No especificado" : fechaNacimiento);
+                        }
                         binding.tvRegistro.setText("Miembro desde: " + date);
                         
                         // Información del programa de fidelidad
@@ -221,6 +256,8 @@ public class FragmentPerfil extends Fragment {
         HashMap<String, Object> userData = new HashMap<>();
         userData.put("names", nombre);
         userData.put("email", email != null ? email : "");
+        userData.put("telefono", "");
+        userData.put("fechaNacimiento", "");
         userData.put("proveedor", "Email");
         userData.put("date", System.currentTimeMillis());
         userData.put("imagen", "");

@@ -29,6 +29,8 @@
     <string name="txt_nombres">Nombre: </string>
     <string name="tv_nombres"> -- </string>
     <string name="txt_email">Email: </string>
+    <string name="txt_telefono">Teléfono: </string>
+    <string name="txt_fecha_nacimiento">Fecha de Nacimiento: </string>
     <string name="txt_proveedor">Proveedor: </string>
     <string name="tv_proveedor"> -- </string>
     <string name="txt_registro">Cuenta Creada: </string>
@@ -75,6 +77,87 @@
     <string name="btn_iniciar_escaner">Iniciar Escáner</string>
     <string name="txt_instrucciones_qr">Apunta la cámara hacia el código QR para escanearlo</string>
     <string name="txt_bienvenida_cafe">¡Bienvenido a nuestro programa de fidelidad!</string>
-
-
+    
+    <!-- Historial -->
+    <string name="historial">Historial</string>
+    <string name="sin_historial">No hay historial disponible</string>
+    <string name="sin_historial_descripcion">Aquí aparecerán tus visitas y canjes realizados</string>
+    
+    <!-- Catálogo -->
+    <string name="catalogo">Catálogo</string>
+    
+    <!-- Beneficios -->
+    <string name="beneficios">Beneficios</string>
+    <string name="mis_beneficios">Mis Beneficios</string>
+    <string name="beneficios_disponibles">Disponibles</string>
+    <string name="beneficios_usados">Usados</string>
+    <string name="beneficios_expirados">Expirados</string>
+    <string name="sin_beneficios">No tienes beneficios</string>
+    <string name="sin_beneficios_descripcion">Acumula más puntos para obtener beneficios</string>
+    <string name="usar_beneficio">Usar</string>
+    <string name="beneficio_usado">Usado</string>
+    <string name="beneficio_expirado">Expirado</string>
+    <string name="expira_el">Expira el %s</string>
+    <string name="usado_el">Usado el %s</string>
+    <string name="usos_restantes">%d usos restantes</string>
+    <string name="uso_unico">Uso único</string>
+    <string name="descuento_porcentaje">%d%% de descuento</string>
+    <string name="descuento_fijo">$%.2f de descuento</string>
+    <string name="producto_gratis">Producto gratis</string>
+    <string name="dos_por_uno">2x1</string>
+    <string name="envio_gratis">Envío gratis</string>
+    <string name="upgrade_gratis">Upgrade gratis</string>
+    <string name="buscar_productos">Buscar productos...</string>
+    <string name="categoria">Categoría</string>
+    <string name="ordenar_por">Ordenar por</string>
+    <string name="todas_categorias">Todas las categorías</string>
+    <string name="bebidas_calientes">Bebidas Calientes</string>
+    <string name="bebidas_frias">Bebidas Frías</string>
+    <string name="postres">Postres</string>
+    <string name="snacks">Snacks</string>
+    <string name="desayunos">Desayunos</string>
+    <string name="precio_menor_mayor">Precio: Menor a Mayor</string>
+    <string name="precio_mayor_menor">Precio: Mayor a Menor</string>
+    <string name="nombre_a_z">Nombre: A-Z</string>
+    <string name="nombre_z_a">Nombre: Z-A</string>
+    <string name="popularidad">Popularidad</string>
+    <string name="sin_productos">No se encontraron productos</string>
+    <string name="sin_productos_descripcion">Intenta cambiar los filtros de búsqueda</string>
+    <string name="detalle_producto">Detalle del Producto</string>
+    <string name="agregar_carrito">Agregar al Carrito</string>
+    <string name="producto_agregado">Producto agregado al carrito</string>
+    <string name="sin_stock">Sin stock</string>
+    <string name="stock_disponible">Stock disponible: %d unidades</string>
+    <string name="calorias">Calorías: %d</string>
+    <string name="ingredientes">Ingredientes: %s</string>
+    <string name="puntos_requeridos">⭐ %d puntos requeridos</string>
+    <string name="vegano">🌱 Vegano</string>
+    <string name="vegetariano">🥬 Vegetariano</string>
+    <string name="sin_lactosa">🥛 Sin Lactosa</string>
+    <string name="sin_gluten">🌾 Sin Gluten</string>
+    <string name="descripcion">Descripción</string>
+    <string name="informacion_nutricional">Información Nutricional</string>
+    <string name="caracteristicas">Características:</string>
+    
+    <!-- Strings adicionales -->
+    <string name="offline_mode">Modo sin conexión</string>
+    <string name="search_products_hint">Buscar productos...</string>
+    <string name="search_branches_hint">Buscar sucursales...</string>
+    <string name="filters">Filtros</string>
+    <string name="category">Categoría</string>
+    <string name="status">Estado</string>
+    <string name="no_products_available">No hay productos disponibles</string>
+    <string name="no_products_description">Intenta cambiar los filtros o verifica tu conexión</string>
+    <string name="error_loading_products">Error al cargar productos</string>
+    <string name="retry">Reintentar</string>
+    <string name="scroll_to_top">Ir arriba</string>
+    <string name="location_permission_denied">Permiso de ubicación denegado</string>
+    <string name="sort_by">Ordenar por</string>
+    <string name="no_branches_available">No hay sucursales disponibles</string>
+    <string name="no_branches_description">Intenta cambiar los filtros o verifica tu conexión</string>
+    <string name="error_loading_branches">Error al cargar sucursales</string>
+    <string name="loading_branches">Cargando sucursales...</string>
+    <string name="get_location">Obtener ubicación</string>
+    <string name="more_options">Más opciones</string>
+    <string name="loading_products">Cargando productos...</string>
 </resources>

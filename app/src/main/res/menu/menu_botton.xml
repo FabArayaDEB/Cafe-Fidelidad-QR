@@ -10,6 +10,14 @@
         android:title="@string/item_puntos"
         android:icon="@drawable/ic_puntos"/>
     <item
+        android:id="@+id/item_catalogo"
+        android:title="@string/catalogo"
+        android:icon="@drawable/ic_catalog"/>
+    <item
+        android:id="@+id/item_beneficios"
+        android:title="@string/beneficios"
+        android:icon="@drawable/ic_discount"/>
+    <item
         android:id="@+id/item_qr"
         android:title="@string/item_qr"
         android:icon="@drawable/ic_qr"/>

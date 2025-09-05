@@ -124,10 +124,12 @@ public class RegistroActivity extends AppCompatActivity {
         hashMap.put("estado", "activo");
         hashMap.put("imagen", "");
         hashMap.put("date", date);
-        hashMap.put("puntos", 100); // Puntos de bienvenida
-        hashMap.put("nivel", "Bronce"); // Nivel inicial
-        hashMap.put("totalCompras", 0);
+        hashMap.put("puntos", Contantes.PUNTOS_BIENVENIDA); // Puntos de bienvenida
+        hashMap.put("nivel", Contantes.NIVEL_BRONCE); // Nivel inicial
+        hashMap.put("totalCompras", 0.0);
         hashMap.put("ultimaVisita", date);
+        hashMap.put("telefono", ""); // Campo para RF-02
+        hashMap.put("fechaNacimiento", ""); // Campo para RF-02
 
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
         reference.child(uid).setValue(hashMap)

@@ -19,6 +19,11 @@ import androidx.fragment.app.Fragment;
 import com.example.cafefidelidaqrdemo.Contantes;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentChatBinding;
+import com.example.cafefidelidaqrdemo.security.QRSecurityManager;
+import com.example.cafefidelidaqrdemo.security.SecureNetworkManager;
+import com.example.cafefidelidaqrdemo.offline.OfflineManager;
+import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
+import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,6 +34,9 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import io.jsonwebtoken.Claims;
 
 public class FragmentQR extends Fragment {
 
@@ -38,6 +46,11 @@ public class FragmentQR extends Fragment {
     private Button btnEscanearQR;
     private TextView tvInstrucciones, tvUltimoEscaneo;
     private static final int CAMERA_PERMISSION_REQUEST = 100;
+    
+    // Gestores de seguridad
+    private QRSecurityManager qrSecurityManager;
+    private SecureNetworkManager networkManager;
+    private OfflineManager offlineManager;
 
     public void onAttach(Context context) {
         mContext = context;
@@ -61,6 +74,11 @@ public class FragmentQR extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        
+        // Inicializar gestores de seguridad y offline
+        qrSecurityManager = QRSecurityManager.getInstance();
+        networkManager = SecureNetworkManager.getInstance();
+        offlineManager = OfflineManager.getInstance(getContext());
         
         // Inicializar vistas
         initViews();
@@ -144,32 +162,156 @@ public class FragmentQR extends Fragment {
     }
     
     private void procesarCodigoQR(String contenidoQR) {
+        long processingStart = PerformanceMonitor.startMeasurement("procesar_codigo_qr");
+        
         try {
-            // Formato esperado: "CAFE_FIDELIDAD:MESA_X:MONTO_Y" o "CAFE_FIDELIDAD:COMPRA:MONTO_Y"
-            if (contenidoQR.startsWith("CAFE_FIDELIDAD:")) {
-                String[] partes = contenidoQR.split(":");
-                if (partes.length >= 3) {
-                    String tipo = partes[1]; // MESA_X o COMPRA
-                    double monto = Double.parseDouble(partes[2]);
-                    
-                    // Calcular puntos
-                    int puntosGanados = Contantes.calcularPuntos(monto);
-                    
-                    // Registrar transacción
-                    registrarTransaccion(tipo, monto, puntosGanados);
-                } else {
-                    Toast.makeText(mContext, "Código QR inválido", Toast.LENGTH_SHORT).show();
-                }
-            } else {
+            // Validar formato básico
+            long validationStart = PerformanceMonitor.startMeasurement("validar_qr_formato");
+            if (!contenidoQR.startsWith("CAFE_FIDELIDAD:")) {
+                PerformanceMonitor.endMeasurement("validar_qr_formato", validationStart);
+                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
                 Toast.makeText(mContext, "Este no es un código QR de Café Fidelidad", Toast.LENGTH_SHORT).show();
+                return;
             }
+            PerformanceMonitor.endMeasurement("validar_qr_formato", validationStart);
+            
+            // Validar firma HMAC-SHA256
+            long hmacStart = PerformanceMonitor.startMeasurement("validar_qr_hmac");
+            if (!qrSecurityManager.validateQRCode(contenidoQR)) {
+                PerformanceMonitor.endMeasurement("validar_qr_hmac", hmacStart);
+                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
+                Toast.makeText(mContext, "Código QR inválido o expirado", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            PerformanceMonitor.endMeasurement("validar_qr_hmac", hmacStart);
+            
+            // Extraer datos del QR validado
+            long extractStart = PerformanceMonitor.startMeasurement("extraer_datos_qr");
+            Map<String, Object> qrData = qrSecurityManager.extractQRData(contenidoQR);
+            if (qrData.isEmpty()) {
+                PerformanceMonitor.endMeasurement("extraer_datos_qr", extractStart);
+                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
+                Toast.makeText(mContext, "Error al procesar datos del QR", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            PerformanceMonitor.endMeasurement("extraer_datos_qr", extractStart);
+            
+            String sucursalId = (String) qrData.get("sucursalId");
+            String mesaId = (String) qrData.get("mesaId");
+            double monto = (Double) qrData.get("monto");
+            long timestamp = (Long) qrData.get("timestamp");
+            
+            // Obtener usuario actual
+            String uid = firebaseAuth.getUid();
+            if (uid == null) {
+                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
+                Toast.makeText(mContext, "Usuario no autenticado", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Crear entidad de transacción para offline-first
+            long createTransactionStart = PerformanceMonitor.startMeasurement("crear_transaccion_entity");
+            TransaccionEntity transaccion = new TransaccionEntity();
+            transaccion.setId(UUID.randomUUID().toString());
+            transaccion.setUserId(uid);
+            transaccion.setSucursalId(sucursalId);
+            transaccion.setMesaId(mesaId);
+            transaccion.setTipo("ganancia");
+            transaccion.setMonto(monto);
+            transaccion.setPuntos(Contantes.calcularPuntos(monto));
+            transaccion.setFecha(System.currentTimeMillis());
+            transaccion.setQrTimestamp(timestamp);
+            transaccion.setDescripcion("Transacción QR - Sucursal: " + sucursalId + " Mesa: " + mesaId);
+            PerformanceMonitor.endMeasurement("crear_transaccion_entity", createTransactionStart);
+            
+            // Registrar transacción usando arquitectura offline-first
+            offlineManager.registrarTransaccion(transaccion, new OfflineManager.TransaccionCallback() {
+                @Override
+                public void onExito(String transaccionId) {
+                    getActivity().runOnUiThread(() -> {
+                        PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
+                        Toast.makeText(mContext, "¡Transacción registrada! Puntos ganados: " + transaccion.getPuntos(), 
+                                Toast.LENGTH_LONG).show();
+                        // Actualizar puntos del usuario
+                        actualizarPuntosUsuario(transaccion.getPuntos(), transaccion.getMonto());
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(mContext, "Error: " + error, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
+            
         } catch (Exception e) {
             Toast.makeText(mContext, "Error al procesar código QR: " + e.getMessage(), 
                     Toast.LENGTH_SHORT).show();
         }
     }
     
-    private void registrarTransaccion(String tipo, double monto, int puntosGanados) {
+    /**
+     * Registra transacción con validaciones de seguridad mejoradas
+     */
+    private void registrarTransaccionSegura(String sucursalId, String mesaId, double monto, 
+                                           int puntosGanados, long qrTimestamp, String jwtToken) {
+        String uid = firebaseAuth.getUid();
+        long timestamp = System.currentTimeMillis();
+        
+        // Validar token JWT
+        Claims claims = qrSecurityManager.validateJWTToken(jwtToken);
+        if (claims == null) {
+            Toast.makeText(mContext, "Token de autenticación inválido", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Generar hash seguro para la transacción
+        String transactionHash = qrSecurityManager.generateSecureHash(
+            uid + sucursalId + mesaId + monto + timestamp);
+        
+        // Crear objeto de transacción con datos de seguridad
+        HashMap<String, Object> transaccion = new HashMap<>();
+        transaccion.put("sucursalId", sucursalId);
+        transaccion.put("mesaId", mesaId);
+        transaccion.put("monto", monto);
+        transaccion.put("puntos", puntosGanados);
+        transaccion.put("fecha", timestamp);
+        transaccion.put("qrTimestamp", qrTimestamp);
+        transaccion.put("hash", transactionHash);
+        transaccion.put("jwtUsed", true);
+        transaccion.put("descripcion", "Escaneo QR Seguro - Sucursal: " + sucursalId + 
+                                     " Mesa: " + mesaId + " - $" + String.format("%.2f", monto));
+        
+        // Guardar en Firebase con referencia única
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("TransaccionesSeguras")
+                .child(uid)
+                .child(transactionHash);
+        
+        ref.setValue(transaccion)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(mContext, 
+                            "¡Transacción segura registrada! +" + puntosGanados + " puntos", 
+                            Toast.LENGTH_LONG).show();
+                    
+                    // Actualizar puntos del usuario
+                     actualizarPuntosUsuario(puntosGanados, monto);
+                     
+                     // Registrar también en el sistema legacy para compatibilidad
+                     registrarTransaccionLegacy(mesaId, monto, puntosGanados);
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(mContext, 
+                            "Error al registrar transacción: " + e.getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                });
+    }
+    
+    /**
+     * Método legacy para compatibilidad con sistema anterior
+     */
+    private void registrarTransaccionLegacy(String tipo, double monto, int puntosGanados) {
         String uid = firebaseAuth.getUid();
         long timestamp = System.currentTimeMillis();
         
@@ -189,9 +331,6 @@ public class FragmentQR extends Fragment {
         
         transaccionRef.setValue(transaccion);
         
-        // Actualizar puntos del usuario
-        actualizarPuntosUsuario(puntosGanados, monto);
-        
         Toast.makeText(mContext, 
                 "¡Felicidades! Has ganado " + puntosGanados + " puntos por tu compra de $" + 
                 String.format("%.2f", monto), 
@@ -199,41 +338,53 @@ public class FragmentQR extends Fragment {
     }
     
     private void actualizarPuntosUsuario(int puntosGanados, double montoCompra) {
-        String uid = firebaseAuth.getUid();
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users").child(uid);
+        long updateStart = PerformanceMonitor.startMeasurement("actualizar_puntos_usuario_qr");
         
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        String uid = firebaseAuth.getUid();
+        
+        // Usar OfflineManager para actualización offline-first
+        offlineManager.obtenerUsuario(uid, new OfflineManager.UsuarioCallback() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                int puntosActuales = 0;
-                double totalComprasActual = 0;
-                
-                try {
-                    String puntosStr = "" + snapshot.child("puntos").getValue();
-                    puntosActuales = Integer.parseInt(puntosStr.equals("null") ? "0" : puntosStr);
+            public void onExito(com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity usuario) {
+                if (usuario != null) {
+                    long calculationStart = PerformanceMonitor.startMeasurement("calcular_nuevos_valores");
                     
-                    String totalStr = "" + snapshot.child("totalCompras").getValue();
-                    totalComprasActual = Double.parseDouble(totalStr.equals("null") ? "0" : totalStr);
-                } catch (Exception e) {
-                    // Usar valores por defecto
+                    // Calcular nuevos valores
+                    int nuevosPuntos = usuario.getPuntos() + puntosGanados;
+                    double nuevasCompras = usuario.getTotalCompras() + montoCompra;
+                    String nuevoNivel = Contantes.calcularNivel(nuevosPuntos);
+                    
+                    PerformanceMonitor.endMeasurement("calcular_nuevos_valores", calculationStart);
+                    
+                    // Actualizar usuario usando OfflineManager
+                    usuario.setPuntos(nuevosPuntos);
+                    usuario.setTotalCompras(nuevasCompras);
+                    usuario.setNivel(nuevoNivel);
+                    usuario.setLastSync(System.currentTimeMillis());
+                    usuario.setNeedsSync(true);
+                    
+                    offlineManager.actualizarUsuario(usuario, new OfflineManager.UsuarioCallback() {
+                        @Override
+                        public void onExito(com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity usuarioActualizado) {
+                            PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
+                            // Puntos actualizados correctamente offline-first
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
+                            Toast.makeText(mContext, "Error actualizando puntos: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
                 }
-                
-                int nuevosPuntos = puntosActuales + puntosGanados;
-                double nuevoTotal = totalComprasActual + montoCompra;
-                String nuevoNivel = Contantes.calcularNivel(nuevosPuntos);
-                
-                HashMap<String, Object> updates = new HashMap<>();
-                updates.put("puntos", nuevosPuntos);
-                updates.put("totalCompras", nuevoTotal);
-                updates.put("nivel", nuevoNivel);
-                updates.put("ultimaVisita", System.currentTimeMillis());
-                
-                userRef.updateChildren(updates);
             }
             
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(mContext, "Error al actualizar puntos", Toast.LENGTH_SHORT).show();
+            public void onError(String error) {
+                PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
+                Toast.makeText(mContext, "Error obteniendo datos del usuario: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -1,9 +1,13 @@
 package com.example.cafefidelidaqrdemo;
 
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.Toast;
+
+import java.util.Calendar;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -55,6 +59,14 @@ public class EditarPerfilActivity extends AppCompatActivity {
                 updateUserInfo();
             }
         });
+
+        // Configurar DatePicker para fecha de nacimiento
+        binding.etFechaNacimiento.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePicker();
+            }
+        });
     }
 
     private void loadUserInfo() {
@@ -66,13 +78,15 @@ public class EditarPerfilActivity extends AppCompatActivity {
                         String nombres = "" + snapshot.child("names").getValue();
                         String imagen = "" + snapshot.child("imagen").getValue();
                         String email = "" + snapshot.child("email").getValue();
+                        String telefono = "" + snapshot.child("telefono").getValue();
+                        String fechaNacimiento = "" + snapshot.child("fechaNacimiento").getValue();
                         String puntos = "" + snapshot.child("puntos").getValue();
                         String nivel = "" + snapshot.child("nivel").getValue();
                         String totalCompras = "" + snapshot.child("totalCompras").getValue();
 
-                        binding.tvNombres.setText(nombres);
-                        
-                        // Solo actualizar el nombre ya que este layout solo tiene ese campo
+                        binding.tvNombres.setText(nombres.equals("null") ? "" : nombres);
+                        binding.etTelefono.setText(telefono.equals("null") ? "" : telefono);
+                        binding.etFechaNacimiento.setText(fechaNacimiento.equals("null") ? "" : fechaNacimiento);
 
                         Glide.with(EditarPerfilActivity.this)
                                 .load(imagen)
@@ -91,6 +105,8 @@ public class EditarPerfilActivity extends AppCompatActivity {
 
     private void updateUserInfo() {
         String nombres = binding.tvNombres.getText().toString().trim();
+        String telefono = binding.etTelefono.getText().toString().trim();
+        String fechaNacimiento = binding.etFechaNacimiento.getText().toString().trim();
         
         if (nombres.isEmpty()) {
             binding.tvNombres.setError("Ingrese su nombre");
@@ -103,6 +119,8 @@ public class EditarPerfilActivity extends AppCompatActivity {
 
         HashMap<String, Object> hashMap = new HashMap<>();
         hashMap.put("names", nombres);
+        hashMap.put("telefono", telefono);
+        hashMap.put("fechaNacimiento", fechaNacimiento);
         // Actualizar fecha de última modificación
         hashMap.put("ultimaModificacion", System.currentTimeMillis());
 
@@ -126,5 +144,29 @@ public class EditarPerfilActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        // Formatear la fecha como DD/MM/AAAA
+                        String fecha = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year);
+                        binding.etFechaNacimiento.setText(fecha);
+                    }
+                },
+                year, month, day
+        );
+        
+        // Establecer fecha máxima como hoy (no permitir fechas futuras)
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.show();
     }
 }
