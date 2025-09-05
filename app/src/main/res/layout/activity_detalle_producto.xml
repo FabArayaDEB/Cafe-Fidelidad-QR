@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DetalleProductoActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/coffee_primary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Imagen del producto -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="300dp">
+
+                <ImageView
+                    android:id="@+id/iv_producto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_coffee_placeholder" />
+
+                <!-- Indicador de producto popular -->
+                <ImageView
+                    android:id="@+id/iv_popular"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="16dp"
+                    android:src="@drawable/ic_star"
+                    android:background="@drawable/circle_background_gold"
+                    android:padding="8dp"
+                    android:visibility="gone" />
+
+                <!-- Etiqueta de descuento -->
+                <TextView
+                    android:id="@+id/tv_descuento"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|start"
+                    android:layout_margin="16dp"
+                    android:background="@drawable/discount_badge_background"
+                    android:padding="8dp"
+                    android:text="20% OFF"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <!-- Información del producto -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Nombre del producto -->
+                <TextView
+                    android:id="@+id/tv_nombre"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Café Americano"
+                    android:textColor="@color/coffee_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <!-- Categoría -->
+                <TextView
+                    android:id="@+id/tv_categoria"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Categoría: Bebidas Calientes"
+                    android:textColor="@color/coffee_secondary"
+                    android:textSize="14sp" />
+
+                <!-- Precios -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_precio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="$25.00"
+                        android:textColor="@color/coffee_primary"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_precio_original"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="$30.00"
+                        android:textColor="@color/coffee_secondary"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+                <!-- Stock -->
+                <TextView
+                    android:id="@+id/tv_stock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Stock: 15 unidades"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <!-- Puntos requeridos -->
+                <TextView
+                    android:id="@+id/tv_puntos_requeridos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="⭐ 100 puntos requeridos"
+                    android:textSize="14sp"
+                    android:textColor="@color/coffee_accent"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <!-- Separador -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@color/coffee_light" />
+
+                <!-- Descripción -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Descripción"
+                    android:textColor="@color/coffee_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_descripcion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Café negro preparado con granos premium de origen colombiano"
+                    android:textColor="@color/coffee_secondary"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="4dp" />
+
+                <!-- Información nutricional -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="Información Nutricional"
+                    android:textColor="@color/coffee_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_calorias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Calorías: 5"
+                    android:textColor="@color/coffee_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_ingredientes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Ingredientes: Café 100% arábica, agua"
+                    android:textColor="@color/coffee_secondary"
+                    android:textSize="14sp" />
+
+                <!-- Indicadores dietéticos -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Características: "
+                        android:textColor="@color/coffee_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_vegano"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌱 Vegano"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/diet_badge_background"
+                        android:padding="4dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_vegetariano"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🥬 Vegetariano"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/diet_badge_background"
+                        android:padding="4dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_sin_lactosa"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🥛 Sin Lactosa"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/diet_badge_background"
+                        android:padding="4dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_sin_gluten"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌾 Sin Gluten"
+                        android:textSize="12sp"
+                        android:background="@drawable/diet_badge_background"
+                        android:padding="4dp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+                <!-- Espaciado para el botón flotante -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Botón flotante para agregar al carrito -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_agregar_carrito"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:text="Agregar al Carrito"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/coffee_primary"
+        app:cornerRadius="12dp"
+        app:icon="@drawable/ic_add_shopping_cart"
+        app:iconGravity="textStart" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

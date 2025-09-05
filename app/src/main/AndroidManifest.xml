@@ -29,6 +29,18 @@
             android:name=".EditarPerfilActivity"
             android:exported="false" />
         <activity
+            android:name=".HistorialActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CatalogoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DetalleProductoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BeneficiosActivity"
+            android:exported="false" />
+        <activity
             android:name=".RegistroActivity"
             android:exported="false" />
         <activity
