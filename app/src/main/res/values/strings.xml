@@ -43,13 +43,13 @@
     <string name="txt_forgotPass">Recuperar Contraseña</string>
     <string name="txt_SendCode">Ingrese su correo para enviar las instrucciones de recuperación</string>
     <string name="btn_SendCode">Enviar</string>
-    
+
     <!-- Strings básicos para el perfil -->
-     <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
-     
-     <!-- Strings necesarios para layouts de login -->
-      <string name="txt_programa_fidelidad">Sistema de autenticación seguro</string>
-      <string name="txt_unete_cafe">Únete</string>
-      <string name="txt_bienvenido_cafe">¡Bienvenido!</string>
+    <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
+
+    <!-- Strings necesarios para layouts de login -->
+    <string name="txt_programa_fidelidad">Sistema de autenticación seguro</string>
+    <string name="txt_unete_cafe">Únete</string>
+    <string name="txt_bienvenido_cafe">¡Bienvenido!</string>
 
 </resources>
