@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapter.BeneficiosAdminAdapter;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDialogFragment;
+import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodel.BeneficiosAdminViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -28,7 +30,7 @@ import java.util.List;
  * Fragment para gestión de beneficios por administradores (CU-04.1)
  * Permite crear, editar, activar/desactivar y eliminar beneficios
  */
-public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdminAdapter.OnBeneficioActionListener {
+public abstract class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdminAdapter.OnBeneficioActionListener {
     
     private static final String TAG = "FragmentBeneficiosAdmin";
     
@@ -73,7 +75,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
     
     private void initViews(View view) {
         recyclerViewBeneficios = view.findViewById(R.id.recyclerViewBeneficios);
-        fabNuevoBeneficio = view.findViewById(R.id.fabNuevoBeneficio);
+        fabNuevoBeneficio = view.findViewById(R.id.fabAgregarBeneficio); //cambiado de fabNuevoBeneficio
         progressIndicator = view.findViewById(R.id.progressIndicator);
         emptyStateView = view.findViewById(R.id.emptyStateView);
     }
@@ -215,8 +217,8 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
         duplicado.setNombre(beneficio.getNombre() + " (Copia)");
         duplicado.setDescripcion(beneficio.getDescripcion());
         duplicado.setTipo(beneficio.getTipo());
-        duplicado.setValor(beneficio.getValor());
-        duplicado.setReglasJson(beneficio.getReglasJson());
+        duplicado.setVisitasRequeridas(beneficio.getVisitasRequeridas()); //cambiado de setValor
+        duplicado.setMontoMinimoCompra(beneficio.getReglasJson());
         duplicado.setSucursalesAplicables(beneficio.getSucursalesAplicables());
         duplicado.setActivo(false); // Crear como inactivo por defecto
         

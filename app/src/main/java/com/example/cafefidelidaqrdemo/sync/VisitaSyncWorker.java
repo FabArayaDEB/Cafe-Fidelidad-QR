@@ -10,6 +10,8 @@ import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import com.example.cafefidelidaqrdemo.models.Visita;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
+import retrofit2.Call;
+import retrofit2.Response;
 import java.util.List;
 
 /**
@@ -52,16 +54,24 @@ public class VisitaSyncWorker extends Worker {
                     Visita visitaModel = convertToModel(visita);
                     
                     // Enviar a API
-                    Visita syncedVisita = apiService.createVisita(visitaModel);
+                    Call<Visita> call = apiService.createVisita(visitaModel);
+                    Response<Visita> response = call.execute();
                     
-                    // Actualizar con ID del servidor si es necesario
-                    if (syncedVisita.getId() != null && !syncedVisita.getId().equals(visita.getId_visita())) {
-                        visita.setId_visita(syncedVisita.getId());
+                    if (response.isSuccessful() && response.body() != null) {
+                        Visita syncedVisita = response.body();
+                        
+                        // Actualizar con ID del servidor si es necesario
+                        if (syncedVisita.getId() != null && !syncedVisita.getId().equals(visita.getId_visita())) {
+                            visita.setId_visita(syncedVisita.getId());
+                        }
+                        
+                        // Actualizar estado de sincronización
+                        visita.setSynced(true);
+                        visita.setNeedsSync(false);
+                        visita.setLastSync(System.currentTimeMillis());
+                    } else {
+                        throw new Exception("Error en respuesta del servidor: " + response.code());
                     }
-                    
-                    // Actualizar estado de sincronización
-                    visita.setEstado_sync("ENVIADO");
-                    visita.setLastSync(System.currentTimeMillis());
                     
                     // Actualizar en base de datos local
                     visitaDao.update(visita);
@@ -74,7 +84,8 @@ public class VisitaSyncWorker extends Worker {
                     
                     // Marcar como error si es un error permanente
                     if (isPermanentError(e)) {
-                        visita.setEstado_sync("ERROR");
+                        visita.setSynced(false);
+                        visita.setNeedsSync(true);
                         visitaDao.update(visita);
                     }
                 }
@@ -103,11 +114,10 @@ public class VisitaSyncWorker extends Worker {
     private Visita convertToModel(VisitaEntity entity) {
         Visita visita = new Visita();
         visita.setId(entity.getId_visita());
-        visita.setClienteId(entity.getId_cliente());
-        visita.setSucursalId(entity.getId_sucursal());
-        visita.setFechaHora(entity.getFecha_hora());
-        visita.setOrigen(entity.getOrigen());
-        visita.setHashQr(entity.getHash_qr());
+        visita.setUserId(entity.getId_cliente());
+        visita.setSucursal(entity.getId_sucursal());
+        visita.setFechaVisita(entity.getFecha_hora());
+        visita.setQrCode(entity.getHash_qr());
         return visita;
     }
     

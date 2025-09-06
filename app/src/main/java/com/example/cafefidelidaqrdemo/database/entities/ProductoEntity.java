@@ -16,6 +16,7 @@ public class ProductoEntity {
     
     private String nombre; // Nombre del producto (ej. "Capuccino")
     private String categoria; // Clasificación (ej. bebida caliente, pastelería, etc.)
+    private String descripcion; // Descripción del producto
     private double precio; // Precio de venta
     private String estado; // Disponible/no disponible
     
@@ -29,10 +30,11 @@ public class ProductoEntity {
     
     // Constructor completo
     public ProductoEntity(@NonNull String id_producto, String nombre, String categoria, 
-                         double precio, String estado) {
+                         String descripcion, double precio, String estado) {
         this.id_producto = id_producto;
         this.nombre = nombre;
         this.categoria = categoria;
+        this.descripcion = descripcion;
         this.precio = precio;
         this.estado = estado;
         this.lastSync = System.currentTimeMillis();
@@ -50,6 +52,9 @@ public class ProductoEntity {
     
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+    
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     
     public double getPrecio() { return precio; }
     public void setPrecio(double precio) { this.precio = precio; }

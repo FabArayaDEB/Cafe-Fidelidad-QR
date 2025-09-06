@@ -9,9 +9,11 @@ import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
+import com.example.cafefidelidaqrdemo.sync.SyncManager;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Date;
+import retrofit2.Response;
 
 /**
  * Repository para manejar operaciones de Cliente con cache local y sincronización
@@ -76,17 +78,23 @@ public class ClienteRepository {
                     // Intentar enviar a API primero
                     try {
                         Cliente clienteModel = convertToModel(cliente);
-                        Cliente updatedCliente = apiService.updateCliente(clienteModel);
+                        Response<Cliente> response = apiService.updateCliente(cliente.getId_cliente(), clienteModel).execute();
                         
-                        // Si la API responde exitosamente, actualizar cache
-                        ClienteEntity updatedEntity = convertToEntity(updatedCliente);
-                        updatedEntity.setSynced(true);
-                        updatedEntity.setNeedsSync(false);
-                        updatedEntity.setLastSync(System.currentTimeMillis());
-                        
-                        clienteDao.update(updatedEntity);
-                        currentClienteLiveData.postValue(updatedEntity);
-                        syncStatusLiveData.postValue(true);
+                        if (response.isSuccessful() && response.body() != null) {
+                            Cliente updatedCliente = response.body();
+                            // Si la API responde exitosamente, actualizar cache
+                            ClienteEntity updatedEntity = convertToEntity(updatedCliente);
+                            updatedEntity.setSynced(true);
+                            updatedEntity.setNeedsSync(false);
+                            updatedEntity.setLastSync(System.currentTimeMillis());
+                            
+                            clienteDao.update(updatedEntity);
+                            currentClienteLiveData.postValue(updatedEntity);
+                            syncStatusLiveData.postValue(true);
+                        } else {
+                            // Si la respuesta no es exitosa, guardar como pendiente
+                            saveAsPending(cliente);
+                        }
                         
                     } catch (Exception apiException) {
                         // Si falla la API, guardar como pendiente de sincronización
@@ -124,15 +132,18 @@ public class ClienteRepository {
      */
     private void refreshFromApi(String clienteId) {
         try {
-            Cliente clienteFromApi = apiService.getCliente(clienteId);
-            ClienteEntity refreshedEntity = convertToEntity(clienteFromApi);
-            refreshedEntity.setSynced(true);
-            refreshedEntity.setNeedsSync(false);
-            refreshedEntity.setLastSync(System.currentTimeMillis());
-            
-            clienteDao.update(refreshedEntity);
-            currentClienteLiveData.postValue(refreshedEntity);
-            syncStatusLiveData.postValue(true);
+            Response<Cliente> response = apiService.getClienteById(clienteId).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    Cliente clienteFromApi = response.body();
+                    ClienteEntity refreshedEntity = convertToEntity(clienteFromApi);
+                    refreshedEntity.setSynced(true);
+                    refreshedEntity.setNeedsSync(false);
+                    refreshedEntity.setLastSync(System.currentTimeMillis());
+                    
+                    clienteDao.update(refreshedEntity);
+                    currentClienteLiveData.postValue(refreshedEntity);
+                    syncStatusLiveData.postValue(true);
+                }
             
         } catch (Exception e) {
             // Si falla el refresh, mantener datos locales
@@ -156,14 +167,17 @@ public class ClienteRepository {
                 for (ClienteEntity cliente : pendingClientes) {
                     try {
                         Cliente clienteModel = convertToModel(cliente);
-                        Cliente syncedCliente = apiService.updateCliente(clienteModel);
-                        
-                        // Marcar como sincronizado
-                        cliente.setSynced(true);
-                        cliente.setNeedsSync(false);
-                        cliente.setLastSync(System.currentTimeMillis());
-                        
-                        clienteDao.update(cliente);
+                        Response<Cliente> response = apiService.updateCliente(cliente.getId_cliente(), clienteModel).execute();
+                        if (response.isSuccessful() && response.body() != null) {
+                            Cliente syncedCliente = response.body();
+                            
+                            // Marcar como sincronizado
+                            cliente.setSynced(true);
+                            cliente.setNeedsSync(false);
+                            cliente.setLastSync(System.currentTimeMillis());
+                            
+                            clienteDao.update(cliente);
+                        }
                         
                     } catch (Exception e) {
                         // Si falla un cliente específico, continuar con los demás
@@ -190,16 +204,19 @@ public class ClienteRepository {
                 }
                 
                 ClienteEntity localCliente = clienteDao.getById(clienteId);
-                Cliente remoteCliente = apiService.getCliente(clienteId);
-                
-                if (localCliente != null && remoteCliente != null) {
-                    // Comparar timestamps para detectar conflictos
-                    long localTimestamp = localCliente.getLastSync();
-                    long remoteTimestamp = remoteCliente.getFechaActualizacion();
+                Response<Cliente> response = apiService.getClienteById(clienteId).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    Cliente remoteCliente = response.body();
                     
-                    if (remoteTimestamp > localTimestamp && localCliente.isNeedsSync()) {
-                        // Hay conflicto - datos modificados en ambos lados
-                        errorLiveData.postValue("CONFLICT:Los datos fueron modificados en otro dispositivo. Por favor, recarga y vuelve a intentar.");
+                    if (localCliente != null && remoteCliente != null) {
+                        // Comparar timestamps para detectar conflictos
+                        long localTimestamp = localCliente.getLastSync();
+                        long remoteTimestamp = remoteCliente.getFechaActualizacion();
+                        
+                        if (remoteTimestamp > localTimestamp && localCliente.isNeedsSync()) {
+                            // Hay conflicto - datos modificados en ambos lados
+                            errorLiveData.postValue("CONFLICT:Los datos fueron modificados en otro dispositivo. Por favor, recarga y vuelve a intentar.");
+                        }
                     }
                 }
                 

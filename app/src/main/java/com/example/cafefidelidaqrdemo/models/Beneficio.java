@@ -53,7 +53,7 @@ public class Beneficio {
     private int vecesCanjeado;
     private double montoTotalAhorrado;
     private Date fechaUltimoCanje;
-    
+
     public enum TipoBeneficio {
         DESCUENTO_PORCENTAJE,
         DESCUENTO_FIJO,

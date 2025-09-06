@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Fondo semi-transparente -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#80000000" />
+        </shape>
+    </item>
+    
+    <!-- Marco de escaneo -->
+    <item
+        android:gravity="center">
+        <shape android:shape="rectangle">
+            <size
+                android:width="250dp"
+                android:height="250dp" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/primary" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    
+    <!-- Esquinas del marco -->
+    <item android:gravity="center">
+        <layer-list>
+            
+            <!-- Esquina superior izquierda -->
+            <item
+                android:gravity="center"
+                android:left="-115dp"
+                android:top="-115dp">
+                <shape android:shape="rectangle">
+                    <size
+                        android:width="30dp"
+                        android:height="30dp" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/primary" />
+                    <corners
+                        android:topLeftRadius="12dp" />
+                </shape>
+            </item>
+            
+            <!-- Esquina superior derecha -->
+            <item
+                android:gravity="center"
+                android:right="-115dp"
+                android:top="-115dp">
+                <shape android:shape="rectangle">
+                    <size
+                        android:width="30dp"
+                        android:height="30dp" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/primary" />
+                    <corners
+                        android:topRightRadius="12dp" />
+                </shape>
+            </item>
+            
+            <!-- Esquina inferior izquierda -->
+            <item
+                android:gravity="center"
+                android:left="-115dp"
+                android:bottom="-115dp">
+                <shape android:shape="rectangle">
+                    <size
+                        android:width="30dp"
+                        android:height="30dp" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/primary" />
+                    <corners
+                        android:bottomLeftRadius="12dp" />
+                </shape>
+            </item>
+            
+            <!-- Esquina inferior derecha -->
+            <item
+                android:gravity="center"
+                android:right="-115dp"
+                android:bottom="-115dp">
+                <shape android:shape="rectangle">
+                    <size
+                        android:width="30dp"
+                        android:height="30dp" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/primary" />
+                    <corners
+                        android:bottomRightRadius="12dp" />
+                </shape>
+            </item>
+            
+        </layer-list>
+    </item>
+    
+</layer-list>

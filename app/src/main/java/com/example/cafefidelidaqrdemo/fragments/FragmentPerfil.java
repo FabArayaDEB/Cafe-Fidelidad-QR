@@ -67,13 +67,13 @@ public class FragmentPerfil extends Fragment {
         tilNombre = view.findViewById(R.id.til_nombre);
         tilEmail = view.findViewById(R.id.til_email);
         tilTelefono = view.findViewById(R.id.til_telefono);
-        tilFechaNac = view.findViewById(R.id.til_fecha_nac);
+        // tilFechaNac = view.findViewById(R.id.til_fecha_nac); // No existe en el layout
         
         // EditTexts
         etNombre = view.findViewById(R.id.et_nombre);
         etEmail = view.findViewById(R.id.et_email);
         etTelefono = view.findViewById(R.id.et_telefono);
-        etFechaNac = view.findViewById(R.id.et_fecha_nac);
+        // etFechaNac = view.findViewById(R.id.et_fecha_nac); // No existe en el layout
         
         // Buttons
         btnGuardar = view.findViewById(R.id.btn_guardar);
@@ -82,7 +82,7 @@ public class FragmentPerfil extends Fragment {
         // Status views
         progressBar = view.findViewById(R.id.progress_bar);
         tvSyncStatus = view.findViewById(R.id.tv_sync_status);
-        tvLastSync = view.findViewById(R.id.tv_last_sync);
+        // tvLastSync = view.findViewById(R.id.tv_last_sync); // No existe en el layout
         
         // Inicialmente en modo solo lectura
         setEditMode(false);
@@ -241,9 +241,9 @@ public class FragmentPerfil extends Fragment {
         if (cliente.getLastSync() > 0) {
             Date lastSync = new Date(cliente.getLastSync());
             SimpleDateFormat syncFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-            tvLastSync.setText("Última sincronización: " + syncFormat.format(lastSync));
+            // tvLastSync.setText("Última sincronización: " + syncFormat.format(lastSync)); // No existe en el layout
         } else {
-            tvLastSync.setText("Sin sincronizar");
+            // tvLastSync.setText("Sin sincronizar"); // No existe en el layout
         }
     }
     
@@ -296,7 +296,8 @@ public class FragmentPerfil extends Fragment {
     
     private boolean validateNombre() {
         String nombre = etNombre.getText().toString().trim();
-        if (!ValidationUtils.isValidName(nombre)) {
+        ValidationUtils.ValidationResult nameResult = ValidationUtils.validateName(nombre);
+        if (!nameResult.isValid()) {
             tilNombre.setError("Nombre debe tener al menos 2 caracteres");
             return false;
         }
@@ -306,7 +307,8 @@ public class FragmentPerfil extends Fragment {
     
     private boolean validateEmail() {
         String email = etEmail.getText().toString().trim();
-        if (!ValidationUtils.isValidEmail(email)) {
+        ValidationUtils.ValidationResult emailResult = ValidationUtils.validateEmail(email);
+        if (!emailResult.isValid()) {
             tilEmail.setError("Email no válido");
             return false;
         }
@@ -316,7 +318,8 @@ public class FragmentPerfil extends Fragment {
     
     private boolean validateTelefono() {
         String telefono = etTelefono.getText().toString().trim();
-        if (!ValidationUtils.isValidPhone(telefono)) {
+        ValidationUtils.ValidationResult phoneResult = ValidationUtils.validatePhone(telefono);
+        if (!phoneResult.isValid()) {
             tilTelefono.setError("Teléfono debe tener 10 dígitos");
             return false;
         }
@@ -326,7 +329,8 @@ public class FragmentPerfil extends Fragment {
     
     private boolean validateFechaNacimiento() {
         String fechaStr = etFechaNac.getText().toString().trim();
-        if (!ValidationUtils.isValidBirthDate(fechaStr)) {
+        ValidationUtils.ValidationResult birthResult = ValidationUtils.validateBirthDate(fechaStr);
+        if (!birthResult.isValid()) {
             tilFechaNac.setError("Fecha no válida o mayor a 120 años");
             return false;
         }
@@ -352,7 +356,7 @@ public class FragmentPerfil extends Fragment {
         try {
             String fechaStr = etFechaNac.getText().toString().trim();
             if (!fechaStr.isEmpty()) {
-                updated.setFecha_nac(dateFormat.parse(fechaStr));
+                updated.setFecha_nac(fechaStr); // Guardar como String
             }
         } catch (Exception e) {
             // Mantener fecha original si hay error
@@ -372,7 +376,12 @@ public class FragmentPerfil extends Fragment {
         
         // Si hay fecha actual, usarla como inicial
         if (clienteOriginal != null && clienteOriginal.getFecha_nac() != null) {
-            calendar.setTime(clienteOriginal.getFecha_nac());
+            try {
+                Date fechaNac = dateFormat.parse(clienteOriginal.getFecha_nac());
+                calendar.setTime(fechaNac);
+            } catch (Exception e) {
+                // Si no se puede parsear, usar fecha actual
+            }
         }
         
         DatePickerDialog datePickerDialog = new DatePickerDialog(

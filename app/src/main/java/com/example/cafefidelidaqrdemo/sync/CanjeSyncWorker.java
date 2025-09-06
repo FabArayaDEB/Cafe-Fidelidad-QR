@@ -10,6 +10,8 @@ import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
 import com.example.cafefidelidaqrdemo.models.Canje;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
+import retrofit2.Call;
+import retrofit2.Response;
 import java.util.List;
 
 /**
@@ -37,7 +39,7 @@ public class CanjeSyncWorker extends Worker {
             }
             
             // Obtener canjes pendientes de sincronización
-            List<CanjeEntity> pendingCanjes = canjeDao.getPendientesSync();
+            List<CanjeEntity> pendingCanjes = canjeDao.getCanjesParaSincronizar();
             
             if (pendingCanjes.isEmpty()) {
                 return Result.success();
@@ -52,16 +54,24 @@ public class CanjeSyncWorker extends Worker {
                     Canje canjeModel = convertToModel(canje);
                     
                     // Enviar a API
-                    Canje syncedCanje = apiService.createCanje(canjeModel);
+                    Call<Canje> call = apiService.createCanje(canjeModel);
+                    Response<Canje> response = call.execute();
                     
-                    // Actualizar con ID del servidor si es necesario
-                    if (syncedCanje.getId() != null && !syncedCanje.getId().equals(canje.getId_canje())) {
-                        canje.setId_canje(syncedCanje.getId());
+                    if (response.isSuccessful() && response.body() != null) {
+                        Canje syncedCanje = response.body();
+                        
+                        // Actualizar con ID del servidor si es necesario
+                        if (syncedCanje.getId() != null && !syncedCanje.getId().equals(canje.getId_canje())) {
+                            canje.setId_canje(syncedCanje.getId());
+                        }
+                        
+                        // Actualizar estado de sincronización
+                        canje.setSynced(true);
+                        canje.setNeedsSync(false);
+                        canje.setLastSync(System.currentTimeMillis());
+                    } else {
+                        throw new Exception("Error en respuesta de API: " + response.code());
                     }
-                    
-                    // Actualizar estado de sincronización
-                    canje.setEstado_sync("ENVIADO");
-                    canje.setLastSync(System.currentTimeMillis());
                     
                     // Actualizar en base de datos local
                     canjeDao.update(canje);
@@ -74,7 +84,8 @@ public class CanjeSyncWorker extends Worker {
                     
                     // Marcar como error si es un error permanente
                     if (isPermanentError(e)) {
-                        canje.setEstado_sync("ERROR");
+                        canje.setSynced(false);
+                        canje.setNeedsSync(true);
                         canjeDao.update(canje);
                     }
                 }
@@ -103,11 +114,10 @@ public class CanjeSyncWorker extends Worker {
     private Canje convertToModel(CanjeEntity entity) {
         Canje canje = new Canje();
         canje.setId(entity.getId_canje());
-        canje.setClienteId(entity.getId_cliente());
-        canje.setBeneficioId(entity.getId_beneficio());
-        canje.setSucursalId(entity.getId_sucursal());
-        canje.setFechaHora(entity.getFecha_hora());
-        canje.setCodigoOtp(entity.getCodigo_otp());
+        canje.setUserId(entity.getId_cliente());
+        canje.setFechaCanje(entity.getFecha_solicitud());
+        canje.setSucursal(entity.getId_sucursal());
+        canje.setCodigoVerificacion(entity.getOtp_codigo());
         return canje;
     }
     

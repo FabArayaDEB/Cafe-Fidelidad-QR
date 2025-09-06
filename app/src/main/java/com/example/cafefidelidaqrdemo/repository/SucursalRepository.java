@@ -1,5 +1,7 @@
 package com.example.cafefidelidaqrdemo.repository;
 
+import android.content.Context;
+import android.location.Location;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.database.dao.SucursalDao;
@@ -14,6 +16,7 @@ import com.example.cafefidelidaqrdemo.utils.LocationUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import retrofit2.Call;
@@ -25,19 +28,21 @@ public class SucursalRepository {
     private final ApiService apiService;
     private final SyncManager syncManager;
     private final SearchManager searchManager;
-    private final Executor executor;
+    private final ExecutorService executor;
+    private final Context context;
     
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isOffline = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> locationPermissionDenied = new MutableLiveData<>(false);
     
-    public SucursalRepository(SucursalDao sucursalDao, ApiService apiService, SyncManager syncManager) {
+    public SucursalRepository(SucursalDao sucursalDao, ApiService apiService, SyncManager syncManager, Context context) {
         this.sucursalDao = sucursalDao;
         this.apiService = apiService;
         this.syncManager = syncManager;
         this.searchManager = new SearchManager();
         this.executor = Executors.newFixedThreadPool(2);
+        this.context = context;
     }
     
     // LiveData getters
@@ -113,7 +118,7 @@ public class SucursalRepository {
     
     public void getSucursalById(Long idSucursal, SucursalCallback callback) {
         executor.execute(() -> {
-            SucursalEntity entity = sucursalDao.getSucursalById(idSucursal);
+            SucursalEntity entity = sucursalDao.getSucursalById(String.valueOf(idSucursal));
             if (entity != null) {
                 callback.onSuccess(convertToModel(entity));
             } else {
@@ -157,7 +162,7 @@ public class SucursalRepository {
             List<SucursalWithDistance> sucursalesWithDistance = new ArrayList<>();
             
             for (SucursalEntity entity : entities) {
-                if (entity.getLat() != null && entity.getLon() != null) {
+                if (entity.getLat() != 0.0 && entity.getLon() != 0.0) {
                     double distance = calculateDistance(userLat, userLon, entity.getLat(), entity.getLon());
                     sucursalesWithDistance.add(new SucursalWithDistance(convertToModel(entity), distance));
                 }
@@ -173,13 +178,19 @@ public class SucursalRepository {
     public void searchSucursales(String query, SearchCallback callback) {
         executor.execute(() -> {
             List<SucursalEntity> allSucursales = sucursalDao.getAllSucursalesSync();
-            List<SearchManager.SucursalWithDistance> results = searchManager.searchSucursalesLocal(
-                allSucursales, query, null, null, null, null
-            );
             List<Sucursal> sucursales = new ArrayList<>();
-            for (SearchManager.SucursalWithDistance item : results) {
-                sucursales.add(convertToModel(item.getSucursal()));
+            
+            // Filtrado simple por nombre y dirección
+            String normalizedQuery = query != null ? query.toLowerCase().trim() : "";
+            
+            for (SucursalEntity entity : allSucursales) {
+                if (normalizedQuery.isEmpty() || 
+                    entity.getNombre().toLowerCase().contains(normalizedQuery) ||
+                    entity.getDireccion().toLowerCase().contains(normalizedQuery)) {
+                    sucursales.add(convertToModel(entity));
+                }
             }
+            
             callback.onResults(sucursales);
         });
     }
@@ -188,12 +199,48 @@ public class SucursalRepository {
                                            Boolean activasOnly, Double maxDistance, SearchWithLocationCallback callback) {
         executor.execute(() -> {
             List<SucursalEntity> allSucursales = sucursalDao.getAllSucursalesSync();
-            LocationUtils.GeoPoint userLocation = (userLat != null && userLon != null) ? 
-                new LocationUtils.GeoPoint(userLat, userLon) : null;
+            Location userLocation = null;
+            if (userLat != null && userLon != null) {
+                userLocation = new Location("");
+                userLocation.setLatitude(userLat);
+                userLocation.setLongitude(userLon);
+            }
             
-            List<SearchManager.SucursalWithDistance> results = searchManager.searchSucursalesLocal(
-                allSucursales, query, userLocation, activasOnly, maxDistance, null
+            LiveData<List<SearchManager.SucursalWithDistance>> resultsLiveData = searchManager.searchSucursalesLocal(
+                allSucursales, query, userLocation, activasOnly, maxDistance
             );
+            
+            // Como necesitamos el resultado de forma síncrona, implementamos filtrado directo
+            List<SearchManager.SucursalWithDistance> results = new ArrayList<>();
+            // Implementar filtrado simple aquí
+            for (SucursalEntity entity : allSucursales) {
+                // Filtro básico por query
+                String normalizedQuery = query != null ? query.toLowerCase().trim() : "";
+                if (!normalizedQuery.isEmpty()) {
+                    if (!entity.getNombre().toLowerCase().contains(normalizedQuery) &&
+                        !entity.getDireccion().toLowerCase().contains(normalizedQuery)) {
+                        continue;
+                    }
+                }
+                
+                // Filtro por estado activo
+                if (activasOnly != null && activasOnly && !entity.isActiva()) {
+                    continue;
+                }
+                
+                // Calcular distancia si hay ubicación
+                Double distance = null;
+                if (userLocation != null && entity.getLat() != 0.0 && entity.getLon() != 0.0) {
+                    distance = calculateDistance(userLat, userLon, entity.getLat(), entity.getLon());
+                    
+                    // Filtro por distancia máxima
+                    if (maxDistance != null && distance > maxDistance) {
+                        continue;
+                    }
+                }
+                
+                results.add(new SearchManager.SucursalWithDistance(entity, distance));
+            }
             
             callback.onResults(results);
         });
@@ -216,7 +263,7 @@ public class SucursalRepository {
     }
     
     public void forceSyncSucursales() {
-        syncManager.syncSucursales();
+        SyncManager.forceSyncAll(context);
     }
     
     public void setLocationPermissionDenied(boolean denied) {
@@ -244,25 +291,31 @@ public class SucursalRepository {
     // Métodos de conversión
     private SucursalEntity convertToEntity(Sucursal sucursal) {
         SucursalEntity entity = new SucursalEntity();
-        entity.setIdSucursal(sucursal.getIdSucursal());
+        entity.setId_sucursal(sucursal.getId());
         entity.setNombre(sucursal.getNombre());
         entity.setDireccion(sucursal.getDireccion());
-        entity.setLat(sucursal.getLat());
-        entity.setLon(sucursal.getLon());
-        entity.setHorario(sucursal.getHorario());
-        entity.setEstado(sucursal.getEstado());
+        entity.setLat(sucursal.getLatitud());
+        entity.setLon(sucursal.getLongitud());
+        entity.setHorario(sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre());
+        entity.setEstado(sucursal.isActiva() ? "activo" : "inactivo");
         return entity;
     }
     
     private Sucursal convertToModel(SucursalEntity entity) {
         Sucursal sucursal = new Sucursal();
-        sucursal.setIdSucursal(entity.getIdSucursal());
+        sucursal.setId(entity.getId_sucursal());
         sucursal.setNombre(entity.getNombre());
         sucursal.setDireccion(entity.getDireccion());
-        sucursal.setLat(entity.getLat());
-        sucursal.setLon(entity.getLon());
-        sucursal.setHorario(entity.getHorario());
-        sucursal.setEstado(entity.getEstado());
+        sucursal.setLatitud(entity.getLat());
+        sucursal.setLongitud(entity.getLon());
+        // Separar horario si es necesario
+        String horario = entity.getHorario();
+        if (horario != null && horario.contains(" - ")) {
+            String[] horarios = horario.split(" - ");
+            sucursal.setHorarioApertura(horarios[0]);
+            sucursal.setHorarioCierre(horarios[1]);
+        }
+        sucursal.setActiva(entity.isActiva());
         return sucursal;
     }
     

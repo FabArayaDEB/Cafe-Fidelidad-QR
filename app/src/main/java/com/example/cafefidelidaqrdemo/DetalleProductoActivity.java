@@ -184,12 +184,8 @@ public class DetalleProductoActivity extends AppCompatActivity {
         ivPopular.setVisibility(producto.isEsPopular() ? View.VISIBLE : View.GONE);
 
         // Configurar puntos requeridos
-        if (producto.getPuntosRequeridos() > 0) {
-            tvPuntosRequeridos.setText(String.format("⭐ %d puntos requeridos", producto.getPuntosRequeridos()));
-            tvPuntosRequeridos.setVisibility(View.VISIBLE);
-        } else {
+        // Puntos requeridos no disponibles en ProductoEntity
             tvPuntosRequeridos.setVisibility(View.GONE);
-        }
 
         // Configurar botón de agregar al carrito
         btnAgregarCarrito.setOnClickListener(new View.OnClickListener() {

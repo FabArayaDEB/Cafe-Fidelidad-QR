@@ -39,10 +39,10 @@ public class FragmentHistorial extends Fragment {
     private HistorialAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar progressBar;
-    private TextView tvEmpty, tvSyncStatus, tvFilterInfo;
+    private TextView tvEmpty, tvSyncStatus; // tvFilterInfo;
     private ChipGroup chipGroupFiltros;
     private Chip chipTodos, chipVisitas, chipCanjes, chipPendientes, chipEnviados;
-    private Button btnFiltroFecha;
+    // private Button btnFiltroFecha; // No existe en el layout
     private FloatingActionButton fabScrollTop;
     
     // ViewModel
@@ -75,12 +75,12 @@ public class FragmentHistorial extends Fragment {
     }
     
     private void initViews(View view) {
-        recyclerView = view.findViewById(R.id.recycler_historial);
+        recyclerView = view.findViewById(R.id.rv_historial);
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh);
         progressBar = view.findViewById(R.id.progress_bar);
-        tvEmpty = view.findViewById(R.id.tv_empty);
+        tvEmpty = view.findViewById(R.id.tv_empty_message);
         tvSyncStatus = view.findViewById(R.id.tv_sync_status);
-        tvFilterInfo = view.findViewById(R.id.tv_filter_info);
+        // tvFilterInfo = view.findViewById(R.id.tv_filter_info); // No existe en el layout
         
         // Filtros
         chipGroupFiltros = view.findViewById(R.id.chip_group_filtros);
@@ -89,7 +89,7 @@ public class FragmentHistorial extends Fragment {
         chipCanjes = view.findViewById(R.id.chip_canjes);
         chipPendientes = view.findViewById(R.id.chip_pendientes);
         chipEnviados = view.findViewById(R.id.chip_enviados);
-        btnFiltroFecha = view.findViewById(R.id.btn_filtro_fecha);
+        // btnFiltroFecha = view.findViewById(R.id.btn_filtro_fecha); // No existe en el layout
         
         fabScrollTop = view.findViewById(R.id.fab_scroll_top);
         
@@ -127,7 +127,7 @@ public class FragmentHistorial extends Fragment {
     }
     
     private void setupRecyclerView() {
-        adapter = new HistorialAdapter();
+        adapter = new HistorialAdapter(getContext());
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
         
@@ -171,13 +171,23 @@ public class FragmentHistorial extends Fragment {
         });
         
         // Filtro de fecha
-        btnFiltroFecha.setOnClickListener(v -> showDateRangeDialog());
+        // btnFiltroFecha.setOnClickListener(v -> showDateRangeDialog()); // No existe en el layout
         
         // Scroll to top
         fabScrollTop.setOnClickListener(v -> recyclerView.smoothScrollToPosition(0));
         
         // Click en items del historial
-        adapter.setOnItemClickListener(this::onHistorialItemClick);
+        adapter.setOnItemClickListener(new HistorialAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(HistorialItem item) {
+                onHistorialItemClick(item);
+            }
+            
+            @Override
+            public void onItemLongClick(HistorialItem item) {
+                // Implementar acción para long click si es necesario
+            }
+        });
     }
     
     private void loadInitialData() {
@@ -194,7 +204,7 @@ public class FragmentHistorial extends Fragment {
     
     private void updateHistorialList(List<HistorialItem> items) {
         if (items != null) {
-            adapter.updateItems(items);
+            adapter.submitList(items); // Usar submitList en lugar de updateItems
             
             // Mostrar mensaje si está vacío
             if (items.isEmpty()) {
@@ -310,45 +320,50 @@ public class FragmentHistorial extends Fragment {
             }
         }
         
-        tvFilterInfo.setText(info.toString());
+        // tvFilterInfo.setText(info.toString()); // No existe en el layout
     }
     
     private void showDateRangeDialog() {
         // Crear diálogo personalizado para selección de rango de fechas
-        DateRangeDialogFragment dialog = new DateRangeDialogFragment();
-        dialog.setDateRange(fechaInicio, fechaFin);
-        dialog.setOnDateRangeSelectedListener((inicio, fin) -> {
-            fechaInicio = inicio;
-            fechaFin = fin;
-            
-            // Actualizar texto del botón
-            if (inicio != null || fin != null) {
-                StringBuilder btnText = new StringBuilder("📅 ");
-                if (inicio != null && fin != null) {
-                    btnText.append(dateFormat.format(inicio))
-                           .append(" - ")
-                           .append(dateFormat.format(fin));
-                } else if (inicio != null) {
-                    btnText.append("Desde ").append(dateFormat.format(inicio));
-                } else {
-                    btnText.append("Hasta ").append(dateFormat.format(fin));
-                }
-                btnFiltroFecha.setText(btnText.toString());
-            } else {
-                btnFiltroFecha.setText("📅 Filtrar por fecha");
-            }
-            
-            applyFilters();
-        });
+        // DateRangeDialogFragment dialog = new DateRangeDialogFragment();
+        // dialog.setDateRange(fechaInicio, fechaFin);
+        // dialog.setOnDateRangeSelectedListener((inicio, fin) -> {
+        //     fechaInicio = inicio;
+        //     fechaFin = fin;
+        //     
+        //     // Actualizar texto del botón
+        //     if (inicio != null || fin != null) {
+        //         StringBuilder btnText = new StringBuilder("📅 ");
+        //         if (inicio != null && fin != null) {
+        //             btnText.append(dateFormat.format(inicio))
+        //                    .append(" - ")
+        //                    .append(dateFormat.format(fin));
+        //         } else if (inicio != null) {
+        //             btnText.append("Desde ").append(dateFormat.format(inicio));
+        //         } else {
+        //             btnText.append("Hasta ").append(dateFormat.format(fin));
+        //         }
+        //         btnFiltroFecha.setText(btnText.toString());
+        //     } else {
+        //         // btnFiltroFecha.setText("📅 Filtrar por fecha"); // No existe en el layout
+        //     }
+        //     
+        //     applyFilters();
+        // });
+        // 
+        // dialog.show(getParentFragmentManager(), "date_range_dialog");
         
-        dialog.show(getParentFragmentManager(), "date_range_dialog");
+        // TODO: Implementar selector de fecha cuando se cree DateRangeDialogFragment
     }
     
     private void onHistorialItemClick(HistorialItem item) {
         // Mostrar detalles del item
-        HistorialDetailDialogFragment dialog = new HistorialDetailDialogFragment();
-        dialog.setHistorialItem(item);
-        dialog.show(getParentFragmentManager(), "historial_detail_dialog");
+        // HistorialDetailDialogFragment dialog = new HistorialDetailDialogFragment();
+        // dialog.setHistorialItem(item);
+        // dialog.show(getParentFragmentManager(), "historial_detail_dialog");
+        
+        // TODO: Implementar diálogo de detalles cuando se cree HistorialDetailDialogFragment
+        Toast.makeText(getContext(), "Detalles de: " + item.getTitulo(), Toast.LENGTH_SHORT).show();
     }
     
     /**
@@ -358,7 +373,7 @@ public class FragmentHistorial extends Fragment {
         chipTodos.setChecked(true);
         fechaInicio = null;
         fechaFin = null;
-        btnFiltroFecha.setText("📅 Filtrar por fecha");
+        // btnFiltroFecha.setText("📅 Filtrar por fecha"); // No existe en el layout
         applyFilters();
     }
     

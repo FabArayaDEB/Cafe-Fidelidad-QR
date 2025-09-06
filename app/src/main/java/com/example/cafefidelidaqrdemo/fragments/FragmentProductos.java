@@ -80,7 +80,7 @@ public class FragmentProductos extends Fragment {
         progressIndicator = view.findViewById(R.id.progressIndicator);
         textViewEmpty = view.findViewById(R.id.textViewEmpty);
         textViewOffline = view.findViewById(R.id.textViewOffline);
-        chipGroupCategorias = view.findViewById(R.id.chipGroupCategorias);
+        chipGroupCategorias = view.findViewById(R.id.chipGroupCategoria);
         chipGroupEstado = view.findViewById(R.id.chipGroupEstado);
         searchView = view.findViewById(R.id.searchView);
         fabScrollTop = view.findViewById(R.id.fabScrollTop);
@@ -127,8 +127,8 @@ public class FragmentProductos extends Fragment {
         
         swipeRefreshLayout.setColorSchemeResources(
             R.color.primary,
-            R.color.secondary,
-            R.color.tertiary
+            R.color.coffee_secondary,
+            R.color.coffee_accent
         );
     }
     

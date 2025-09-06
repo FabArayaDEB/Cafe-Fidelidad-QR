@@ -49,7 +49,7 @@ public class HistorialActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        historialAdapter = new HistorialAdapter(this, historialItems);
+        historialAdapter = new HistorialAdapter(this);
         binding.recyclerViewHistorial.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerViewHistorial.setAdapter(historialAdapter);
     }

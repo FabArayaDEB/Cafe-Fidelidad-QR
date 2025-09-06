@@ -18,6 +18,8 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapter.BeneficiosDisponiblesAdapter;
 import com.example.cafefidelidaqrdemo.adapter.ProgresoFidelizacionAdapter;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
+import com.example.cafefidelidaqrdemo.ui.dialogs.ProximoBeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodel.ProgresoViewModel;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;

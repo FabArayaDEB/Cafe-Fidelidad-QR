@@ -89,9 +89,23 @@ public interface BeneficioDao {
            "(vigencia_ini IS NULL OR vigencia_ini <= :fecha) AND " +
            "(vigencia_fin IS NULL OR vigencia_fin >= :fecha)")
     LiveData<Integer> getCountBeneficiosVigentes(long fecha);
+    
+    @Query("SELECT COUNT(*) FROM beneficios WHERE estado = 'inactivo'")
+    LiveData<Integer> getCountBeneficiosInactivos();
+    
+    @Query("SELECT COUNT(*) FROM beneficios WHERE estado = 'activo'")
+    int getCountBeneficiosActivosSync();
+    
+    @Query("SELECT COUNT(*) FROM beneficios WHERE estado = 'inactivo'")
+    int getCountBeneficiosInactivosSync();
 
     @Query("SELECT * FROM beneficios WHERE " +
            "lastSync >= :fechaDesde AND lastSync <= :fechaHasta " +
            "ORDER BY lastSync DESC")
     LiveData<List<BeneficioEntity>> getBeneficiosPorPeriodo(long fechaDesde, long fechaHasta);
+    
+    @Query("SELECT COUNT(*) FROM beneficios WHERE " +
+           "estado = 'activo' AND " +
+           "producto_premio = CAST(:productoId AS TEXT)")
+    int countBeneficiosActivosConProducto(long productoId);
 }

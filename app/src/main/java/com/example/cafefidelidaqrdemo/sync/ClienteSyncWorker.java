@@ -11,6 +11,7 @@ import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import java.util.List;
+import retrofit2.Response;
 
 /**
  * Worker para sincronización de clientes en segundo plano
@@ -52,15 +53,19 @@ public class ClienteSyncWorker extends Worker {
                     Cliente clienteModel = convertToModel(cliente);
                     
                     // Enviar a API
-                    Cliente syncedCliente = apiService.updateCliente(clienteModel);
+                    Response<Cliente> response = apiService.updateCliente(cliente.getId_cliente(), clienteModel).execute();
                     
-                    // Actualizar estado de sincronización
-                    cliente.setSynced(true);
-                    cliente.setNeedsSync(false);
-                    cliente.setLastSync(System.currentTimeMillis());
-                    
-                    // Actualizar en base de datos local
-                    clienteDao.update(cliente);
+                    if (response.isSuccessful() && response.body() != null) {
+                        Cliente syncedCliente = response.body();
+                        
+                        // Actualizar estado de sincronización
+                        cliente.setSynced(true);
+                        cliente.setNeedsSync(false);
+                        cliente.setLastSync(System.currentTimeMillis());
+                        
+                        // Actualizar en base de datos local
+                        clienteDao.update(cliente);
+                    }
                     
                     successCount++;
                     

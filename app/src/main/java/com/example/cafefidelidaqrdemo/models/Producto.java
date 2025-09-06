@@ -221,4 +221,14 @@ public class Producto {
     public boolean estaEnStock() {
         return stock > 0;
     }
+
+    private String estado;
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
 }

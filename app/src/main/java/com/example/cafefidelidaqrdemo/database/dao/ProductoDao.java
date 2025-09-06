@@ -108,4 +108,7 @@ public interface ProductoDao {
     
     @Query("SELECT * FROM productos WHERE estado = 'disponible' AND precio <= :precioMaximo ORDER BY precio DESC")
     List<ProductoEntity> getDisponiblesHastaPrecio(double precioMaximo);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE nombre = :nombre AND id_producto != :idExcluir")
+    int existeProductoConNombre(String nombre, long idExcluir);
 }

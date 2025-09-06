@@ -10,8 +10,13 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
+import com.example.cafefidelidaqrdemo.database.dao.SucursalDao;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.network.ApiClient;
+import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
+import com.example.cafefidelidaqrdemo.sync.SyncManager;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +46,12 @@ public class SucursalesViewModel extends AndroidViewModel {
     
     public SucursalesViewModel(@NonNull Application application) {
         super(application);
-        this.repository = new SucursalRepository(application);
+        // Obtener instancias necesarias para el repositorio
+        SucursalDao sucursalDao = CafeFidelidadDatabase.getInstance(application).sucursalDao();
+        ApiService apiService = ApiClient.getInstance().getApiService();
+        SyncManager syncManager = SyncManager.getInstance(application);
+        
+        this.repository = new SucursalRepository(sucursalDao, apiService, syncManager, application);
         this.executor = Executors.newFixedThreadPool(3);
         
         // Observar datos del repositorio
@@ -146,7 +156,7 @@ public class SucursalesViewModel extends AndroidViewModel {
         });
     }
     
-    public void getSucursalById(int id, SucursalRepository.SucursalCallback callback) {
+    public void getSucursalById(long id, SucursalRepository.SucursalCallback callback) {
         executor.execute(() -> {
             repository.getSucursalById(id, callback);
         });
