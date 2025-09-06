@@ -136,12 +136,33 @@ public class RegistroActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
-                        progressDialog.dismiss();
-                        Toast.makeText(RegistroActivity.this, 
-                            "¡Bienvenido a Café Fidelidad! Has recibido 100 puntos de bienvenida", 
-                            Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(RegistroActivity.this, MainActivity.class));
-                        finishAffinity();
+                        // Guardar también en SQLite local usando OfflineManager
+                        OfflineManager offlineManager = OfflineManager.getInstance(RegistroActivity.this);
+                        offlineManager.saveUserToLocal(hashMap, new OfflineManager.SaveUserCallback() {
+                            @Override
+                            public void onSuccess() {
+                                runOnUiThread(() -> {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(RegistroActivity.this, 
+                                        "¡Bienvenido a Café Fidelidad! Has recibido 100 puntos de bienvenida", 
+                                        Toast.LENGTH_LONG).show();
+                                    startActivity(new Intent(RegistroActivity.this, MainActivity.class));
+                                    finishAffinity();
+                                });
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                runOnUiThread(() -> {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(RegistroActivity.this, 
+                                        "Usuario registrado pero error al guardar localmente: " + error, 
+                                        Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(RegistroActivity.this, MainActivity.class));
+                                    finishAffinity();
+                                });
+                            }
+                        });
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
