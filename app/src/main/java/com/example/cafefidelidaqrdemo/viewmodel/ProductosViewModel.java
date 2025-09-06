@@ -37,13 +37,11 @@ public class ProductosViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar dependencias
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getDatabase(application);
-        SyncManager syncManager = SyncManager.getInstance(application);
+        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
         
         repository = new ProductoRepository(
             database.productoDao(),
-            ApiClient.getApiService(),
-            syncManager
+            ApiClient.getApiService()
         );
         
         // Configurar LiveData

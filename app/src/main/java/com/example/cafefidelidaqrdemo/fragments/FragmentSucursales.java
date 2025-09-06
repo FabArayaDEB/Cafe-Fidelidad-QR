@@ -156,8 +156,8 @@ public class FragmentSucursales extends Fragment {
         
         swipeRefreshLayout.setColorSchemeResources(
             R.color.primary,
-            R.color.secondary,
-            R.color.tertiary
+            R.color.coffee_secondary,
+            R.color.coffee_accent
         );
     }
     
@@ -390,7 +390,14 @@ public class FragmentSucursales extends Fragment {
         if ("distancia".equals(ordenSeleccionado) && userLocation != null) {
             viewModel.getSucursalesWithDistance(userLocation.getLatitude(), 
                 userLocation.getLongitude(), sucursalesWithDistance -> {
-                    adapter.submitListWithDistance(sucursalesWithDistance);
+                    // Convertir SucursalRepository.SucursalWithDistance a SucursalesAdapter.SucursalItem
+                    List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
+                    for (SucursalRepository.SucursalWithDistance item : sucursalesWithDistance) {
+                        // Convertir Sucursal a SucursalEntity (necesitamos crear un método de conversión)
+                        SucursalEntity entity = convertToEntity(item.getSucursal());
+                        items.add(new SucursalesAdapter.SucursalItem(entity, item.getDistance()));
+                    }
+                    adapter.submitListWithDistance(items);
                 });
         } else {
             // Ordenar por nombre
@@ -470,6 +477,18 @@ public class FragmentSucursales extends Fragment {
                 .setAction("Reintentar", v -> viewModel.refreshSucursales())
                 .show();
         }
+    }
+    
+    private SucursalEntity convertToEntity(com.example.cafefidelidaqrdemo.models.Sucursal sucursal) {
+        SucursalEntity entity = new SucursalEntity();
+        entity.setId_sucursal(sucursal.getId());
+        entity.setNombre(sucursal.getNombre());
+        entity.setDireccion(sucursal.getDireccion());
+        entity.setLat(sucursal.getLatitud());
+        entity.setLon(sucursal.getLongitud());
+        entity.setHorario(sucursal.getHorario());
+        entity.setEstado(sucursal.getEstado());
+        return entity;
     }
     
     @Override

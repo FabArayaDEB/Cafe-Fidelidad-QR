@@ -110,12 +110,12 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
             if (isDisponible) {
                 chipEstado.setText("Disponible");
                 chipEstado.setChipBackgroundColorResource(R.color.success_light);
-                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success_dark));
+                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success_green));
                 viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.success));
             } else {
                 chipEstado.setText("No disponible");
                 chipEstado.setChipBackgroundColorResource(R.color.error_light);
-                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error_dark));
+                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error_red));
                 viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.error));
             }
             

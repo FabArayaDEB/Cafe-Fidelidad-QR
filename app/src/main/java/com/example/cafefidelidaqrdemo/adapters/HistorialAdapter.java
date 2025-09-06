@@ -171,7 +171,7 @@ public class HistorialAdapter extends ListAdapter<HistorialItem, HistorialAdapte
                     break;
                     
                 default:
-                    ivEstado.setImageResource(R.drawable.ic_help);
+                    ivEstado.setImageResource(R.drawable.ic_redeem);
                     ivEstado.setColorFilter(ContextCompat.getColor(context, R.color.color_texto_secundario));
                     tvEstado.setTextColor(ContextCompat.getColor(context, R.color.color_texto_secundario));
                     break;

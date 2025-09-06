@@ -64,6 +64,18 @@ public interface SucursalDao {
     @Query("SELECT COUNT(*) FROM sucursales WHERE estado = 'activa'")
     int getCountActivas();
     
+    @Query("SELECT COUNT(*) FROM sucursales WHERE estado = 'activa'")
+    LiveData<Integer> getCountSucursalesActivas();
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE estado = 'inactiva'")
+    LiveData<Integer> getCountSucursalesInactivas();
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE estado = 'activa'")
+    int getCountSucursalesActivasSync();
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE estado = 'inactiva'")
+    int getCountSucursalesInactivasSync();
+    
     @Query("DELETE FROM sucursales")
     void deleteAll();
     

@@ -16,6 +16,7 @@ import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,11 +34,9 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
     private final SimpleDateFormat dateFormat;
     
     public interface OnBeneficioActionListener {
-        void onEditBeneficio(Beneficio beneficio);
-        void onDeleteBeneficio(Beneficio beneficio);
         void onToggleActiveBeneficio(Beneficio beneficio);
-        void onViewBeneficioDetails(Beneficio beneficio);
-        void onDuplicateBeneficio(Beneficio beneficio);
+        void onEditarBeneficio(Beneficio beneficio);
+        void onEliminarBeneficio(Beneficio beneficio);
     }
     
     public BeneficiosAdminAdapter(List<Beneficio> beneficios, OnBeneficioActionListener listener) {
@@ -75,35 +74,26 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         private final MaterialCardView cardView;
         private final TextView textNombre;
         private final TextView textDescripcion;
-        private final TextView textTipo;
-        private final TextView textValor;
+        private final Chip chipTipo;
         private final TextView textVigencia;
-        private final TextView textSucursales;
-        private final Chip chipEstado;
-        private final ImageView iconTipo;
+        private final TextView textUsos;
+        private final TextView textClientesBeneficiados;
+        private final MaterialSwitch switchActivo;
         private final MaterialButton btnEditar;
         private final MaterialButton btnEliminar;
-        private final MaterialButton btnToggleActive;
-        private final MaterialButton btnDetalles;
-        private final MaterialButton btnDuplicar;
         
-        public BeneficioViewHolder(@NonNull View itemView) {
+        public BeneficioViewHolder(MaterialCardView cardView, @NonNull View itemView) {
             super(itemView);
-            
-            cardView = itemView.findViewById(R.id.cardBeneficio);
+            this.cardView = cardView;
             textNombre = itemView.findViewById(R.id.textNombre);
             textDescripcion = itemView.findViewById(R.id.textDescripcion);
-            textTipo = itemView.findViewById(R.id.textTipo);
-            textValor = itemView.findViewById(R.id.textValor);
+            chipTipo = itemView.findViewById(R.id.chipTipo);
             textVigencia = itemView.findViewById(R.id.textVigencia);
-            textSucursales = itemView.findViewById(R.id.textSucursales);
-            chipEstado = itemView.findViewById(R.id.chipEstado);
-            iconTipo = itemView.findViewById(R.id.iconTipo);
+            textUsos = itemView.findViewById(R.id.textContadorBeneficios); // Cambiado de textUsos
+            textClientesBeneficiados = itemView.findViewById(R.id.textClientesBeneficiados);
+            switchActivo = itemView.findViewById(R.id.switchActivo);
             btnEditar = itemView.findViewById(R.id.btnEditar);
             btnEliminar = itemView.findViewById(R.id.btnEliminar);
-            btnToggleActive = itemView.findViewById(R.id.btnToggleActive);
-            btnDetalles = itemView.findViewById(R.id.btnDetalles);
-            btnDuplicar = itemView.findViewById(R.id.btnDuplicar);
         }
         
         public void bind(Beneficio beneficio) {
@@ -114,49 +104,38 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             textDescripcion.setText(beneficio.getDescripcion() != null ? 
                 beneficio.getDescripcion() : "Sin descripción");
             
-            // Tipo y valor
-            setupTipoAndValue(beneficio, context);
+            // Tipo
+            setupTipo(beneficio);
             
             // Vigencia
             setupVigencia(beneficio);
             
-            // Sucursales
-            setupSucursales(beneficio);
-            
-            // Estado
-            setupEstado(beneficio, context);
+            // Estado activo/inactivo
+            setupEstadoSwitch(beneficio);
             
             // Configurar botones
             setupButtons(beneficio);
             
-            // Configurar card según estado
-            setupCardAppearance(beneficio, context);
+            // Estadísticas
+            setupEstadisticas(beneficio);
         }
         
-        private void setupTipoAndValue(Beneficio beneficio, Context context) {
+        private void setupTipo(Beneficio beneficio) {
             String tipoText = getTipoDisplayName(beneficio.getTipo());
-            textTipo.setText(tipoText);
-            
-            // Configurar icono según tipo
-            int iconRes = getTipoIcon(beneficio.getTipo());
-            iconTipo.setImageResource(iconRes);
-            
-            // Configurar valor según tipo
-            String valorText = getValorDisplayText(beneficio);
-            textValor.setText(valorText);
+            chipTipo.setText(tipoText);
         }
         
         private void setupVigencia(Beneficio beneficio) {
-            if (beneficio.getFechaInicio() != null && beneficio.getFechaFin() != null) {
+            if (beneficio.getFechaCreacion() != null && beneficio.getFechaCreacion() != null) {
                 String vigenciaText = String.format("Vigencia: %s - %s",
-                    dateFormat.format(beneficio.getFechaInicio()),
-                    dateFormat.format(beneficio.getFechaFin()));
+                    dateFormat.format(beneficio.getFechaInicioVigencia()),
+                    dateFormat.format(beneficio.getFechaFinVigencia()));
                 textVigencia.setText(vigenciaText);
                 textVigencia.setVisibility(View.VISIBLE);
                 
                 // Verificar si está vigente
                 Date now = new Date();
-                if (now.before(beneficio.getFechaInicio()) || now.after(beneficio.getFechaFin())) {
+                if (now.before(beneficio.getFechaCreacion()) || now.after(beneficio.getFechaFinVigencia())) {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_error));
                 } else {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_success));
@@ -168,96 +147,43 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             }
         }
         
-        private void setupSucursales(Beneficio beneficio) {
-            if (beneficio.getSucursalesAplicables() != null && !beneficio.getSucursalesAplicables().isEmpty()) {
-                if (beneficio.getSucursalesAplicables().size() == 1) {
-                    textSucursales.setText("Sucursal: " + beneficio.getSucursalesAplicables().get(0));
-                } else {
-                    textSucursales.setText(String.format("Sucursales: %d aplicables", 
-                        beneficio.getSucursalesAplicables().size()));
+        private void setupEstadoSwitch(Beneficio beneficio) {
+            switchActivo.setChecked(beneficio.isActivo());
+            switchActivo.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (listener != null) {
+                    listener.onToggleActiveBeneficio(beneficio);
                 }
-                textSucursales.setVisibility(View.VISIBLE);
-            } else {
-                textSucursales.setText("Todas las sucursales");
-                textSucursales.setVisibility(View.VISIBLE);
-            }
+            });
         }
         
-        private void setupEstado(Beneficio beneficio, Context context) {
-            if (beneficio.isActivo()) {
-                chipEstado.setText("Activo");
-                chipEstado.setChipBackgroundColorResource(R.color.color_success);
-                chipEstado.setTextColor(ContextCompat.getColor(context, android.R.color.white));
-            } else {
-                chipEstado.setText("Inactivo");
-                chipEstado.setChipBackgroundColorResource(R.color.color_error);
-                chipEstado.setTextColor(ContextCompat.getColor(context, android.R.color.white));
-            }
+        private void setupEstadisticas(Beneficio beneficio) {
+            // Mostrar estadísticas de uso
+            int usos = beneficio.getCantidadUsosActuales();
+            textUsos.setText(String.format("Usos: %d", usos));
+            
+            // Mostrar clientes beneficiados si está disponible
+            int clientesBeneficiados = beneficio.getVecesCanjeado();
+            textClientesBeneficiados.setText(String.format("Clientes: %d", clientesBeneficiados));
+            textClientesBeneficiados.setVisibility(View.VISIBLE);
         }
         
         private void setupButtons(Beneficio beneficio) {
             btnEditar.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onEditBeneficio(beneficio);
+                    listener.onEditarBeneficio(beneficio);
                 }
             });
             
             btnEliminar.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onDeleteBeneficio(beneficio);
+                    listener.onEliminarBeneficio(beneficio);
                 }
             });
-            
-            btnToggleActive.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onToggleActiveBeneficio(beneficio);
-                }
-            });
-            
-            btnDetalles.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onViewBeneficioDetails(beneficio);
-                }
-            });
-            
-            btnDuplicar.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onDuplicateBeneficio(beneficio);
-                }
-            });
-            
-            // Configurar texto del botón toggle
-            btnToggleActive.setText(beneficio.isActivo() ? "Desactivar" : "Activar");
-            btnToggleActive.setIconResource(beneficio.isActivo() ? 
-                R.drawable.ic_visibility_off : R.drawable.ic_visibility);
         }
         
-        private void setupCardAppearance(Beneficio beneficio, Context context) {
-            if (!beneficio.isActivo()) {
-                // Beneficio inactivo - apariencia atenuada
-                cardView.setAlpha(0.7f);
-                cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_surface_variant));
-            } else {
-                // Beneficio activo - apariencia normal
-                cardView.setAlpha(1.0f);
-                cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.color_surface));
-            }
-            
-            // Verificar si está vigente
-            if (beneficio.getFechaInicio() != null && beneficio.getFechaFin() != null) {
-                Date now = new Date();
-                if (now.before(beneficio.getFechaInicio()) || now.after(beneficio.getFechaFin())) {
-                    // No vigente - borde rojo
-                    cardView.setStrokeColor(ContextCompat.getColor(context, R.color.color_error));
-                    cardView.setStrokeWidth(2);
-                } else {
-                    // Vigente - sin borde especial
-                    cardView.setStrokeWidth(0);
-                }
-            }
-        }
+
         
-        private String getTipoDisplayName(Beneficio.TipoBeneficio tipo) {
+        private String getTipoDisplayName(com.example.cafefidelidaqrdemo.model.Beneficio.TipoBeneficio tipo) {
             switch (tipo) {
                 case DESCUENTO_PORCENTAJE:
                     return "Descuento %";
@@ -265,41 +191,13 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
                     return "Descuento Fijo";
                 case DOS_POR_UNO:
                     return "2x1";
-                case PRODUCTO_GRATIS:
-                    return "Producto Gratis";
+                case PREMIO:
+                    return "Premio Especial";
                 default:
                     return "Desconocido";
             }
         }
         
-        private int getTipoIcon(Beneficio.TipoBeneficio tipo) {
-            switch (tipo) {
-                case DESCUENTO_PORCENTAJE:
-                    return R.drawable.ic_percent;
-                case DESCUENTO_MONTO:
-                    return R.drawable.ic_money_off;
-                case DOS_POR_UNO:
-                    return R.drawable.ic_looks_two;
-                case PRODUCTO_GRATIS:
-                    return R.drawable.ic_card_giftcard;
-                default:
-                    return R.drawable.ic_help;
-            }
-        }
-        
-        private String getValorDisplayText(Beneficio beneficio) {
-            switch (beneficio.getTipo()) {
-                case DESCUENTO_PORCENTAJE:
-                    return String.format("%.0f%%", beneficio.getValor());
-                case DESCUENTO_MONTO:
-                    return String.format("$%.2f", beneficio.getValor());
-                case DOS_POR_UNO:
-                    return "2x1";
-                case PRODUCTO_GRATIS:
-                    return "Gratis";
-                default:
-                    return String.valueOf(beneficio.getValor());
-            }
-        }
+
     }
 }

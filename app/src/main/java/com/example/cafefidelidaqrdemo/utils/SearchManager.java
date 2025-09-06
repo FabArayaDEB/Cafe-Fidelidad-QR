@@ -168,10 +168,10 @@ public class SearchManager {
             // Calcular distancia si hay ubicación del usuario
             Double distance = null;
             if (userLocation != null && 
-                LocationUtils.isValidCoordinates(sucursal.getLatitud(), sucursal.getLongitud())) {
+                LocationUtils.isValidCoordinates(sucursal.getLat(), sucursal.getLon())) {
                 distance = LocationUtils.calculateDistance(
                     userLocation.getLatitude(), userLocation.getLongitude(),
-                    sucursal.getLatitud(), sucursal.getLongitud());
+                    sucursal.getLat(), sucursal.getLon());
                 
                 // Filtro por distancia máxima
                 if (maxDistanceKm != null && distance > maxDistanceKm) {
@@ -211,9 +211,7 @@ public class SearchManager {
     private boolean matchesSearchQuery(SucursalEntity sucursal, String normalizedQuery) {
         String sucursalText = normalizeText(
             sucursal.getNombre() + " " + 
-            sucursal.getDireccion() + " " + 
-            sucursal.getCiudad() + " " + 
-            sucursal.getZona());
+            sucursal.getDireccion());
         
         return sucursalText.contains(normalizedQuery);
     }
@@ -315,8 +313,6 @@ public class SearchManager {
         int score = 0;
         String normalizedName = normalizeText(sucursal.getNombre());
         String normalizedAddress = normalizeText(sucursal.getDireccion());
-        String normalizedCity = normalizeText(sucursal.getCiudad());
-        String normalizedZone = normalizeText(sucursal.getZona());
         
         // Coincidencia exacta en nombre (mayor score)
         if (normalizedName.equals(query)) {
@@ -330,16 +326,6 @@ public class SearchManager {
         // Coincidencia en dirección
         if (normalizedAddress.contains(query)) {
             score += 20;
-        }
-        
-        // Coincidencia en ciudad
-        if (normalizedCity.contains(query)) {
-            score += 15;
-        }
-        
-        // Coincidencia en zona
-        if (normalizedZone.contains(query)) {
-            score += 10;
         }
         
         // Bonus por estar activa

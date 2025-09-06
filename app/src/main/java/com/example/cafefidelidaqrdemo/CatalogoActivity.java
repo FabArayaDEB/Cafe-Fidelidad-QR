@@ -149,7 +149,7 @@ public class CatalogoActivity extends AppCompatActivity {
                 
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     Producto producto = dataSnapshot.getValue(Producto.class);
-                    if (producto != null && producto.isDisponible()) {
+                    if (producto != null && producto.isActivo()) {
                         listaProductos.add(producto);
                     }
                 }

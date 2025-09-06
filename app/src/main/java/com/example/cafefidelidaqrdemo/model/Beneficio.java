@@ -49,6 +49,12 @@ public class Beneficio {
     @SerializedName("fechaModificacion")
     private Date fechaModificacion;
 
+    @SerializedName("cantidadUsosActuales")
+    private int cantidadUsosActuales;
+
+    @SerializedName("vecesCanjeado")
+    private int vecesCanjeado;
+
     // Enum para tipos de beneficio
     public enum TipoBeneficio {
         DESCUENTO_PORCENTAJE("descuento_porcentaje"),
@@ -177,6 +183,22 @@ public class Beneficio {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public int getCantidadUsosActuales() {
+        return cantidadUsosActuales;
+    }
+
+    public void setCantidadUsosActuales(int cantidadUsosActuales) {
+        this.cantidadUsosActuales = cantidadUsosActuales;
+    }
+
+    public int getVecesCanjeado() {
+        return vecesCanjeado;
+    }
+
+    public void setVecesCanjeado(int vecesCanjeado) {
+        this.vecesCanjeado = vecesCanjeado;
     }
 
     public Date getFechaCreacion() {

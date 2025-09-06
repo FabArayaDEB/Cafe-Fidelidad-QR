@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add_sucursal"
+        android:icon="@drawable/ic_add"
+        android:title="Agregar Sucursal"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search"
+        android:title="Buscar"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_filter"
+        android:icon="@drawable/ic_filter"
+        android:title="Filtrar"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_export"
+        android:icon="@drawable/ic_export"
+        android:title="Exportar"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_refresh"
+        android:title="Actualizar"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_toggle_filter"
+        android:icon="@drawable/ic_filter"
+        android:title="Filtrar Activas"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_view_map"
+        android:icon="@drawable/ic_map"
+        android:title="Vista Mapa"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sync"
+        android:icon="@drawable/ic_sync"
+        android:title="Sincronizar"
+        app:showAsAction="never" />
+
+</menu>

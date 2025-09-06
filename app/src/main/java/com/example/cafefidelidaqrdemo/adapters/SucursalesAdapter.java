@@ -19,6 +19,7 @@ import com.google.android.material.chip.Chip;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalItem, SucursalesAdapter.SucursalViewHolder> {
     
@@ -75,10 +76,10 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     }
     
     // Método para actualizar lista sin distancias
-    public void submitList(List<SucursalEntity> sucursales) {
+    public void submitList(List<SucursalItem> sucursales) {
         List<SucursalItem> items = sucursales.stream()
             .map(sucursal -> new SucursalItem(sucursal, null))
-            .collect(java.util.stream.Collectors.toList());
+            .collect(Collectors.toList());
         submitList(items);
     }
     
@@ -153,12 +154,12 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             if ("activo".equalsIgnoreCase(estado)) {
                 chipEstado.setText("Activa");
                 chipEstado.setChipBackgroundColorResource(R.color.success_light);
-                chipEstado.setTextColor(itemView.getContext().getColor(R.color.success_dark));
+                chipEstado.setTextColor(itemView.getContext().getColor(R.color.success_green));
                 chipEstado.setVisibility(View.VISIBLE);
             } else {
                 chipEstado.setText("Inactiva");
                 chipEstado.setChipBackgroundColorResource(R.color.error_light);
-                chipEstado.setTextColor(itemView.getContext().getColor(R.color.error_dark));
+                chipEstado.setTextColor(itemView.getContext().getColor(R.color.error_red));
                 chipEstado.setVisibility(View.VISIBLE);
             }
         }
@@ -179,9 +180,9 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
                 
                 // Cambiar color según distancia
                 if (distancia <= 0.5) {
-                    textViewDistancia.setTextColor(itemView.getContext().getColor(R.color.success_dark));
+                    textViewDistancia.setTextColor(itemView.getContext().getColor(R.color.success_green));
                 } else if (distancia <= 2.0) {
-                    textViewDistancia.setTextColor(itemView.getContext().getColor(R.color.warning_dark));
+                    textViewDistancia.setTextColor(itemView.getContext().getColor(R.color.warm_orange));
                 } else {
                     textViewDistancia.setTextColor(itemView.getContext().getColor(R.color.on_surface_variant));
                 }
@@ -194,10 +195,10 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
         private void configurarIcono(SucursalEntity sucursal) {
             // Configurar icono según el estado de la sucursal
             if ("activo".equalsIgnoreCase(sucursal.getEstado())) {
-                imageViewIcon.setImageResource(R.drawable.ic_store_active);
+                imageViewIcon.setImageResource(R.drawable.ic_store);
                 imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.primary));
             } else {
-                imageViewIcon.setImageResource(R.drawable.ic_store_inactive);
+                imageViewIcon.setImageResource(R.drawable.ic_store_empty);
                 imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.on_surface_variant));
             }
         }
@@ -213,7 +214,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
                 cardView.setCardElevation(2f);
                 cardView.setAlpha(0.7f);
                 cardView.setStrokeWidth(1);
-                cardView.setStrokeColor(itemView.getContext().getColor(R.color.outline_variant));
+                cardView.setStrokeColor(itemView.getContext().getColor(R.color.color_outline_variant));
             }
         }
         
@@ -258,8 +259,8 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
                     oldSucursal.getDireccion().equals(newSucursal.getDireccion()) &&
                     oldSucursal.getHorario().equals(newSucursal.getHorario()) &&
                     oldSucursal.getEstado().equals(newSucursal.getEstado()) &&
-                    Double.compare(oldSucursal.getLatitud(), newSucursal.getLatitud()) == 0 &&
-                    Double.compare(oldSucursal.getLongitud(), newSucursal.getLongitud()) == 0;
+                    Double.compare(oldSucursal.getLat(), newSucursal.getLat()) == 0 &&
+                    Double.compare(oldSucursal.getLon(), newSucursal.getLon()) == 0;
                 
                 boolean distanciaSame = (oldItem.getDistancia() == null && newItem.getDistancia() == null) ||
                     (oldItem.getDistancia() != null && newItem.getDistancia() != null &&

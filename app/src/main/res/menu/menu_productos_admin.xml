@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_toggle_filter"
+        android:title="Filtros"
+        android:icon="@drawable/ic_filter_list"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_search"
+        android:title="Buscar"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_add_product"
+        android:title="Agregar Producto"
+        android:icon="@drawable/ic_add"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_export"
+        android:title="Exportar"
+        android:icon="@drawable/ic_file_download"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import"
+        android:title="Importar"
+        android:icon="@drawable/ic_file_upload"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sync"
+        android:title="Sincronizar"
+        android:icon="@drawable/ic_sync"
+        app:showAsAction="never" />
+
+</menu>

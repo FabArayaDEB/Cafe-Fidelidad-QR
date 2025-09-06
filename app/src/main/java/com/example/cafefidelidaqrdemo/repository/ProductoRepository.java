@@ -6,7 +6,7 @@ import com.example.cafefidelidaqrdemo.database.dao.ProductoDao;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
-import com.example.cafefidelidaqrdemo.sync.SyncManager;
+
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import com.example.cafefidelidaqrdemo.utils.SearchManager;
 
@@ -22,7 +22,6 @@ import retrofit2.Response;
 public class ProductoRepository {
     private final ProductoDao productoDao;
     private final ApiService apiService;
-    private final SyncManager syncManager;
     private final SearchManager searchManager;
     private final Executor executor;
     
@@ -30,10 +29,9 @@ public class ProductoRepository {
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isOffline = new MutableLiveData<>(false);
     
-    public ProductoRepository(ProductoDao productoDao, ApiService apiService, SyncManager syncManager) {
+    public ProductoRepository(ProductoDao productoDao, ApiService apiService) {
         this.productoDao = productoDao;
         this.apiService = apiService;
-        this.syncManager = syncManager;
         this.searchManager = new SearchManager();
         this.executor = Executors.newFixedThreadPool(2);
     }
@@ -122,7 +120,7 @@ public class ProductoRepository {
     }
     
     private void fetchProductoFromApi(Long idProducto, ProductoCallback callback) {
-        apiService.getProductoById(idProducto).enqueue(new Callback<Producto>() {
+        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<Producto>() {
             @Override
             public void onResponse(Call<Producto> call, Response<Producto> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -186,7 +184,8 @@ public class ProductoRepository {
     }
     
     public void forceSyncProductos() {
-        syncManager.syncProductos();
+        // SyncManager solo tiene métodos estáticos, no necesita instancia
+        // Se puede implementar sincronización específica aquí si es necesario
     }
     
     public void clearError() {
@@ -196,7 +195,7 @@ public class ProductoRepository {
     // Métodos de conversión
     private ProductoEntity convertToEntity(Producto producto) {
         ProductoEntity entity = new ProductoEntity();
-        entity.setIdProducto(producto.getIdProducto());
+        entity.setId_producto(producto.getId());
         entity.setNombre(producto.getNombre());
         entity.setCategoria(producto.getCategoria());
         entity.setPrecio(producto.getPrecio());
@@ -206,7 +205,7 @@ public class ProductoRepository {
     
     private Producto convertToModel(ProductoEntity entity) {
         Producto producto = new Producto();
-        producto.setIdProducto(entity.getIdProducto());
+        producto.setId(entity.getId_producto());
         producto.setNombre(entity.getNombre());
         producto.setCategoria(entity.getCategoria());
         producto.setPrecio(entity.getPrecio());

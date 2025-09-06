@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header del producto -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_nombre_producto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre del Producto"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary" />
+
+                <TextView
+                    android:id="@+id/tv_categoria_producto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Categoría"
+                    android:textSize="14sp"
+                    android:textColor="@color/color_on_surface_variant"
+                    android:layout_marginTop="2dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_estado_producto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Disponible"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:padding="6dp"
+                android:background="@color/color_success_container"
+                android:textColor="@color/color_success"
+                android:layout_marginEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/tv_descripcion_producto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descripción del producto"
+            android:textSize="14sp"
+            android:textColor="@color/color_on_surface"
+            android:layout_marginTop="8dp"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Información de precio y puntos -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_precio_producto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="$0.00"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/color_primary" />
+
+            <TextView
+                android:id="@+id/tv_puntos_producto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 pts"
+                android:textSize="14sp"
+                android:textColor="@color/color_secondary"
+                android:layout_marginEnd="16dp" />
+
+            <!-- Botones de acción -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_toggle_activo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_play"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Toggle activo"
+                    android:layout_marginEnd="4dp" />
+
+                <ImageButton
+                    android:id="@+id/btn_toggle_disponibilidad"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_pause"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Toggle disponibilidad"
+                    android:layout_marginEnd="4dp" />
+
+                <ImageButton
+                    android:id="@+id/btn_editar_producto"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Editar producto"
+                    android:layout_marginEnd="4dp" />
+
+                <ImageButton
+                    android:id="@+id/btn_eliminar_producto"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_delete"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Eliminar producto" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

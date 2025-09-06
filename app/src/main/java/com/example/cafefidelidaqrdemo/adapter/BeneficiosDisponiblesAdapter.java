@@ -201,15 +201,15 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
         private int getTipoIcon(Beneficio.TipoBeneficio tipo) {
             switch (tipo) {
                 case DESCUENTO_PORCENTAJE:
-                    return R.drawable.ic_percent;
+                    return R.drawable.ic_discount;
                 case DESCUENTO_MONTO:
-                    return R.drawable.ic_money_off;
+                    return R.drawable.ic_discount;
                 case DOS_POR_UNO:
-                    return R.drawable.ic_looks_two;
+                    return R.drawable.ic_redeem;
                 case PRODUCTO_GRATIS:
-                    return R.drawable.ic_card_giftcard;
+                    return R.drawable.ic_redeem;
                 default:
-                    return R.drawable.ic_card_giftcard;
+                    return R.drawable.ic_redeem;
             }
         }
         

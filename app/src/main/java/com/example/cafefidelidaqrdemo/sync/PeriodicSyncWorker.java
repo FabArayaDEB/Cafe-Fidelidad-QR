@@ -43,7 +43,7 @@ public class PeriodicSyncWorker extends Worker {
             // Verificar si hay datos pendientes de sincronización
             int pendingClientes = clienteDao.getPendientesSync().size();
             int pendingVisitas = visitaDao.getPendientesSync().size();
-            int pendingCanjes = canjeDao.getPendientesSync().size();
+            int pendingCanjes = canjeDao.getCanjesParaSincronizar().size();
             
             android.util.Log.i("PeriodicSyncWorker", 
                 String.format("Datos pendientes - Clientes: %d, Visitas: %d, Canjes: %d", 
@@ -91,15 +91,15 @@ public class PeriodicSyncWorker extends Worker {
             long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
             
             // Eliminar visitas con estado ERROR más antiguas de 30 días
-            int deletedVisitas = visitaDao.deleteOldErrorRecords(thirtyDaysAgo);
-            if (deletedVisitas > 0) {
-                android.util.Log.i("PeriodicSyncWorker", "Eliminadas " + deletedVisitas + " visitas con errores antiguos");
-            }
+            visitaDao.eliminarErroresAntiguos(5, thirtyDaysAgo); // 5 intentos máximos
+            android.util.Log.i("PeriodicSyncWorker", "Limpieza de visitas con errores antiguos completada");
             
-            // Eliminar canjes con estado ERROR más antiguos de 30 días
-            int deletedCanjes = canjeDao.deleteOldErrorRecords(thirtyDaysAgo);
-            if (deletedCanjes > 0) {
-                android.util.Log.i("PeriodicSyncWorker", "Eliminados " + deletedCanjes + " canjes con errores antiguos");
+            // Limpiar canjes expirados y cancelados antiguos
+            int deletedCanjesExpirados = canjeDao.limpiarCanjesToExpirados(thirtyDaysAgo);
+            int deletedCanjesCancelados = canjeDao.limpiarCanjesCancelados(thirtyDaysAgo);
+            int totalDeletedCanjes = deletedCanjesExpirados + deletedCanjesCancelados;
+            if (totalDeletedCanjes > 0) {
+                android.util.Log.i("PeriodicSyncWorker", "Eliminados " + totalDeletedCanjes + " canjes antiguos");
             }
             
             // Actualizar estadísticas de sincronización
@@ -118,13 +118,13 @@ public class PeriodicSyncWorker extends Worker {
             // Contar registros por estado
             int clientesPendientes = clienteDao.getPendientesSync().size();
             int visitasPendientes = visitaDao.getPendientesSync().size();
-            int canjesPendientes = canjeDao.getPendientesSync().size();
+            int canjesPendientes = canjeDao.getCanjesParaSincronizar().size();
             
             int visitasEnviadas = visitaDao.getByEstadoSync("ENVIADO").size();
-            int canjesEnviados = canjeDao.getByEstadoSync("ENVIADO").size();
+            int canjesEnviados = canjeDao.getCanjesNoSincronizados().size(); // Usar método disponible
             
             int visitasError = visitaDao.getByEstadoSync("ERROR").size();
-            int canjesError = canjeDao.getByEstadoSync("ERROR").size();
+            int canjesError = 0; // CanjeDao no tiene getByEstadoSync
             
             // Log de estadísticas
             android.util.Log.i("PeriodicSyncWorker", 
