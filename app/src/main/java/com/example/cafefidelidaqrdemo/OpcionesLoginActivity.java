@@ -119,10 +119,32 @@ public class OpcionesLoginActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
-                            // Usuario ya existe, ir a MainActivity
-                            progressDialog.dismiss();
-                            startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
-                            finish();
+                            // Usuario ya existe, sincronizar con SQLite local
+                            HashMap<String, Object> existingUserData = new HashMap<>();
+                            for (DataSnapshot child : snapshot.getChildren()) {
+                                existingUserData.put(child.getKey(), child.getValue());
+                            }
+                            
+                            OfflineManager offlineManager = OfflineManager.getInstance(OpcionesLoginActivity.this);
+                            offlineManager.saveUserToLocal(existingUserData, new OfflineManager.SaveUserCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    runOnUiThread(() -> {
+                                        progressDialog.dismiss();
+                                        startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
+                                        finish();
+                                    });
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    runOnUiThread(() -> {
+                                        progressDialog.dismiss();
+                                        startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
+                                        finish();
+                                    });
+                                }
+                            });
                         } else {
                             // Usuario nuevo, crear datos por defecto
                             createUserDataForGoogleSignIn(user);
@@ -167,12 +189,33 @@ public class OpcionesLoginActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        progressDialog.dismiss();
-                        Toast.makeText(OpcionesLoginActivity.this, 
-                            "¡Bienvenido! Has recibido " + Contantes.PUNTOS_BIENVENIDA + " puntos de bienvenida", 
-                            Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
-                        finish();
+                        // Guardar también en SQLite local usando OfflineManager
+                        OfflineManager offlineManager = OfflineManager.getInstance(OpcionesLoginActivity.this);
+                        offlineManager.saveUserToLocal(userData, new OfflineManager.SaveUserCallback() {
+                            @Override
+                            public void onSuccess() {
+                                runOnUiThread(() -> {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(OpcionesLoginActivity.this, 
+                                        "¡Bienvenido! Has recibido " + Contantes.PUNTOS_BIENVENIDA + " puntos de bienvenida", 
+                                        Toast.LENGTH_LONG).show();
+                                    startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
+                                    finish();
+                                });
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                runOnUiThread(() -> {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(OpcionesLoginActivity.this, 
+                                        "Usuario registrado pero error al guardar localmente: " + error, 
+                                        Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(OpcionesLoginActivity.this, MainActivity.class));
+                                    finish();
+                                });
+                            }
+                        });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
