@@ -41,6 +41,16 @@ public class TableroRepository {
         this.executor = Executors.newFixedThreadPool(2);
     }
     
+    // Constructor alternativo para uso desde ViewModels
+    public TableroRepository(Context context) {
+        this.context = context;
+        // Obtener TableroDao desde la base de datos
+        // this.tableroDao = CafeFidelidadDatabase.getInstance(context).tableroDao();
+        this.tableroDao = null; // Temporal hasta que se implemente la base de datos
+        this.apiService = ApiClient.getApiService();
+        this.executor = Executors.newFixedThreadPool(2);
+    }
+    
     // ==================== GETTERS PARA LIVEDATA ====================
     
     public LiveData<Boolean> getIsLoading() { return isLoading; }

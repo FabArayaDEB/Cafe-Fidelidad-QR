@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -99,16 +99,17 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         }
         
         textValor.setText(String.valueOf(beneficio.getValor()));
-        textVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas()));
+        // textVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas())); // Método no existe
+        textVisitasRequeridas.setText("N/A"); // Simulación temporal
         
-        if (beneficio.getFechaInicioVigencia() != null) {
-            textFechaInicio.setText(dateFormat.format(beneficio.getFechaInicioVigencia()));
+        if (beneficio.getFechaInicio() != null) {
+            textFechaInicio.setText(dateFormat.format(beneficio.getFechaInicio()));
         } else {
             textFechaInicio.setText("No especificada");
         }
         
-        if (beneficio.getFechaFinVigencia() != null) {
-            textFechaFin.setText(dateFormat.format(beneficio.getFechaFinVigencia()));
+        if (beneficio.getFechaFin() != null) {
+            textFechaFin.setText(dateFormat.format(beneficio.getFechaFin()));
         } else {
             textFechaFin.setText("No especificada");
         }

@@ -48,10 +48,11 @@ public class SucursalesViewModel extends AndroidViewModel {
         super(application);
         // Obtener instancias necesarias para el repositorio
         SucursalDao sucursalDao = CafeFidelidadDatabase.getInstance(application).sucursalDao();
-        ApiService apiService = ApiClient.getInstance().getApiService();
-        SyncManager syncManager = SyncManager.getInstance(application);
+        ApiService apiService = ApiClient.getApiService();
+        // TODO: Implementar método getInstance(Application) en SyncManager
+        // SyncManager syncManager = SyncManager.getInstance(application);
         
-        this.repository = new SucursalRepository(sucursalDao, apiService, syncManager, application);
+        this.repository = new SucursalRepository(sucursalDao, apiService, null, application);
         this.executor = Executors.newFixedThreadPool(3);
         
         // Observar datos del repositorio

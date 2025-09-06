@@ -118,7 +118,7 @@ public class SucursalRepository {
     
     public void getSucursalById(Long idSucursal, SucursalCallback callback) {
         executor.execute(() -> {
-            SucursalEntity entity = sucursalDao.getSucursalById(String.valueOf(idSucursal));
+            SucursalEntity entity = sucursalDao.getById(String.valueOf(idSucursal));
             if (entity != null) {
                 callback.onSuccess(convertToModel(entity));
             } else {

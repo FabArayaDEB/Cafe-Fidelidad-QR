@@ -17,7 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.example.cafefidelidaqrdemo.model.Beneficio.TipoBeneficio;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
@@ -131,7 +131,7 @@ public class BeneficioDialogFragment extends DialogFragment {
         }
         
         editValor.setText(String.valueOf(beneficio.getValor()));
-        editVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas()));
+        // editVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas())); // Método no existe
         
         if (beneficio.getFechaInicioVigencia() != null) {
             editFechaInicio.setText(dateFormat.format(beneficio.getFechaInicioVigencia()));
@@ -177,7 +177,7 @@ public class BeneficioDialogFragment extends DialogFragment {
         beneficio.setDescripcion(editDescripcion.getText().toString().trim());
         beneficio.setTipo((TipoBeneficio) spinnerTipo.getSelectedItem());
         beneficio.setValor(Double.parseDouble(editValor.getText().toString()));
-        beneficio.setVisitasRequeridas(Integer.parseInt(editVisitasRequeridas.getText().toString()));
+        // beneficio.setVisitasRequeridas(Integer.parseInt(editVisitasRequeridas.getText().toString())); // Método no existe
         beneficio.setActivo(switchActivo.isChecked());
         
         // Set dates if provided

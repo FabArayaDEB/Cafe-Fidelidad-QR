@@ -8,7 +8,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
 import com.example.cafefidelidaqrdemo.repository.VisitaRepository;
 import com.google.gson.Gson;
@@ -114,7 +114,8 @@ public class ProgresoViewModel extends AndroidViewModel {
     private void loadLocalData() {
         try {
             // Obtener total de visitas locales
-            totalVisitasLocal = visitaRepository.getTotalVisitasSync();
+            // TODO: Implementar método para obtener conteo total de visitas
+            totalVisitasLocal = 0; // Placeholder hasta implementar método correcto
             
             // Calcular progreso con datos locales
             calculateProgreso(totalVisitasLocal, true);
@@ -159,7 +160,10 @@ public class ProgresoViewModel extends AndroidViewModel {
     private void calculateProgreso(int totalVisitas, boolean isLocal) {
         try {
             // Obtener beneficios vigentes
-            List<Beneficio> beneficiosVigentes = beneficioRepository.getBeneficiosVigentesSync();
+            // TODO: Convertir BeneficioEntity a Beneficio model
+            // List<BeneficioEntity> beneficiosVigentes = beneficioDao.getBeneficiosVigentesSync(System.currentTimeMillis());
+            // Por ahora usar lista vacía
+            List<Beneficio> beneficiosVigentes = new ArrayList<>();
             
             if (beneficiosVigentes.isEmpty()) {
                 hasDataLiveData.postValue(false);

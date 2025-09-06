@@ -20,6 +20,9 @@ public interface SucursalDao {
     void insert(SucursalEntity sucursal);
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insertSucursal(SucursalEntity sucursal);
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<SucursalEntity> sucursales);
     
     @Update
@@ -28,11 +31,14 @@ public interface SucursalDao {
     @Delete
     void delete(SucursalEntity sucursal);
     
+    @Delete
+    void deleteSucursal(SucursalEntity sucursal);
+    
     @Query("SELECT * FROM sucursales WHERE id_sucursal = :id")
     SucursalEntity getById(String id);
     
     @Query("SELECT * FROM sucursales WHERE id_sucursal = :id")
-    SucursalEntity getSucursalById(String id);
+    LiveData<SucursalEntity> getSucursalById(String id);
     
     @Query("SELECT * FROM sucursales")
     List<SucursalEntity> getAll();
@@ -96,4 +102,20 @@ public interface SucursalDao {
     
     @Query("SELECT * FROM sucursales WHERE estado = 'activa' ORDER BY nombre ASC")
     List<SucursalEntity> getActivasOrdenadas();
+    
+    @Query("SELECT * FROM sucursales WHERE nombre LIKE '%' || :nombre || '%'")
+    LiveData<List<SucursalEntity>> buscarSucursalesPorNombre(String nombre);
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE lat = :lat AND lon = :lon AND id_sucursal != :excludeId")
+    int existeSucursalEnUbicacion(double lat, double lon, String excludeId);
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE nombre = :nombre AND direccion = :direccion AND id_sucursal != :excludeId")
+    int existeSucursalEnCiudad(String nombre, String direccion, String excludeId);
+    
+    @Query("SELECT version FROM sucursales WHERE id_sucursal = :id")
+    int getVersionSucursal(String id);
+    
+    @Update
+    int updateSucursal(SucursalEntity sucursal);
+    
 }

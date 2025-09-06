@@ -8,6 +8,7 @@ import com.example.cafefidelidaqrdemo.database.dao.VisitaDao;
 import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import com.example.cafefidelidaqrdemo.models.Visita;
 import com.example.cafefidelidaqrdemo.network.ApiService;
+import retrofit2.Call;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -100,7 +101,8 @@ public class VisitaRepository {
                         Visita visitaModel = convertToModel(visita);
                         
                         // Enviar a servidor
-                        Visita resultado = apiService.createVisita(visitaModel);
+                        Call<Visita> call = apiService.createVisita(visitaModel);
+                        Visita resultado = call.execute().body();
                         
                         // Marcar como sincronizada
                         visitaDao.markAsSynced(visita.getId_visita(), System.currentTimeMillis());

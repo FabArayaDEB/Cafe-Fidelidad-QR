@@ -20,6 +20,8 @@ public class SucursalEntity {
     private double lon; // Longitud - ubicación geográfica
     private String horario; // Horarios de atención
     private String estado; // Activo/inactivo (si la sucursal está operativa)
+    private int version; // Control de versión para concurrencia
+    private long fechaModificacion; // Timestamp de última modificación
     
     // Campos adicionales para sincronización offline
     private long lastSync;
@@ -49,6 +51,11 @@ public class SucursalEntity {
     public String getId_sucursal() { return id_sucursal; }
     public void setId_sucursal(@NonNull String id_sucursal) { this.id_sucursal = id_sucursal; }
     
+    // Método adicional para compatibilidad con long ID
+    public void setId(long id) {
+        this.id_sucursal = String.valueOf(id);
+    }
+    
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     
@@ -61,6 +68,18 @@ public class SucursalEntity {
     public double getLon() { return lon; }
     public void setLon(double lon) { this.lon = lon; }
     
+    // Métodos de compatibilidad para getLatitud() y getLongitud()
+    public double getLatitud() { return lat; }
+    public void setLatitud(double latitud) { this.lat = latitud; }
+    
+    public double getLongitud() { return lon; }
+    public void setLongitud(double longitud) { this.lon = longitud; }
+    
+    // Métodos de compatibilidad para fechaCreacion y fechaModificacion
+    public long getFechaCreacion() { return fechaModificacion; }
+    public void setFechaCreacion(long fechaCreacion) { this.fechaModificacion = fechaCreacion; }
+    
+
     public String getHorario() { return horario; }
     public void setHorario(String horario) { this.horario = horario; }
     
@@ -75,6 +94,12 @@ public class SucursalEntity {
     
     public boolean isSynced() { return synced; }
     public void setSynced(boolean synced) { this.synced = synced; }
+    
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+    
+    public long getFechaModificacion() { return fechaModificacion; }
+    public void setFechaModificacion(long fechaModificacion) { this.fechaModificacion = fechaModificacion; }
     
     // Métodos de utilidad
     public boolean isActiva() {

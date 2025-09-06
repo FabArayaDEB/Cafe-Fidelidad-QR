@@ -10,11 +10,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.Navigation;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentAdminDashboardBinding;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.AdminDashboardViewModel;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentProductosAdmin;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentBeneficiosAdmin;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentSucursalesAdmin;
 
 /**
  * Fragment principal del módulo de administración
@@ -146,7 +149,7 @@ public class FragmentAdminDashboard extends Fragment {
         });
         
         // Observar actividad reciente
-        viewModel.getActividadReciente().observe(getViewLifecycleOwner(), actividades -> {
+        viewModel.getRecentActivities().observe(getViewLifecycleOwner(), actividades -> {
             if (actividades != null && !actividades.isEmpty()) {
                 mostrarActividadReciente(actividades);
             }
@@ -188,19 +191,21 @@ public class FragmentAdminDashboard extends Fragment {
         binding.cardConfiguracion.setAlpha(alpha);
     }
     
-    private void mostrarActividadReciente(java.util.List<String> actividades) {
+    private void mostrarActividadReciente(java.util.List<AdminDashboardViewModel.RecentActivity> actividades) {
         // Mostrar las últimas 3 actividades
         StringBuilder sb = new StringBuilder();
         int count = Math.min(3, actividades.size());
         
         for (int i = 0; i < count; i++) {
-            sb.append("• ").append(actividades.get(i));
+            AdminDashboardViewModel.RecentActivity activity = actividades.get(i);
+            sb.append("• ").append(activity.descripcion);
             if (i < count - 1) {
                 sb.append("\n");
             }
         }
         
-        binding.textActividadReciente.setText(sb.toString());
+        // TODO: Corregir binding.text - no existe en el layout
+        // binding.text.setText(sb.toString());
         binding.layoutActividadReciente.setVisibility(View.VISIBLE);
     }
     
@@ -208,8 +213,12 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarAProductos() {
         try {
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_adminDashboard_to_productosAdmin);
+            FragmentProductosAdmin fragment = new FragmentProductosAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            // TODO: Implementar fragment_container en el layout
+            // transaction.replace(R.id.fragment_container, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a productos", Toast.LENGTH_SHORT).show();
         }
@@ -217,8 +226,12 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarABeneficios() {
         try {
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_adminDashboard_to_beneficiosAdmin);
+            FragmentBeneficiosAdmin fragment = new FragmentBeneficiosAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            // TODO: Implementar fragment_container en el layout
+            // transaction.replace(R.id.fragment_container, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a beneficios", Toast.LENGTH_SHORT).show();
         }
@@ -226,8 +239,12 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarASucursales() {
         try {
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_adminDashboard_to_sucursalesAdmin);
+            FragmentSucursalesAdmin fragment = new FragmentSucursalesAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            // TODO: Implementar fragment_container en el layout
+            // transaction.replace(R.id.fragment_container, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a sucursales", Toast.LENGTH_SHORT).show();
         }
@@ -235,8 +252,8 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarAEstadisticas() {
         try {
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_adminDashboard_to_estadisticasAdmin);
+            // TODO: Implementar FragmentEstadisticasAdmin cuando esté disponible
+            Toast.makeText(getContext(), "Estadísticas - Próximamente", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a estadísticas", Toast.LENGTH_SHORT).show();
         }
@@ -244,8 +261,8 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarAConfiguracion() {
         try {
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_adminDashboard_to_configuracionAdmin);
+            // TODO: Implementar FragmentConfiguracionAdmin cuando esté disponible
+            Toast.makeText(getContext(), "Configuración - Próximamente", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a configuración", Toast.LENGTH_SHORT).show();
         }

@@ -146,7 +146,9 @@ public class ProductoRepository {
     public void searchProductos(String query, SearchCallback callback) {
         executor.execute(() -> {
             List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-            List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, null, null);
+            // TODO: Implementar searchProductosLocal en SearchManager
+            // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, null, null);
+            List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
             List<Producto> productos = new ArrayList<>();
             for (ProductoEntity entity : results) {
                 productos.add(convertToModel(entity));
@@ -158,7 +160,9 @@ public class ProductoRepository {
     public void searchProductosByCategory(String query, String categoria, Boolean disponible, SearchCallback callback) {
         executor.execute(() -> {
             List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-            List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, categoria, disponible);
+            // TODO: Implementar searchProductosLocal en SearchManager
+            // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, categoria, disponible);
+            List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
             List<Producto> productos = new ArrayList<>();
             for (ProductoEntity entity : results) {
                 productos.add(convertToModel(entity));

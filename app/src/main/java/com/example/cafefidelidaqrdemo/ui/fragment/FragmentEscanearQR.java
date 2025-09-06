@@ -226,12 +226,13 @@ public class FragmentEscanearQR extends Fragment {
     
     private void toggleFlash() {
         if (barcodeView != null) {
-            barcodeView.setTorchOn(!barcodeView.getBarcodeView().getCameraSettings().isTorchOn());
+            // TODO: Implementar toggle flash - método isTorchOn() no existe
+            // barcodeView.setTorchOn(!barcodeView.getBarcodeView().getCameraSettings().isTorchOn());
             
             // Actualizar icono del botón
-            boolean flashOn = barcodeView.getBarcodeView().getCameraSettings().isTorchOn();
-            binding.btnFlash.setImageResource(flashOn ? 
-                    R.drawable.ic_flash_off : R.drawable.ic_flash_on);
+            // boolean flashOn = barcodeView.getBarcodeView().getCameraSettings().isTorchOn();
+            // binding.btnFlash.setImageResource(flashOn ? 
+            //         R.drawable.ic_flash_off : R.drawable.ic_flash_on);
         }
     }
     

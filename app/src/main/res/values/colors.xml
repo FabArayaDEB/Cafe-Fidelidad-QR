@@ -18,7 +18,10 @@
     <color name="gold_accent">#FFD700</color>
     <color name="warm_orange">#FF8C00</color>
     <color name="success_green">#4CAF50</color>
+    <color name="success_light">#C8E6C9</color>
+    <color name="color_canje">#FF9800</color>
     <color name="error_red">#F44336</color>
+    <color name="error_light">#FFCDD2</color>
     
     <!-- Colores de fondo -->
     <color name="background_light">#FFF8DC</color>
@@ -78,4 +81,5 @@
     <color name="color_warning_container">#FFF3CD</color>
     <color name="color_on_warning">#FFFFFF</color>
     <color name="color_text_secondary">#757575</color>
+    <color name="color_tertiary">#CD853F</color>
 </resources>

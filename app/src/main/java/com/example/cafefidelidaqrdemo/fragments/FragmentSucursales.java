@@ -374,12 +374,12 @@ public class FragmentSucursales extends Fragment {
         
         for (SucursalEntity sucursal : sucursalesOriginales) {
             boolean pasaFiltroEstado = estadoSeleccionado.isEmpty() || 
-                sucursal.getEstado().equalsIgnoreCase(estadoSeleccionado);
+                (estadoSeleccionado.equalsIgnoreCase("activo") && sucursal.getEstado().equals("activo")) ||
+                (estadoSeleccionado.equalsIgnoreCase("inactivo") && !sucursal.getEstado().equals("activo"));
             
             boolean pasaFiltroBusqueda = queryBusqueda.isEmpty() || 
                 sucursal.getNombre().toLowerCase().contains(queryBusqueda.toLowerCase()) ||
-                sucursal.getDireccion().toLowerCase().contains(queryBusqueda.toLowerCase()) ||
-                sucursal.getCiudad().toLowerCase().contains(queryBusqueda.toLowerCase());
+                sucursal.getDireccion().toLowerCase().contains(queryBusqueda.toLowerCase());
             
             if (pasaFiltroEstado && pasaFiltroBusqueda) {
                 sucursalesFiltradas.add(sucursal);
@@ -402,7 +402,12 @@ public class FragmentSucursales extends Fragment {
         } else {
             // Ordenar por nombre
             sucursalesFiltradas.sort((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()));
-            adapter.submitList(sucursalesFiltradas);
+            // Convertir SucursalEntity a SucursalItem
+            List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
+            for (SucursalEntity entity : sucursalesFiltradas) {
+                items.add(new SucursalesAdapter.SucursalItem(entity, 0.0)); // Sin distancia
+            }
+            adapter.submitListWithDistance(items);
         }
         
         // Mostrar mensaje si no hay sucursales
@@ -486,8 +491,10 @@ public class FragmentSucursales extends Fragment {
         entity.setDireccion(sucursal.getDireccion());
         entity.setLat(sucursal.getLatitud());
         entity.setLon(sucursal.getLongitud());
-        entity.setHorario(sucursal.getHorario());
-        entity.setEstado(sucursal.getEstado());
+        // Combinar horarios de apertura y cierre
+        String horario = sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre();
+        entity.setHorario(horario);
+        entity.setEstado(sucursal.isActiva() ? "activo" : "inactivo");
         return entity;
     }
     

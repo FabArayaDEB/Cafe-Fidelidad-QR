@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentProductosAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogProductoBinding;
-import com.example.cafefidelidaqrdemo.data.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.ProductosAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.ProductosAdminViewModel;
 
@@ -264,10 +264,10 @@ public class FragmentProductosAdmin extends Fragment {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioProducto(dialogBinding)) {
                     ProductoEntity productoEditado = crearProductoDesdeFormulario(dialogBinding);
-                    productoEditado.setId(producto.getId());
+                    productoEditado.setId_producto(producto.getId_producto());
                     // Mantener campos del producto original
                     productoEditado.setVersion(producto.getVersion());
-                    productoEditado.setFechaCreacion(producto.getFechaCreacion());
+                    // productoEditado.setFechaCreacion(producto.getFechaCreacion()); // TODO: database.entities.ProductoEntity no tiene este método
                     viewModel.actualizarProducto(productoEditado);
                     dialog.dismiss();
                 }
@@ -381,7 +381,7 @@ public class FragmentProductosAdmin extends Fragment {
         producto.setActivo(dialogBinding.switchDisponible.isChecked());
         // Valores por defecto para campos no incluidos en el formulario
         producto.setStockDisponible(0); // Stock inicial
-        producto.setCreadoPor("admin"); // Usuario por defecto
+        // producto.setCreadoPor("admin"); // TODO: database.entities.ProductoEntity no tiene este método
         
         return producto;
     }
@@ -425,9 +425,9 @@ public class FragmentProductosAdmin extends Fragment {
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
                     if (producto.isActivo()) {
-                        viewModel.desactivarProducto(producto.getId(), "Desactivado por administrador");
+                        viewModel.desactivarProducto(Long.parseLong(producto.getId_producto()), "Desactivado por administrador");
                     } else {
-                        viewModel.activarProducto(producto.getId());
+                        viewModel.activarProducto(Long.parseLong(producto.getId_producto()));
                     }
                 })
                 .setNegativeButton("No", null)
@@ -439,7 +439,7 @@ public class FragmentProductosAdmin extends Fragment {
                 .setTitle("Eliminar Producto")
                 .setMessage(String.format("¿Está seguro que desea eliminar el producto '%s'?\n\nEsta acción no se puede deshacer.", producto.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarProducto(producto.getId());
+                    viewModel.eliminarProducto(Long.parseLong(producto.getId_producto()));
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
@@ -468,7 +468,7 @@ public class FragmentProductosAdmin extends Fragment {
         // Actualizar en el ViewModel
         viewModel.actualizarProducto(producto);
         
-        String mensaje = nuevaDisponibilidad ? "Producto marcado como disponible" : "Producto marcado como no disponible";
+        String mensaje = nuevoEstado ? "Producto marcado como disponible" : "Producto marcado como no disponible";
         Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
     }
     

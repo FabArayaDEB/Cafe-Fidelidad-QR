@@ -91,7 +91,8 @@ public class PeriodicSyncWorker extends Worker {
             long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
             
             // Eliminar visitas con estado ERROR más antiguas de 30 días
-            visitaDao.eliminarErroresAntiguos(5, thirtyDaysAgo); // 5 intentos máximos
+            // TODO: Implementar método eliminarErroresAntiguos en VisitaDao
+            // visitaDao.eliminarErroresAntiguos(5, thirtyDaysAgo); // 5 intentos máximos
             android.util.Log.i("PeriodicSyncWorker", "Limpieza de visitas con errores antiguos completada");
             
             // Limpiar canjes expirados y cancelados antiguos

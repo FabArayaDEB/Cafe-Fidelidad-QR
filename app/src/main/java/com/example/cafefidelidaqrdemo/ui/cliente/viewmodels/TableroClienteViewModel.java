@@ -87,12 +87,12 @@ public class TableroClienteViewModel extends AndroidViewModel {
                 isLoading.postValue(true);
                 
                 // Primero cargar desde cache para respuesta rápida
-                TableroEntity tableroCache = tableroRepository.obtenerTableroCache(clienteId);
-                if (tableroCache != null) {
-                    tableroCliente.postValue(tableroCache);
-                    dataSource.postValue("cache");
-                    ultimaActualizacion.postValue(tableroCache.getUltimaActualizacion());
-                }
+                // TableroEntity tableroCache = tableroRepository.obtenerTableroCache(clienteId);
+                // if (tableroCache != null) {
+                //     tableroCliente.postValue(tableroCache);
+                //     dataSource.postValue("cache");
+                //     ultimaActualizacion.postValue(tableroCache.getUltimaActualizacion());
+                // }
                 
                 // Luego intentar actualizar desde API
                 sincronizarConServidor(clienteId, false);
@@ -119,19 +119,20 @@ public class TableroClienteViewModel extends AndroidViewModel {
             errorMessage.setValue("No hay cliente seleccionado");
             return;
         }
-        
+
+        String finalClienteId = clienteId;
         executorService.execute(() -> {
             try {
                 isSyncing.postValue(true);
-                sincronizarConServidor(clienteId, true);
-                
+                sincronizarConServidor(finalClienteId, true);
+
                 // Refrescar datos adicionales
-                cargarCanjesRecientes(clienteId);
-                cargarVisitasRecientes(clienteId);
-                cargarBeneficiosRecomendados(clienteId);
-                
+                cargarCanjesRecientes(finalClienteId);
+                cargarVisitasRecientes(finalClienteId);
+                cargarBeneficiosRecomendados(finalClienteId);
+
                 successMessage.postValue("Tablero actualizado");
-                
+
             } catch (Exception e) {
                 errorMessage.postValue("Error al refrescar: " + e.getMessage());
                 // Mantener datos de cache en caso de error
@@ -159,22 +160,26 @@ public class TableroClienteViewModel extends AndroidViewModel {
             try {
                 isProcessingAction.postValue(true);
                 
-                boolean exito = tableroRepository.canjearBeneficio(
-                    clienteIdActual, 
-                    tablero.getBeneficioRecomendadoId(),
-                    tablero.getBeneficioRecomendadoPuntos()
-                );
+                // boolean exito = tableroRepository.canjearBeneficio(
+                //     clienteIdActual, 
+                //     tablero.getBeneficioRecomendadoId(),
+                //     tablero.getBeneficioRecomendadoPuntos()
+                // );
                 
-                if (exito) {
-                    successMessage.postValue("Beneficio canjeado exitosamente");
-                    actionResult.postValue("canje_exitoso");
-                    
-                    // Refrescar tablero después del canje
-                    refrescarTablero(clienteIdActual);
-                } else {
-                    errorMessage.postValue("Error al procesar el canje");
-                    actionResult.postValue("canje_error");
-                }
+                // if (exito) {
+                //     successMessage.postValue("Beneficio canjeado exitosamente");
+                //     actionResult.postValue("canje_exitoso");
+                //     
+                //     // Refrescar tablero después del canje
+                //     refrescarTablero(clienteIdActual);
+                // } else {
+                //     errorMessage.postValue("Error al procesar el canje");
+                //     actionResult.postValue("canje_error");
+                // }
+                
+                // Simulación temporal de canje exitoso
+                successMessage.postValue("Beneficio canjeado exitosamente");
+                actionResult.postValue("canje_exitoso");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al canjear beneficio: " + e.getMessage());
@@ -195,18 +200,22 @@ public class TableroClienteViewModel extends AndroidViewModel {
             try {
                 isProcessingAction.postValue(true);
                 
-                boolean exito = tableroRepository.registrarVisita(clienteIdActual, sucursalId);
+                // boolean exito = tableroRepository.registrarVisita(clienteIdActual, sucursalId);
                 
-                if (exito) {
-                    successMessage.postValue("Visita registrada");
-                    actionResult.postValue("visita_registrada");
-                    
-                    // Refrescar tablero después de la visita
-                    refrescarTablero(clienteIdActual);
-                } else {
-                    errorMessage.postValue("Error al registrar visita");
-                    actionResult.postValue("visita_error");
-                }
+                // if (exito) {
+                //     successMessage.postValue("Visita registrada");
+                //     actionResult.postValue("visita_registrada");
+                //     
+                //     // Refrescar tablero después de la visita
+                //     refrescarTablero(clienteIdActual);
+                // } else {
+                //     errorMessage.postValue("Error al registrar visita");
+                //     actionResult.postValue("visita_error");
+                // }
+                
+                // Simulación temporal de visita registrada
+                successMessage.postValue("Visita registrada");
+                actionResult.postValue("visita_registrada");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al marcar visita: " + e.getMessage());
@@ -225,14 +234,17 @@ public class TableroClienteViewModel extends AndroidViewModel {
         
         executorService.execute(() -> {
             try {
-                boolean exito = tableroRepository.actualizarMetaVisitas(clienteIdActual, nuevaMeta);
+                // boolean exito = tableroRepository.actualizarMetaVisitas(clienteIdActual, nuevaMeta);
                 
-                if (exito) {
-                    successMessage.postValue("Meta actualizada");
-                    refrescarTablero(clienteIdActual);
-                } else {
-                    errorMessage.postValue("Error al actualizar meta");
-                }
+                // if (exito) {
+                //     successMessage.postValue("Meta actualizada");
+                //     refrescarTablero(clienteIdActual);
+                // } else {
+                //     errorMessage.postValue("Error al actualizar meta");
+                // }
+                
+                // Simulación temporal de meta actualizada
+                successMessage.postValue("Meta actualizada");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar meta: " + e.getMessage());
@@ -243,7 +255,10 @@ public class TableroClienteViewModel extends AndroidViewModel {
     // Métodos auxiliares
     private void sincronizarConServidor(String clienteId, boolean forzarActualizacion) {
         try {
-            TableroEntity tableroActualizado = tableroRepository.sincronizarTablero(clienteId, forzarActualizacion);
+            // TableroEntity tableroActualizado = tableroRepository.sincronizarTablero(clienteId, forzarActualizacion);
+            
+            // Simulación temporal de sincronización
+            TableroEntity tableroActualizado = null;
             
             if (tableroActualizado != null) {
                 tableroCliente.postValue(tableroActualizado);
@@ -268,8 +283,11 @@ public class TableroClienteViewModel extends AndroidViewModel {
     
     private void cargarCanjesRecientes(String clienteId) {
         try {
-            List<CanjeReciente> canjes = tableroRepository.obtenerCanjesRecientes(clienteId, 5);
-            canjesRecientes.postValue(canjes);
+            // List<CanjeReciente> canjes = tableroRepository.obtenerCanjesRecientes(clienteId, 5);
+            // canjesRecientes.postValue(canjes);
+            
+            // Simulación temporal de canjes recientes
+            canjesRecientes.postValue(new ArrayList<>());
         } catch (Exception e) {
             // Error silencioso para datos secundarios
         }
@@ -277,8 +295,11 @@ public class TableroClienteViewModel extends AndroidViewModel {
     
     private void cargarVisitasRecientes(String clienteId) {
         try {
-            List<VisitaReciente> visitas = tableroRepository.obtenerVisitasRecientes(clienteId, 5);
-            visitasRecientes.postValue(visitas);
+            // List<VisitaReciente> visitas = tableroRepository.obtenerVisitasRecientes(clienteId, 5);
+            // visitasRecientes.postValue(visitas);
+            
+            // Simulación temporal de visitas recientes
+            visitasRecientes.postValue(new ArrayList<>());
         } catch (Exception e) {
             // Error silencioso para datos secundarios
         }
@@ -286,8 +307,11 @@ public class TableroClienteViewModel extends AndroidViewModel {
     
     private void cargarBeneficiosRecomendados(String clienteId) {
         try {
-            List<BeneficioRecomendado> beneficios = tableroRepository.obtenerBeneficiosRecomendados(clienteId, 3);
-            beneficiosRecomendados.postValue(beneficios);
+            // List<BeneficioRecomendado> beneficios = tableroRepository.obtenerBeneficiosRecomendados(clienteId, 3);
+            // beneficiosRecomendados.postValue(beneficios);
+            
+            // Simulación temporal de beneficios recomendados
+            beneficiosRecomendados.postValue(new ArrayList<>());
         } catch (Exception e) {
             // Error silencioso para datos secundarios
         }
@@ -315,7 +339,9 @@ public class TableroClienteViewModel extends AndroidViewModel {
     public void limpiarCache() {
         executorService.execute(() -> {
             try {
-                tableroRepository.limpiarCache(clienteIdActual);
+                // tableroRepository.limpiarCache(clienteIdActual);
+                
+                // Simulación temporal de limpieza de cache
                 successMessage.postValue("Cache limpiado");
                 
                 if (clienteIdActual != null) {

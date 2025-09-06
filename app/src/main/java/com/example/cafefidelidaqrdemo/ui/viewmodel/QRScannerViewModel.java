@@ -5,8 +5,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.data.repository.VisitaRepository;
-import com.example.cafefidelidaqrdemo.data.entity.VisitaEntity;
+import com.example.cafefidelidaqrdemo.repository.VisitaRepository;
+import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.network.ApiClient;
 import java.util.List;
@@ -30,28 +30,26 @@ public class QRScannerViewModel extends AndroidViewModel {
     private final LiveData<Integer> contadorPendientes;
     private final LiveData<Integer> visitasHoy;
     
-    public QRScannerViewModel(@NonNull Application application) {
+    public QRScannerViewModel(@NonNull Application application, LiveData<List<VisitaEntity>> visitasPendientes, LiveData<Integer> contadorPendientes, LiveData<Integer> visitasHoy) {
         super(application);
         
         // Inicializar repository
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
-        this.visitaRepository = new VisitaRepository(
-            database.visitaDao(),
-            ApiClient.getApiService(),
-            application
-        );
+        this.visitaRepository = new VisitaRepository(application);
         
-        // Inicializar LiveData
-        this.visitasPendientes = visitaRepository.obtenerPendientes();
-        this.contadorPendientes = visitaRepository.contarPendientes();
-        this.visitasHoy = visitaRepository.contarVisitasHoy();
+        // TODO: Implementar métodos en VisitaRepository
+        // this.visitasPendientes = visitaRepository.obtenerPendientes();
+        // this.contadorPendientes = visitaRepository.contarPendientes();
+        // this.visitasHoy = visitaRepository.contarVisitasHoy();
         
         // Observar mensajes del repository
-        visitaRepository.getMensajeEstado().observeForever(mensaje -> {
-            if (mensaje != null) {
-                _mensaje.postValue(mensaje);
-            }
-        });
+        // visitaRepository.getMensajeEstado().observeForever(mensaje -> {
+        //     if (mensaje != null) {
+        //         _mensaje.postValue(mensaje);
+        //     }
+        // });
+        this.visitasPendientes = visitasPendientes;
+        this.contadorPendientes = contadorPendientes;
+        this.visitasHoy = visitasHoy;
     }
     
     // Getters para LiveData
@@ -87,6 +85,8 @@ public class QRScannerViewModel extends AndroidViewModel {
      * Procesar código QR escaneado
      */
     public void procesarQR(String qrContent) {
+        // TODO: Implementar procesamiento de QR con VisitaRepository
+        /*
         if (qrContent == null || qrContent.trim().isEmpty()) {
             _error.postValue("QR vacío o inválido");
             return;
@@ -128,12 +128,15 @@ public class QRScannerViewModel extends AndroidViewModel {
                 }, 3000);
             }
         });
+        */
     }
     
     /**
      * Sincronizar visitas pendientes
      */
     public void sincronizarPendientes() {
+        // TODO: Implementar sincronización con VisitaRepository
+        /*
         _estadoProcesamiento.postValue(EstadoProcesamiento.PROCESSING);
         visitaRepository.sincronizarPendientes();
         
@@ -141,12 +144,15 @@ public class QRScannerViewModel extends AndroidViewModel {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
         }, 2000);
+        */
     }
     
     /**
      * Reintentar visitas con error
      */
     public void reintentarErrores() {
+        // TODO: Implementar reintento de errores con VisitaRepository
+        /*
         _estadoProcesamiento.postValue(EstadoProcesamiento.PROCESSING);
         visitaRepository.reintentarErrores();
         
@@ -154,6 +160,7 @@ public class QRScannerViewModel extends AndroidViewModel {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
         }, 2000);
+        */
     }
     
     /**
@@ -203,7 +210,8 @@ public class QRScannerViewModel extends AndroidViewModel {
      * Limpiar datos antiguos
      */
     public void limpiarDatosAntiguos() {
-        visitaRepository.limpiarDatosAntiguos();
+        // TODO: Implementar limpieza de datos antiguos con VisitaRepository
+        // visitaRepository.limpiarDatosAntiguos();
     }
     
     @Override

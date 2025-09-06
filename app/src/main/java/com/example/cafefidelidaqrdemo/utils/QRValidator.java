@@ -163,7 +163,7 @@ public class QRValidator {
                     rateLimiter.recordVisit(clienteId, sucursalId, deviceId, 
                         location != null ? location.toString() : "unknown");
                     
-                    return ValidationResult.success(data.getSucursalId(), data.getTimestamp(), data.getNonce());
+                    return ValidationResult.success(data.getSucursalId().toString(), data.getTimestamp(), data.getNonce());
                     
                 } else {
                     // Error de validación del servidor
@@ -432,7 +432,7 @@ public class QRValidator {
      */
     public String getStats() {
         return String.format("QRValidator - %s, %s, %s", 
-            nonceManager.getStats(),
+            getNonceStats(),
             rateLimiter.getStats(),
             fraudDetector.getStats());
     }
@@ -444,7 +444,7 @@ public class QRValidator {
         return String.format("Sistema Anti-Fraude:\n%s\n%s\n%s",
             rateLimiter.getStats(),
             fraudDetector.getStats(),
-            nonceManager.getStats());
+            getNonceStats());
     }
     
     /**

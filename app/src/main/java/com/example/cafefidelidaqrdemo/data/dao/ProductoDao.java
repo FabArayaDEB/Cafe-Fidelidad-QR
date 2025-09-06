@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.example.cafefidelidaqrdemo.data.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 
 import java.util.List;
 
