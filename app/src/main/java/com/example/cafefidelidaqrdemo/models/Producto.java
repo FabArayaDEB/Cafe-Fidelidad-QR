@@ -231,4 +231,9 @@ public class Producto {
     public void setEstado(String estado) {
         this.estado = estado;
     }
+
+    // Método para verificar si el producto está activo
+    public boolean isActivo() {
+        return disponible && "activo".equalsIgnoreCase(estado);
+    }
 }

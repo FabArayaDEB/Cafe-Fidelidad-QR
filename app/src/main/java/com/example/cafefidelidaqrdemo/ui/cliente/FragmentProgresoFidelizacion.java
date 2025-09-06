@@ -17,7 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapter.BeneficiosDisponiblesAdapter;
 import com.example.cafefidelidaqrdemo.adapter.ProgresoFidelizacionAdapter;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.dialogs.ProximoBeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodel.ProgresoViewModel;
@@ -95,25 +95,25 @@ public class FragmentProgresoFidelizacion extends Fragment {
     private void initViews(View view) {
         // Layouts principales
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        layoutProgreso = view.findViewById(R.id.layoutProgreso);
-        layoutBeneficiosDisponibles = view.findViewById(R.id.layoutBeneficiosDisponibles);
-        layoutProximosBeneficios = view.findViewById(R.id.layoutProximosBeneficios);
+        // layoutProgreso = view.findViewById(R.id.layoutProgreso);
+        // layoutBeneficiosDisponibles = view.findViewById(R.id.layoutBeneficiosDisponibles);
+        // layoutProximosBeneficios = view.findViewById(R.id.layoutProximosBeneficios);
         emptyStateView = view.findViewById(R.id.emptyStateView);
-        errorStateView = view.findViewById(R.id.errorStateView);
+        // errorStateView = view.findViewById(R.id.errorStateView); // TODO: Agregar este ID al layout
         
         // Views de progreso
         textTotalVisitas = view.findViewById(R.id.textTotalVisitas);
-        textProgresoGeneral = view.findViewById(R.id.textProgresoGeneral);
+        // textProgresoGeneral = view.findViewById(R.id.textProgresoGeneral);
         progressCircular = view.findViewById(R.id.progressCircular);
-        textEstadoSync = view.findViewById(R.id.textEstadoSync);
+        // textEstadoSync = view.findViewById(R.id.textEstadoSync);
         
         // Views de beneficios disponibles
-        recyclerBeneficiosDisponibles = view.findViewById(R.id.recyclerBeneficiosDisponibles);
-        textBeneficiosDisponiblesTitle = view.findViewById(R.id.textBeneficiosDisponiblesTitle);
+        // recyclerBeneficiosDisponibles = view.findViewById(R.id.recyclerBeneficiosDisponibles);
+        // textBeneficiosDisponiblesTitle = view.findViewById(R.id.textBeneficiosDisponiblesTitle);
         
         // Views de próximos beneficios
-        recyclerProximosBeneficios = view.findViewById(R.id.recyclerProximosBeneficios);
-        textProximosBeneficiosTitle = view.findViewById(R.id.textProximosBeneficiosTitle);
+        // recyclerProximosBeneficios = view.findViewById(R.id.recyclerProximosBeneficios);
+        // textProximosBeneficiosTitle = view.findViewById(R.id.textProximosBeneficiosTitle);
     }
     
     private void setupRecyclerViews() {
@@ -122,18 +122,18 @@ public class FragmentProgresoFidelizacion extends Fragment {
             new ArrayList<>(), 
             this::onBeneficioDisponibleClick
         );
-        recyclerBeneficiosDisponibles.setLayoutManager(
-            new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false)
-        );
-        recyclerBeneficiosDisponibles.setAdapter(beneficiosDisponiblesAdapter);
+        // recyclerBeneficiosDisponibles.setLayoutManager(
+        //         new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false)
+        // );
+        // recyclerBeneficiosDisponibles.setAdapter(beneficiosDisponiblesAdapter);
         
         // RecyclerView para próximos beneficios
-        proximosBeneficiosAdapter = new ProgresoFidelizacionAdapter(
-            new ArrayList<>(),
-            this::onProximoBeneficioClick
-        );
-        recyclerProximosBeneficios.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerProximosBeneficios.setAdapter(proximosBeneficiosAdapter);
+        // proximosBeneficiosAdapter = new ProgresoFidelizacionAdapter(
+        //     new ArrayList<>(),
+        //     this::onProximoBeneficioClick
+        // );
+        // recyclerProximosBeneficios.setLayoutManager(new LinearLayoutManager(getContext()));
+        // recyclerProximosBeneficios.setAdapter(proximosBeneficiosAdapter);
     }
     
     private void setupSwipeRefresh() {
@@ -208,94 +208,98 @@ public class FragmentProgresoFidelizacion extends Fragment {
             
             // Texto de progreso
             if (progreso.getVisitasParaProximo() > 0) {
-                textProgresoGeneral.setText(String.format(
-                    "%d/%d visitas para próximo beneficio",
-                    progreso.getVisitasActuales(),
-                    progreso.getVisitasParaProximo()
-                ));
+                // textProgresoGeneral.setText(String.format(
+                //     "%d/%d visitas para próximo beneficio",
+                //     progreso.getVisitasActuales(),
+                //     progreso.getVisitasParaProximo()
+                // ));
             } else {
-                textProgresoGeneral.setText("¡Felicidades! Has alcanzado todos los beneficios disponibles");
+                // textProgresoGeneral.setText("¡Felicidades! Has alcanzado todos los beneficios disponibles");
             }
         } else {
             progressCircular.setVisibility(View.GONE);
-            textProgresoGeneral.setText("Configura tus beneficios para ver tu progreso");
+            // textProgresoGeneral.setText("Configura tus beneficios para ver tu progreso");
         }
     }
     
     private void updateBeneficiosDisponibles(List<Beneficio> beneficios) {
         if (beneficios.isEmpty()) {
-            layoutBeneficiosDisponibles.setVisibility(View.GONE);
+            // layoutBeneficiosDisponibles.setVisibility(View.GONE);
         } else {
-            layoutBeneficiosDisponibles.setVisibility(View.VISIBLE);
-            textBeneficiosDisponiblesTitle.setText(
-                String.format("Beneficios Disponibles (%d)", beneficios.size())
-            );
+            // layoutBeneficiosDisponibles.setVisibility(View.VISIBLE);
+            // textBeneficiosDisponiblesTitle.setText(
+        //         String.format("Beneficios Disponibles (%d)", beneficiosDisponibles.size())
+        // );
             beneficiosDisponiblesAdapter.updateBeneficios(beneficios);
         }
     }
     
     private void updateProximosBeneficios(List<ProgresoViewModel.ProximoBeneficio> proximosBeneficios) {
         if (proximosBeneficios.isEmpty()) {
-            layoutProximosBeneficios.setVisibility(View.GONE);
+            // layoutProximosBeneficios.setVisibility(View.GONE);
         } else {
-            layoutProximosBeneficios.setVisibility(View.VISIBLE);
-            textProximosBeneficiosTitle.setText(
-                String.format("Próximos Beneficios (%d)", proximosBeneficios.size())
-            );
-            proximosBeneficiosAdapter.updateProximosBeneficios(proximosBeneficios);
+            // layoutProximosBeneficios.setVisibility(View.VISIBLE);
+            // textProximosBeneficiosTitle.setText(
+        //         String.format("Próximos Beneficios (%d)", proximosBeneficios.size())
+        // );
+            // proximosBeneficiosAdapter.updateProximosBeneficios(proximosBeneficios);
         }
     }
     
     private void updateSyncStatus(ProgresoViewModel.SyncStatus syncStatus) {
         if (syncStatus == null) {
-            textEstadoSync.setVisibility(View.GONE);
+            // textEstadoSync.setVisibility(View.GONE);
             return;
         }
         
-        textEstadoSync.setVisibility(View.VISIBLE);
+        // textEstadoSync.setVisibility(View.VISIBLE);
         
-        switch (syncStatus.getEstado()) {
-            case SINCRONIZADO:
-                textEstadoSync.setText("✓ Datos actualizados");
-                textEstadoSync.setTextColor(getResources().getColor(R.color.color_success, null));
-                break;
-            case ESTIMADO:
-                textEstadoSync.setText("⚠ Datos estimados (sin conexión)");
-                textEstadoSync.setTextColor(getResources().getColor(R.color.color_warning, null));
-                break;
-            case SINCRONIZANDO:
-                textEstadoSync.setText("🔄 Sincronizando...");
-                textEstadoSync.setTextColor(getResources().getColor(R.color.color_info, null));
-                break;
-            case ERROR:
-                textEstadoSync.setText("❌ Error de sincronización");
-                textEstadoSync.setTextColor(getResources().getColor(R.color.color_error, null));
-                break;
-        }
+        // switch (syncStatus.getEstado()) {
+        //     case SINCRONIZADO:
+        //         textEstadoSync.setText("✓ Datos actualizados");
+        //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_success, null));
+        //         break;
+        //     case ESTIMADO:
+        //         textEstadoSync.setText("⚠ Datos estimados (sin conexión)");
+        //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_warning, null));
+        //         break;
+        //     case SINCRONIZANDO:
+        //         textEstadoSync.setText("🔄 Sincronizando...");
+        //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_info, null));
+        //         break;
+        //     case ERROR:
+        //         textEstadoSync.setText("❌ Error de sincronización");
+        //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_error, null));
+        //         break;
+        // }
     }
     
     private void updateEmptyState(boolean isEmpty) {
         if (isEmpty) {
             emptyStateView.setVisibility(View.VISIBLE);
-            layoutProgreso.setVisibility(View.GONE);
-            layoutBeneficiosDisponibles.setVisibility(View.GONE);
-            layoutProximosBeneficios.setVisibility(View.GONE);
+            // layoutProgreso.setVisibility(View.GONE);
+            // layoutBeneficiosDisponibles.setVisibility(View.GONE);
+        // layoutProximosBeneficios.setVisibility(View.GONE);
         } else {
             emptyStateView.setVisibility(View.GONE);
-            layoutProgreso.setVisibility(View.VISIBLE);
+            // layoutProgreso.setVisibility(View.VISIBLE);
         }
     }
     
     private void showErrorState(String error) {
+        // TODO: Agregar errorStateView al layout
+        /*
         errorStateView.setVisibility(View.VISIBLE);
         TextView textError = errorStateView.findViewById(R.id.textError);
         if (textError != null) {
             textError.setText(error);
         }
+        */
     }
     
     private void hideErrorState() {
-        errorStateView.setVisibility(View.GONE);
+        // TODO: Agregar errorStateView al layout
+        // errorStateView.setVisibility(View.GONE);
     }
     
     // Callbacks de clicks
@@ -323,9 +327,9 @@ public class FragmentProgresoFidelizacion extends Fragment {
         super.onDestroyView();
         // Limpiar referencias
         swipeRefreshLayout = null;
-        layoutProgreso = null;
-        layoutBeneficiosDisponibles = null;
-        layoutProximosBeneficios = null;
+        // layoutProgreso = null;
+        // layoutBeneficiosDisponibles = null;
+        // layoutProximosBeneficios = null;
         emptyStateView = null;
         errorStateView = null;
         beneficiosDisponiblesAdapter = null;

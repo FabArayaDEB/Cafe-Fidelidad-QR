@@ -118,67 +118,67 @@ public class FragmentTableroCliente extends Fragment {
     
     private void initializeViews(View view) {
         // Vistas principales
-        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_tablero);
-        scrollViewContent = view.findViewById(R.id.scroll_view_content);
-        layoutOffline = view.findViewById(R.id.layout_offline);
-        layoutNoData = view.findViewById(R.id.layout_no_data);
-        progressBarLoading = view.findViewById(R.id.progress_bar_loading);
-        textDataSource = view.findViewById(R.id.text_data_source);
+        // swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_tablero);
+        // scrollViewContent = view.findViewById(R.id.scroll_view_content);
+        // layoutOffline = view.findViewById(R.id.layout_offline);
+        // layoutNoData = view.findViewById(R.id.layout_no_data);
+        // progressBarLoading = view.findViewById(R.id.progress_bar_loading);
+        // textDataSource = view.findViewById(R.id.text_data_source);
         
         // Tarjeta de bienvenida
-        cardBienvenida = view.findViewById(R.id.card_bienvenida);
-        textNombreCliente = view.findViewById(R.id.text_nombre_cliente);
-        textMensajeMotivacional = view.findViewById(R.id.text_mensaje_motivacional);
-        textUltimaVisita = view.findViewById(R.id.text_ultima_visita);
-        textRachaVisitas = view.findViewById(R.id.text_racha_visitas);
+        // cardBienvenida = view.findViewById(R.id.card_bienvenida);
+        // textNombreCliente = view.findViewById(R.id.text_nombre_cliente);
+        // textMensajeMotivacional = view.findViewById(R.id.text_mensaje_motivacional);
+        // textUltimaVisita = view.findViewById(R.id.text_ultima_visita);
+        // textRachaVisitas = view.findViewById(R.id.text_racha_visitas);
         
         // Tarjeta de visitas
-        cardVisitas = view.findViewById(R.id.card_visitas);
-        textTotalVisitas = view.findViewById(R.id.text_total_visitas);
-        textVisitasMes = view.findViewById(R.id.text_visitas_mes);
-        textVisitasSemana = view.findViewById(R.id.text_visitas_semana);
-        textSucursalFavorita = view.findViewById(R.id.text_sucursal_favorita);
-        progressMetaVisitas = view.findViewById(R.id.progress_meta_visitas);
-        textProgresoMeta = view.findViewById(R.id.text_progreso_meta);
+        // cardVisitas = view.findViewById(R.id.card_visitas);
+        // textTotalVisitas = view.findViewById(R.id.text_total_visitas);
+        // textVisitasMes = view.findViewById(R.id.text_visitas_mes);
+        // textVisitasSemana = view.findViewById(R.id.text_visitas_semana);
+        // textSucursalFavorita = view.findViewById(R.id.text_sucursal_favorita);
+        // progressMetaVisitas = view.findViewById(R.id.progress_meta_visitas);
+        // textProgresoMeta = view.findViewById(R.id.text_progreso_meta);
         
         // Tarjeta de puntos
-        cardPuntos = view.findViewById(R.id.card_puntos);
-        textPuntosDisponibles = view.findViewById(R.id.text_puntos_disponibles);
-        textPuntosTotales = view.findViewById(R.id.text_puntos_totales);
-        textPuntosCanjeados = view.findViewById(R.id.text_puntos_canjeados);
-        textNivelFidelidad = view.findViewById(R.id.text_nivel_fidelidad);
-        progressNivel = view.findViewById(R.id.progress_nivel);
-        textProgresoNivel = view.findViewById(R.id.text_progreso_nivel);
-        textPuntosSiguienteNivel = view.findViewById(R.id.text_puntos_siguiente_nivel);
+        // cardPuntos = view.findViewById(R.id.card_puntos);
+        // textPuntosDisponibles = view.findViewById(R.id.text_puntos_disponibles);
+        // textPuntosTotales = view.findViewById(R.id.text_puntos_totales);
+        // textPuntosCanjeados = view.findViewById(R.id.text_puntos_canjeados);
+        // textNivelFidelidad = view.findViewById(R.id.text_nivel_fidelidad);
+        // progressNivel = view.findViewById(R.id.progress_nivel);
+        // textProgresoNivel = view.findViewById(R.id.text_progreso_nivel);
+        // textPuntosSiguienteNivel = view.findViewById(R.id.text_puntos_siguiente_nivel);
         
         // Tarjeta de beneficios
-        cardBeneficios = view.findViewById(R.id.card_beneficios);
-        textBeneficiosDisponibles = view.findViewById(R.id.text_beneficios_disponibles);
-        textBeneficiosCanjeables = view.findViewById(R.id.text_beneficios_canjeables);
-        textBeneficioRecomendado = view.findViewById(R.id.text_beneficio_recomendado);
-        textPuntosRecomendado = view.findViewById(R.id.text_puntos_recomendado);
-        btnVerBeneficios = view.findViewById(R.id.btn_ver_beneficios);
-        btnCanjearRecomendado = view.findViewById(R.id.btn_canjear_recomendado);
+        // cardBeneficios = view.findViewById(R.id.card_beneficios);
+        // textBeneficiosDisponibles = view.findViewById(R.id.text_beneficios_disponibles);
+        // textBeneficiosCanjeables = view.findViewById(R.id.text_beneficios_canjeables);
+        // textBeneficioRecomendado = view.findViewById(R.id.text_beneficio_recomendado);
+        // textPuntosRecomendado = view.findViewById(R.id.text_puntos_recomendado);
+        // btnVerBeneficios = view.findViewById(R.id.btn_ver_beneficios);
+        // btnCanjearRecomendado = view.findViewById(R.id.btn_canjear_recomendado);
         
         // Tarjeta de canjes
-        cardCanjes = view.findViewById(R.id.card_canjes);
-        textTotalCanjes = view.findViewById(R.id.text_total_canjes);
-        textCanjesMes = view.findViewById(R.id.text_canjes_mes);
-        textValorTotalCanjes = view.findViewById(R.id.text_valor_total_canjes);
-        textUltimoCanje = view.findViewById(R.id.text_ultimo_canje);
-        recyclerViewCanjesRecientes = view.findViewById(R.id.recycler_view_canjes_recientes);
+        // cardCanjes = view.findViewById(R.id.card_canjes);
+        // textTotalCanjes = view.findViewById(R.id.text_total_canjes);
+        // textCanjesMes = view.findViewById(R.id.text_canjes_mes);
+        // textValorTotalCanjes = view.findViewById(R.id.text_valor_total_canjes);
+        // textUltimoCanje = view.findViewById(R.id.text_ultimo_canje);
+        // recyclerViewCanjesRecientes = view.findViewById(R.id.recycler_view_canjes_recientes);
         
         // Tarjeta de recomendaciones
-        cardRecomendaciones = view.findViewById(R.id.card_recomendaciones);
-        textSucursalRecomendada = view.findViewById(R.id.text_sucursal_recomendada);
-        btnVerSucursales = view.findViewById(R.id.btn_ver_sucursales);
-        btnVerHistorial = view.findViewById(R.id.btn_ver_historial);
+        // cardRecomendaciones = view.findViewById(R.id.card_recomendaciones);
+        // textSucursalRecomendada = view.findViewById(R.id.text_sucursal_recomendada);
+        // btnVerSucursales = view.findViewById(R.id.btn_ver_sucursales);
+        // btnVerHistorial = view.findViewById(R.id.btn_ver_historial);
         
         // Acciones rápidas
-        layoutAccionesRapidas = view.findViewById(R.id.layout_acciones_rapidas);
-        btnEscanearQR = view.findViewById(R.id.btn_escanear_qr);
-        btnVerMapa = view.findViewById(R.id.btn_ver_mapa);
-        btnContacto = view.findViewById(R.id.btn_contacto);
+        // layoutAccionesRapidas = view.findViewById(R.id.layout_acciones_rapidas);
+        // btnEscanearQR = view.findViewById(R.id.btn_escanear_qr);
+        // btnVerMapa = view.findViewById(R.id.btn_ver_mapa);
+        // btnContacto = view.findViewById(R.id.btn_contacto);
     }
     
     private void setupViewModel() {
@@ -186,9 +186,9 @@ public class FragmentTableroCliente extends Fragment {
     }
     
     private void setupRecyclerView() {
-        canjesAdapter = new CanjesRecientesAdapter(new ArrayList<>(), this::onCanjeRecenteClick);
-        recyclerViewCanjesRecientes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        recyclerViewCanjesRecientes.setAdapter(canjesAdapter);
+        // canjesAdapter = new CanjesRecientesAdapter(new ArrayList<>(), this::onCanjeRecenteClick);
+        // recyclerViewCanjesRecientes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        // recyclerViewCanjesRecientes.setAdapter(canjesAdapter);
     }
     
     private void setupListeners() {
@@ -277,11 +277,11 @@ public class FragmentTableroCliente extends Fragment {
         });
         
         // Canjes recientes
-        viewModel.getCanjesRecientes().observe(getViewLifecycleOwner(), canjes -> {
-            if (canjes != null) {
-                canjesAdapter.updateCanjes(canjes);
-            }
-        });
+        // viewModel.getCanjesRecientes().observe(getViewLifecycleOwner(), canjes -> {
+        //     if (canjes != null) {
+        //         canjesAdapter.updateCanjes(canjes);
+        //     }
+        // });
     }
     
     private void loadTableroData() {

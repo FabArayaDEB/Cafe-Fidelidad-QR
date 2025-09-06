@@ -51,26 +51,28 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
     public void cargarBeneficiosDisponibles(String clienteId) {
         isLoading.setValue(true);
         
-        executor.execute(() -> {
-            try {
-                // Obtener beneficios activos
-                List<BeneficioEntity> beneficios = beneficioRepository.getBeneficiosActivosSync();
-                
-                // Filtrar beneficios ya canjeados por el cliente
-                List<BeneficioEntity> beneficiosDisponiblesLista = filtrarBeneficiosDisponibles(beneficios, clienteId);
-                
-                beneficiosDisponibles.postValue(beneficiosDisponiblesLista);
-                isLoading.postValue(false);
-                
-                if (beneficiosDisponiblesLista.isEmpty()) {
-                    mensajeEstado.postValue("No tienes beneficios disponibles en este momento.");
-                } else {
-                    mensajeEstado.postValue("Tienes " + beneficiosDisponiblesLista.size() + " beneficios disponibles.");
-                }
-                
-            } catch (Exception e) {
-                isLoading.postValue(false);
-                mensajeEstado.postValue("Error al cargar beneficios: " + e.getMessage());
+        // Observar beneficios activos desde el repository
+        beneficioRepository.getBeneficiosActivos().observeForever(beneficiosActivos -> {
+            if (beneficiosActivos != null) {
+                executor.execute(() -> {
+                    try {
+                        // Filtrar beneficios ya canjeados por el cliente
+                        List<BeneficioEntity> beneficiosDisponiblesLista = filtrarBeneficiosDisponibles(beneficiosActivos, clienteId);
+                        
+                        beneficiosDisponibles.postValue(beneficiosDisponiblesLista);
+                        isLoading.postValue(false);
+                        
+                        if (beneficiosDisponiblesLista.isEmpty()) {
+                            mensajeEstado.postValue("No tienes beneficios disponibles en este momento.");
+                        } else {
+                            mensajeEstado.postValue("Tienes " + beneficiosDisponiblesLista.size() + " beneficios disponibles.");
+                        }
+                        
+                    } catch (Exception e) {
+                        isLoading.postValue(false);
+                        mensajeEstado.postValue("Error al cargar beneficios: " + e.getMessage());
+                    }
+                });
             }
         });
     }
@@ -206,17 +208,18 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         
         descripcion.append("Tipo: ").append(beneficio.getTipo()).append("\n");
         
-        if (beneficio.getDescuento_porcentaje() > 0) {
-            descripcion.append("Descuento: ").append(beneficio.getDescuento_porcentaje()).append("%\n");
+        if (beneficio.getDescuento_pct() > 0) {
+            descripcion.append("Descuento: ").append(beneficio.getDescuento_pct()).append("%\n");
         }
         
         if (beneficio.getDescuento_monto() > 0) {
             descripcion.append("Descuento: $").append(beneficio.getDescuento_monto()).append("\n");
         }
         
-        if (beneficio.getDescripcion() != null && !beneficio.getDescripcion().isEmpty()) {
-            descripcion.append("\n").append(beneficio.getDescripcion());
-        }
+        // TODO: BeneficioEntity no tiene método getDescripcion()
+        // if (beneficio.getDescripcion() != null && !beneficio.getDescripcion().isEmpty()) {
+        //     descripcion.append("\n").append(beneficio.getDescripcion());
+        // }
         
         return descripcion.toString();
     }

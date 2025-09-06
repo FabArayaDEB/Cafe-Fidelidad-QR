@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.data.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.text.DecimalFormat;

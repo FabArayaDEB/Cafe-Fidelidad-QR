@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -82,9 +82,9 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         private final MaterialButton btnEditar;
         private final MaterialButton btnEliminar;
         
-        public BeneficioViewHolder(MaterialCardView cardView, @NonNull View itemView) {
+        public BeneficioViewHolder(@NonNull View itemView) {
             super(itemView);
-            this.cardView = cardView;
+            this.cardView = itemView.findViewById(R.id.cardView);
             textNombre = itemView.findViewById(R.id.textNombre);
             textDescripcion = itemView.findViewById(R.id.textDescripcion);
             chipTipo = itemView.findViewById(R.id.chipTipo);
@@ -126,7 +126,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         }
         
         private void setupVigencia(Beneficio beneficio) {
-            if (beneficio.getFechaCreacion() != null && beneficio.getFechaCreacion() != null) {
+            if (beneficio.getFechaInicioVigencia() != null && beneficio.getFechaFinVigencia() != null) {
                 String vigenciaText = String.format("Vigencia: %s - %s",
                     dateFormat.format(beneficio.getFechaInicioVigencia()),
                     dateFormat.format(beneficio.getFechaFinVigencia()));
@@ -135,7 +135,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
                 
                 // Verificar si está vigente
                 Date now = new Date();
-                if (now.before(beneficio.getFechaCreacion()) || now.after(beneficio.getFechaFinVigencia())) {
+                if (now.before(beneficio.getFechaInicioVigencia()) || now.after(beneficio.getFechaFinVigencia())) {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_error));
                 } else {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_success));
@@ -183,7 +183,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         
 
         
-        private String getTipoDisplayName(com.example.cafefidelidaqrdemo.model.Beneficio.TipoBeneficio tipo) {
+        private String getTipoDisplayName(Beneficio.TipoBeneficio tipo) {
             switch (tipo) {
                 case DESCUENTO_PORCENTAJE:
                     return "Descuento %";
@@ -192,7 +192,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
                 case DOS_POR_UNO:
                     return "2x1";
                 case PREMIO:
-                    return "Premio Especial";
+                    return "Premio";
                 default:
                     return "Desconocido";
             }

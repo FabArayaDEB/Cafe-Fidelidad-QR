@@ -55,21 +55,21 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
         private final MaterialCardView cardView;
         private final ImageView imageViewProducto;
         private final TextView textViewNombre;
-        private final TextView textViewCategoria;
+        // private final TextView textViewCategoria; // No existe en layout
         private final TextView textViewPrecio;
-        private final Chip chipEstado;
-        private final View viewDisponibilidad;
+        // private final Chip chipEstado; // No existe en layout
+        // private final View viewDisponibilidad; // No existe en layout
         
         public ProductoViewHolder(@NonNull View itemView) {
             super(itemView);
             
-            cardView = itemView.findViewById(R.id.cardViewProducto);
-            imageViewProducto = itemView.findViewById(R.id.imageViewProducto);
-            textViewNombre = itemView.findViewById(R.id.textViewNombre);
-            textViewCategoria = itemView.findViewById(R.id.textViewCategoria);
-            textViewPrecio = itemView.findViewById(R.id.textViewPrecio);
-            chipEstado = itemView.findViewById(R.id.chipEstado);
-            viewDisponibilidad = itemView.findViewById(R.id.viewDisponibilidad);
+            cardView = itemView.findViewById(R.id.card_producto);
+            imageViewProducto = itemView.findViewById(R.id.iv_producto);
+            textViewNombre = itemView.findViewById(R.id.tv_nombre);
+            // textViewCategoria = itemView.findViewById(R.id.textViewCategoria); // No existe en layout
+            textViewPrecio = itemView.findViewById(R.id.tv_precio);
+            // chipEstado = itemView.findViewById(R.id.chipEstado); // No existe en layout
+            // viewDisponibilidad = itemView.findViewById(R.id.viewDisponibilidad); // No existe en layout
             
             // Configurar listeners
             cardView.setOnClickListener(v -> {
@@ -98,32 +98,35 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
             textViewNombre.setText(producto.getNombre());
             
             // Configurar categoría
-            textViewCategoria.setText(producto.getCategoria());
+            // textViewCategoria.setText(producto.getCategoria()); // No existe en layout
             
             // Configurar precio
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
             textViewPrecio.setText(currencyFormat.format(producto.getPrecio()));
             
             // Configurar estado
-            boolean isDisponible = "activo".equalsIgnoreCase(producto.getEstado());
+            // boolean isDisponible = "activo".equalsIgnoreCase(producto.getEstado());
             
+            // Elementos comentados porque no existen en el layout
+            /*
             if (isDisponible) {
-                chipEstado.setText("Disponible");
-                chipEstado.setChipBackgroundColorResource(R.color.success_light);
-                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success_green));
-                viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.success));
+                // chipEstado.setText("Disponible"); // No existe en layout
+            // chipEstado.setChipBackgroundColorResource(R.color.success_light);
+            // chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success_green));
+                // viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.success)); // No existe en layout
             } else {
-                chipEstado.setText("No disponible");
-                chipEstado.setChipBackgroundColorResource(R.color.error_light);
-                chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error_red));
-                viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.error));
+                // chipEstado.setText("No disponible"); // No existe en layout
+            // chipEstado.setChipBackgroundColorResource(R.color.error_light);
+            // chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error_red));
+                // viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.error)); // No existe en layout
             }
+            */
             
             // Configurar imagen del producto basada en la categoría
             configureProductImage(producto.getCategoria());
             
             // Configurar apariencia de la tarjeta según disponibilidad
-            configureCardAppearance(isDisponible);
+            // configureCardAppearance(isDisponible); // Variable comentada
         }
         
         private void configureProductImage(String categoria) {
@@ -132,22 +135,22 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
             switch (categoria.toLowerCase()) {
                 case "café":
                 case "cafe":
-                    imageResource = R.drawable.ic_coffee;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
                 case "bebidas":
-                    imageResource = R.drawable.ic_local_drink;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
                 case "postres":
-                    imageResource = R.drawable.ic_cake;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
                 case "snacks":
-                    imageResource = R.drawable.ic_fastfood;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
                 case "desayunos":
-                    imageResource = R.drawable.ic_breakfast;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
                 default:
-                    imageResource = R.drawable.ic_restaurant;
+                    imageResource = R.drawable.ic_coffee_placeholder;
                     break;
             }
             
@@ -165,7 +168,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
                 cardView.setAlpha(1.0f);
                 cardView.setCardElevation(4f);
                 textViewNombre.setAlpha(1.0f);
-                textViewCategoria.setAlpha(1.0f);
+                // textViewCategoria.setAlpha(1.0f); // No existe en layout
                 textViewPrecio.setAlpha(1.0f);
                 imageViewProducto.setAlpha(1.0f);
             } else {
@@ -173,7 +176,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
                 cardView.setAlpha(0.7f);
                 cardView.setCardElevation(2f);
                 textViewNombre.setAlpha(0.6f);
-                textViewCategoria.setAlpha(0.6f);
+                // textViewCategoria.setAlpha(0.6f); // No existe en layout
                 textViewPrecio.setAlpha(0.6f);
                 imageViewProducto.setAlpha(0.5f);
             }
@@ -185,14 +188,14 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
         new DiffUtil.ItemCallback<ProductoEntity>() {
             @Override
             public boolean areItemsTheSame(@NonNull ProductoEntity oldItem, @NonNull ProductoEntity newItem) {
-                return oldItem.getIdProducto().equals(newItem.getIdProducto());
+                return oldItem.getId_producto().equals(newItem.getId_producto());
             }
             
             @Override
             public boolean areContentsTheSame(@NonNull ProductoEntity oldItem, @NonNull ProductoEntity newItem) {
                 return oldItem.getNombre().equals(newItem.getNombre()) &&
                        oldItem.getCategoria().equals(newItem.getCategoria()) &&
-                       oldItem.getPrecio().equals(newItem.getPrecio()) &&
+                       Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0 &&
                        oldItem.getEstado().equals(newItem.getEstado());
             }
         };

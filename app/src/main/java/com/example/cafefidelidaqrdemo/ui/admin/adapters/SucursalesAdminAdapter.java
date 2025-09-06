@@ -106,7 +106,8 @@ public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdmin
             textViewDireccion.setText(sucursal.getDireccion());
             textViewCiudad.setText("Ciudad no disponible"); // Campo no disponible en entity
             textViewTelefono.setText("Teléfono no disponible"); // Campo no disponible en entity
-            textViewHorario.setText(sucursal.getHorario());
+            String horario = sucursal.getHorario();
+        textViewHorario.setText(horario);
             textViewGerente.setText("Gerente no disponible"); // Campo no disponible en entity
             
             // Estado

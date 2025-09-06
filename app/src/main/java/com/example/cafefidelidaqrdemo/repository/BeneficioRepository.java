@@ -239,7 +239,7 @@ public class BeneficioRepository {
     
     // Verificar conflictos de vigencia
     private boolean hasConflictingVigencia(BeneficioEntity beneficio) {
-        if (beneficio.getVigencia_ini() == null || beneficio.getVigencia_fin() == null) {
+        if (beneficio.getVigencia_ini() == 0 || beneficio.getVigencia_fin() == 0) {
             return false; // Sin fechas definidas, no hay conflicto
         }
         

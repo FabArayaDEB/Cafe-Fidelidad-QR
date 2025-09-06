@@ -19,6 +19,10 @@ public class ProductoEntity {
     private String descripcion; // Descripción del producto
     private double precio; // Precio de venta
     private String estado; // Disponible/no disponible
+    private String codigo; // Código del producto
+    private String codigoBarras; // Código de barras del producto
+    private int stockDisponible; // Stock disponible del producto
+    private int version; // Control de versión para concurrencia
     
     // Campos adicionales para sincronización offline
     private long lastSync;
@@ -62,6 +66,15 @@ public class ProductoEntity {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
     
+    public String getCodigo() { return codigo; }
+    public void setCodigo(String codigo) { this.codigo = codigo; }
+    
+    public String getCodigoBarras() { return codigoBarras; }
+    public void setCodigoBarras(String codigoBarras) { this.codigoBarras = codigoBarras; }
+    
+    public int getStockDisponible() { return stockDisponible; }
+    public void setStockDisponible(int stockDisponible) { this.stockDisponible = stockDisponible; }
+    
     public long getLastSync() { return lastSync; }
     public void setLastSync(long lastSync) { this.lastSync = lastSync; }
     
@@ -72,6 +85,10 @@ public class ProductoEntity {
     public void setSynced(boolean synced) { this.synced = synced; }
     
     // Métodos de utilidad
+    public boolean isActivo() {
+        return "activo".equalsIgnoreCase(estado);
+    }
+    
     public boolean isDisponible() {
         return "disponible".equalsIgnoreCase(estado);
     }
@@ -87,6 +104,11 @@ public class ProductoEntity {
     
     public void marcarNoDisponible() {
         this.estado = "no disponible";
+        this.needsSync = true;
+    }
+    
+    public void setActivo(boolean activo) {
+        this.estado = activo ? "activo" : "inactivo";
         this.needsSync = true;
     }
     
@@ -106,5 +128,14 @@ public class ProductoEntity {
      */
     public String getPrecioFormateado() {
         return String.format("$%.2f", precio);
+    }
+    
+    // Getter y setter para version
+    public int getVersion() {
+        return version;
+    }
+    
+    public void setVersion(int version) {
+        this.version = version;
     }
 }

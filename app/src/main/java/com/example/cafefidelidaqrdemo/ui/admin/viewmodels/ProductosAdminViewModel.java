@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.data.repositories.AdminRepository;
-import com.example.cafefidelidaqrdemo.data.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -120,14 +120,24 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 }
                 
                 // Verificar si ya existe un producto con el mismo código
-                if (producto.getCodigo() != null && !producto.getCodigo().isEmpty() &&
-                    adminRepository.existeProductoPorCodigo(producto.getCodigo())) {
-                    errorMessage.postValue("Ya existe un producto con ese código");
-                    return;
+                if (producto.getCodigo() != null && !producto.getCodigo().isEmpty()) {
+                    if (adminRepository.existeProductoPorCodigo(producto.getCodigo())) {
+                        errorMessage.postValue("Ya existe un producto con ese código");
+                        return;
+                    }
                 }
                 
-                adminRepository.crearProducto(producto);
-                successMessage.postValue("Producto creado exitosamente");
+                adminRepository.crearProducto(producto, new AdminRepository.AdminCallback<ProductoEntity>() {
+                    @Override
+                    public void onSuccess(ProductoEntity result) {
+                        successMessage.postValue("Producto creado exitosamente");
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        errorMessage.postValue("Error al crear producto: " + error);
+                    }
+                });
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al crear producto: " + e.getMessage());
@@ -152,7 +162,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         executor.execute(() -> {
             try {
                 // Verificar control de versión
-                ProductoEntity productoActual = adminRepository.getProductoPorId(producto.getId());
+                ProductoEntity productoActual = adminRepository.getProductoPorId(producto.getId_producto());
                 if (productoActual == null) {
                     errorMessage.postValue("El producto no existe");
                     return;
@@ -164,14 +174,14 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 }
                 
                 // Verificar nombres duplicados (excluyendo el producto actual)
-                if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId())) {
+                if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId_producto())) {
                     errorMessage.postValue("Ya existe otro producto con ese nombre");
                     return;
                 }
                 
                 // Verificar códigos duplicados (excluyendo el producto actual)
                 if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty() &&
-                    adminRepository.existeProductoPorCodigoExcluyendoId(producto.getCodigoBarras(), producto.getId())) {
+                    adminRepository.existeProductoPorCodigoExcluyendoId(producto.getCodigoBarras(), producto.getId_producto())) {
                     errorMessage.postValue("Ya existe otro producto con ese código");
                     return;
                 }

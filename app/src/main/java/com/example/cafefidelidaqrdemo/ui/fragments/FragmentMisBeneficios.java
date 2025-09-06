@@ -59,7 +59,7 @@ public class FragmentMisBeneficios extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(requireContext());
-        clienteId = sessionManager.getClienteId();
+        clienteId = sessionManager.getUserId();
     }
     
     @Nullable
@@ -84,13 +84,13 @@ public class FragmentMisBeneficios extends Fragment {
     
     private void initViews(View view) {
         recyclerViewBeneficios = view.findViewById(R.id.recyclerViewBeneficios);
-        textViewNoBeneficios = view.findViewById(R.id.textViewNoBeneficios);
-        cardViewOtp = view.findViewById(R.id.cardViewOtp);
-        textViewOtpCodigo = view.findViewById(R.id.textViewOtpCodigo);
-        textViewTiempoRestante = view.findViewById(R.id.textViewTiempoRestante);
-        textViewBeneficioSeleccionado = view.findViewById(R.id.textViewBeneficioSeleccionado);
-        buttonSolicitarNuevo = view.findViewById(R.id.buttonSolicitarNuevo);
-        buttonCancelarOtp = view.findViewById(R.id.buttonCancelarOtp);
+        // textViewNoBeneficios = view.findViewById(R.id.textViewNoBeneficios); // TODO: Agregar este ID al layout
+        // cardViewOtp = view.findViewById(R.id.cardViewOtp); // TODO: Agregar este ID al layout
+        // textViewOtpCodigo = view.findViewById(R.id.textViewOtpCodigo); // TODO: Agregar este ID al layout
+        // textViewTiempoRestante = view.findViewById(R.id.textViewTiempoRestante); // TODO: Agregar este ID al layout
+        // textViewBeneficioSeleccionado = view.findViewById(R.id.textViewBeneficioSeleccionado); // TODO: Agregar este ID al layout
+        // buttonSolicitarNuevo = view.findViewById(R.id.buttonSolicitarNuevo); // TODO: Agregar este ID al layout
+        // buttonCancelarOtp = view.findViewById(R.id.buttonCancelarOtp); // TODO: Agregar este ID al layout
         
         // Inicialmente ocultar card de OTP
         cardViewOtp.setVisibility(View.GONE);
@@ -112,17 +112,17 @@ public class FragmentMisBeneficios extends Fragment {
             if (beneficios != null && !beneficios.isEmpty()) {
                 adapter.updateBeneficios(beneficios);
                 recyclerViewBeneficios.setVisibility(View.VISIBLE);
-                textViewNoBeneficios.setVisibility(View.GONE);
+                // textViewNoBeneficios.setVisibility(View.GONE); // TODO: Agregar este ID al layout
             } else {
                 recyclerViewBeneficios.setVisibility(View.GONE);
-                textViewNoBeneficios.setVisibility(View.VISIBLE);
+                // textViewNoBeneficios.setVisibility(View.VISIBLE); // TODO: Agregar este ID al layout
             }
         });
         
         // Observar OTP actual
         viewModel.getOtpActual().observe(getViewLifecycleOwner(), otp -> {
             if (otp != null && !otp.isEmpty()) {
-                textViewOtpCodigo.setText(formatearOtp(otp));
+                // textViewOtpCodigo.setText(formatearOtp(otp)); // TODO: Implementar cuando se agregue la vista
                 cardViewOtp.setVisibility(View.VISIBLE);
             }
         });
@@ -133,7 +133,7 @@ public class FragmentMisBeneficios extends Fragment {
                 iniciarTemporizador(tiempoRestante);
             } else {
                 detenerTemporizador();
-                textViewTiempoRestante.setText("00:00");
+                // textViewTiempoRestante.setText("00:00"); // TODO: Implementar cuando se agregue la vista
             }
         });
         
@@ -164,6 +164,8 @@ public class FragmentMisBeneficios extends Fragment {
     }
     
     private void setupClickListeners() {
+        // TODO: Implementar cuando se agreguen las vistas
+        /*
         buttonSolicitarNuevo.setOnClickListener(v -> {
             if (beneficioSeleccionado != null) {
                 solicitarNuevoOtp();
@@ -173,6 +175,7 @@ public class FragmentMisBeneficios extends Fragment {
         buttonCancelarOtp.setOnClickListener(v -> {
             cancelarOtp();
         });
+        */
     }
     
     private void onBeneficioClick(BeneficioEntity beneficio) {
@@ -193,15 +196,17 @@ public class FragmentMisBeneficios extends Fragment {
     }
     
     private void solicitarOtp(BeneficioEntity beneficio) {
-        String sucursalId = sessionManager.getSucursalId(); // Obtener sucursal actual
-        textViewBeneficioSeleccionado.setText(beneficio.getNombre());
-        viewModel.solicitarOtp(clienteId, beneficio.getId_beneficio(), sucursalId);
+        // TODO: Implementar getSucursalId() en SessionManager
+        // String sucursalId = sessionManager.getSucursalId(); // Obtener sucursal actual
+        // textViewBeneficioSeleccionado.setText(beneficio.getNombre()); // TODO: Implementar cuando se agregue la vista
+        // viewModel.solicitarOtp(clienteId, beneficio.getId_beneficio(), sucursalId);
     }
     
     private void solicitarNuevoOtp() {
         if (beneficioSeleccionado != null) {
-            String sucursalId = sessionManager.getSucursalId();
-            viewModel.solicitarNuevoOtp(clienteId, beneficioSeleccionado.getId_beneficio(), sucursalId);
+            // TODO: Implementar getSucursalId() en SessionManager
+            // String sucursalId = sessionManager.getSucursalId();
+            // viewModel.solicitarNuevoOtp(clienteId, beneficioSeleccionado.getId_beneficio(), sucursalId);
         }
     }
     
@@ -229,7 +234,7 @@ public class FragmentMisBeneficios extends Fragment {
                 break;
             case "OTP_EXPIRADO":
                 Toast.makeText(getContext(), "El código OTP ha expirado.", Toast.LENGTH_SHORT).show();
-                buttonSolicitarNuevo.setVisibility(View.VISIBLE);
+                // buttonSolicitarNuevo.setVisibility(View.VISIBLE); // TODO: Implementar cuando se agregue la vista
                 break;
             case "CANJE_COMPLETADO":
                 Toast.makeText(getContext(), "¡Beneficio canjeado exitosamente!", Toast.LENGTH_LONG).show();
@@ -237,7 +242,7 @@ public class FragmentMisBeneficios extends Fragment {
                 viewModel.cargarBeneficiosDisponibles(clienteId); // Recargar lista
                 break;
             case "ERROR_CONEXION":
-                buttonSolicitarNuevo.setVisibility(View.VISIBLE);
+                // buttonSolicitarNuevo.setVisibility(View.VISIBLE); // TODO: Implementar cuando se agregue la vista
                 break;
             case "ERROR_DOBLE_CANJE":
                 cardViewOtp.setVisibility(View.GONE);
@@ -268,27 +273,27 @@ public class FragmentMisBeneficios extends Fragment {
                 segundos = segundos % 60;
                 
                 String tiempoFormateado = String.format("%02d:%02d", minutos, segundos);
-                textViewTiempoRestante.setText(tiempoFormateado);
+                // textViewTiempoRestante.setText(tiempoFormateado); // TODO: Implementar cuando se agregue la vista
                 
                 // Cambiar color cuando quedan menos de 10 segundos
                 if (millisUntilFinished < 10000) {
-                    textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                    // textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.holo_red_dark)); // TODO: Implementar cuando se agregue la vista
                 } else {
-                    textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.black));
+                    // textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.black)); // TODO: Implementar cuando se agregue la vista
                 }
             }
             
             @Override
             public void onFinish() {
-                textViewTiempoRestante.setText("00:00");
-                textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                buttonSolicitarNuevo.setVisibility(View.VISIBLE);
+                // textViewTiempoRestante.setText("00:00"); // TODO: Implementar cuando se agregue la vista
+            // textViewTiempoRestante.setTextColor(getResources().getColor(android.R.color.holo_red_dark)); // TODO: Implementar cuando se agregue la vista
+            // buttonSolicitarNuevo.setVisibility(View.VISIBLE); // TODO: Implementar cuando se agregue la vista
                 Toast.makeText(getContext(), "El código OTP ha expirado", Toast.LENGTH_SHORT).show();
             }
         };
         
         countDownTimer.start();
-        buttonSolicitarNuevo.setVisibility(View.GONE);
+        // buttonSolicitarNuevo.setVisibility(View.GONE); // TODO: Implementar cuando se agregue la vista
     }
     
     private void detenerTemporizador() {

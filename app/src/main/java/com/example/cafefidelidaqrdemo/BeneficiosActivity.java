@@ -242,14 +242,12 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
             .show();
     }
     
-    @Override
     public void onBeneficioClick(Beneficio beneficio) {
         // Mostrar detalles del beneficio
         // TODO: Implementar DetalleBeneficioActivity
         Toast.makeText(this, "Detalles de: " + beneficio.getNombre(), Toast.LENGTH_SHORT).show();
     }
     
-    @Override
     public void onUsarBeneficioClick(Beneficio beneficio) {
         if (beneficio.getEstado() == Beneficio.EstadoBeneficio.DISPONIBLE && beneficio.esValido()) {
             // TODO: Implementar CanjeBeneficioActivity

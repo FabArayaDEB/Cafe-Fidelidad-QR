@@ -57,7 +57,7 @@ public interface BeneficioDao {
     int countBeneficiosConflictivos(long fechaInicio, long fechaFin, String excludeId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertBeneficio(BeneficioEntity beneficio);
+    long insertBeneficio(BeneficioEntity beneficio);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertBeneficios(List<BeneficioEntity> beneficios);

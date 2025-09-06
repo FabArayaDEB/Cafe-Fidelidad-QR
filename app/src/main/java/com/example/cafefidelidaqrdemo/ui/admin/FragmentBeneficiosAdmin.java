@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapter.BeneficiosAdminAdapter;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodel.BeneficiosAdminViewModel;
@@ -30,7 +30,7 @@ import java.util.List;
  * Fragment para gestión de beneficios por administradores (CU-04.1)
  * Permite crear, editar, activar/desactivar y eliminar beneficios
  */
-public abstract class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdminAdapter.OnBeneficioActionListener {
+public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdminAdapter.OnBeneficioActionListener {
     
     private static final String TAG = "FragmentBeneficiosAdmin";
     
@@ -75,7 +75,7 @@ public abstract class FragmentBeneficiosAdmin extends Fragment implements Benefi
     
     private void initViews(View view) {
         recyclerViewBeneficios = view.findViewById(R.id.recyclerViewBeneficios);
-        fabNuevoBeneficio = view.findViewById(R.id.fabAgregarBeneficio); //cambiado de fabNuevoBeneficio
+        // fabNuevoBeneficio = view.findViewById(R.id.fabNuevoBeneficio); // TODO: Agregar este ID al layout
         progressIndicator = view.findViewById(R.id.progressIndicator);
         emptyStateView = view.findViewById(R.id.emptyStateView);
     }
@@ -189,40 +189,18 @@ public abstract class FragmentBeneficiosAdmin extends Fragment implements Benefi
     
     // Implementación de BeneficiosAdminAdapter.OnBeneficioActionListener
     @Override
-    public void onEditBeneficio(Beneficio beneficio) {
+    public void onEditarBeneficio(Beneficio beneficio) {
         showEditBeneficioDialog(beneficio);
     }
     
     @Override
-    public void onDeleteBeneficio(Beneficio beneficio) {
+    public void onEliminarBeneficio(Beneficio beneficio) {
         showDeleteConfirmationDialog(beneficio);
     }
     
     @Override
     public void onToggleActiveBeneficio(Beneficio beneficio) {
         showToggleActiveDialog(beneficio);
-    }
-    
-    @Override
-    public void onViewBeneficioDetails(Beneficio beneficio) {
-        // Mostrar detalles del beneficio
-        BeneficioDetailsDialogFragment detailsDialog = BeneficioDetailsDialogFragment.newInstance(beneficio);
-        detailsDialog.show(getParentFragmentManager(), "BeneficioDetailsDialog");
-    }
-    
-    @Override
-    public void onDuplicateBeneficio(Beneficio beneficio) {
-        // Crear copia del beneficio para duplicar
-        Beneficio duplicado = new Beneficio();
-        duplicado.setNombre(beneficio.getNombre() + " (Copia)");
-        duplicado.setDescripcion(beneficio.getDescripcion());
-        duplicado.setTipo(beneficio.getTipo());
-        duplicado.setVisitasRequeridas(beneficio.getVisitasRequeridas()); //cambiado de setValor
-        duplicado.setMontoMinimoCompra(beneficio.getReglasJson());
-        duplicado.setSucursalesAplicables(beneficio.getSucursalesAplicables());
-        duplicado.setActivo(false); // Crear como inactivo por defecto
-        
-        showEditBeneficioDialog(duplicado);
     }
     
     @Override

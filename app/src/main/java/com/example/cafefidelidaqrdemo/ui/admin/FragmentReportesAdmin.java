@@ -388,13 +388,20 @@ public class FragmentReportesAdmin extends Fragment {
         }
         
         // Aplicar filtros en el ViewModel
-        viewModel.aplicarFiltros(
+        ReportesAdminViewModel.FiltrosReporte filtros = new ReportesAdminViewModel.FiltrosReporte(
             tipoReporteSeleccionado,
             fechaInicioSeleccionada,
             fechaFinSeleccionada,
-            sucursalSeleccionada,
+            sucursalSeleccionada != null ? sucursalSeleccionada.toString() : null,
             beneficioSeleccionado
         );
+        viewModel.aplicarFiltros(filtros);
+    }
+    
+    private String formatearFecha(Date fecha) {
+        if (fecha == null) return null;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(fecha);
     }
     
     private void limpiarFiltros() {

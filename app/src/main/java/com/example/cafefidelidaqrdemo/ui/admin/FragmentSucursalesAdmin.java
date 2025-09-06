@@ -29,7 +29,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentSucursalesAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogSucursalBinding;
-import com.example.cafefidelidaqrdemo.data.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.SucursalesAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.SucursalesAdminViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -229,12 +229,9 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         
         // Botón de filtro no está disponible en este layout
         
-        binding.buttonLimpiarBusqueda.setOnClickListener(v -> {
-            binding.editTextBuscar.setText("");
-            binding.buttonLimpiarBusqueda.setVisibility(View.GONE);
-        });
+        // Botón limpiar búsqueda no está disponible en este layout
         
-        binding.buttonToggleVista.setOnClickListener(v -> toggleVistaMapaLista());
+        // Botón toggle vista no está disponible en este layout
     }
     
     private void setupSearchView() {
@@ -246,13 +243,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = s.toString().trim();
                 
-                if (query.isEmpty()) {
-                    binding.buttonLimpiarBusqueda.setVisibility(View.GONE);
-                    adapter.filtrarSucursales("");
-                } else {
-                    binding.buttonLimpiarBusqueda.setVisibility(View.VISIBLE);
-                    adapter.filtrarSucursales(query);
-                }
+                // Funcionalidad de filtrado no implementada en el adapter
             }
             
             @Override
@@ -261,11 +252,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
     }
     
     private void setupMap() {
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
+        // Mapa no está disponible en este layout
     }
     
     @Override
@@ -298,17 +285,11 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             // Actualizar marcadores en el mapa
             actualizarMarcadoresMapa();
             
-            // Mostrar/ocultar mensaje de lista vacía
+            // Mostrar/ocultar RecyclerView según contenido
             if (sucursales.isEmpty()) {
-                binding.textViewListaVacia.setVisibility(View.VISIBLE);
-                binding.textViewListaVacia.setText(
-                        mostrarSoloActivas ? 
-                        "No hay sucursales activas" : 
-                        "No hay sucursales registradas"
-                );
                 binding.recyclerViewSucursales.setVisibility(View.GONE);
+                // TextView de lista vacía no está disponible en el layout
             } else {
-                binding.textViewListaVacia.setVisibility(View.GONE);
                 binding.recyclerViewSucursales.setVisibility(View.VISIBLE);
             }
         }
@@ -319,8 +300,8 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             mMap.clear();
             
             for (SucursalEntity sucursal : sucursalesList) {
-                if (sucursal.getLatitud() != 0 && sucursal.getLongitud() != 0) {
-                    LatLng posicion = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
+                if (sucursal.getLat() != 0 && sucursal.getLon() != 0) {
+                LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
                     
                     MarkerOptions markerOptions = new MarkerOptions()
                             .position(posicion)
@@ -328,7 +309,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
                             .snippet(sucursal.getDireccion());
                     
                     // Cambiar color según estado
-                    if (!sucursal.isActivo()) {
+                    if (!sucursal.isActiva()) {
                         // Marcador gris para sucursales inactivas
                         markerOptions.alpha(0.5f);
                     }
@@ -351,23 +332,15 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
     }
     
     private void actualizarTextoFiltro() {
-        binding.buttonFiltro.setText(
-                mostrarSoloActivas ? "Mostrar Todas" : "Solo Activas"
-        );
+        // buttonFiltro no está disponible en el layout
+        // binding.buttonFiltro.setText(
+        //         mostrarSoloActivas ? "Mostrar Todas" : "Solo Activas"
+        // );
     }
     
     private void toggleVistaMapaLista() {
-        if (binding.layoutLista.getVisibility() == View.VISIBLE) {
-            // Cambiar a vista de mapa
-            binding.layoutLista.setVisibility(View.GONE);
-            binding.layoutMapa.setVisibility(View.VISIBLE);
-            binding.buttonToggleVista.setText("Ver Lista");
-        } else {
-            // Cambiar a vista de lista
-            binding.layoutLista.setVisibility(View.VISIBLE);
-            binding.layoutMapa.setVisibility(View.GONE);
-            binding.buttonToggleVista.setText("Ver Mapa");
-        }
+        // Funcionalidad de toggle entre vista mapa/lista no implementada
+        // Los layouts layoutLista y layoutMapa no están disponibles
     }
     
     private void mostrarDialogoNuevaSucursal() {
@@ -408,7 +381,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioSucursal(dialogBinding)) {
                     SucursalEntity sucursalEditada = crearSucursalDesdeFormulario(dialogBinding);
-                    sucursalEditada.setId(sucursal.getId());
+                    sucursalEditada.setId_sucursal(sucursal.getId_sucursal());
                     sucursalEditada.setVersion(sucursal.getVersion());
                     sucursalEditada.setFechaCreacion(sucursal.getFechaCreacion());
                     viewModel.actualizarSucursal(sucursalEditada);
@@ -432,44 +405,38 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             // Modo edición
             dialogBinding.editTextNombre.setText(sucursal.getNombre());
             dialogBinding.editTextDireccion.setText(sucursal.getDireccion());
-            dialogBinding.editTextCiudad.setText(sucursal.getCiudad());
-            dialogBinding.editTextTelefono.setText(sucursal.getTelefono());
-            dialogBinding.editTextEmail.setText(sucursal.getEmail());
-            dialogBinding.editTextGerente.setText(sucursal.getGerente());
-            dialogBinding.editTextCapacidad.setText(String.valueOf(sucursal.getCapacidadMaxima()));
-            dialogBinding.editTextDescripcion.setText(sucursal.getDescripcion());
-            dialogBinding.switchActivo.setChecked(sucursal.isActivo());
+            // editTextCiudad, editTextTelefono, editTextEmail, editTextGerente,
+            // editTextCapacidad, editTextDescripcion y switchActivo no están disponibles en el layout
             
-            latitudSeleccionada = sucursal.getLatitud();
-            longitudSeleccionada = sucursal.getLongitud();
-            horarioAperturaSeleccionado = sucursal.getHorarioApertura();
-            horarioCierreSeleccionado = sucursal.getHorarioCierre();
+            latitudSeleccionada = sucursal.getLat();
+            longitudSeleccionada = sucursal.getLon();
+            horarioAperturaSeleccionado = sucursal.getHorario().split(" - ")[0];
+            horarioCierreSeleccionado = sucursal.getHorario().split(" - ")[1];
             
-            dialogBinding.textViewUbicacion.setText(
-                    String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
+            // textViewUbicacion no está disponible en el layout
         } else {
             // Modo creación
-            dialogBinding.switchActivo.setChecked(true);
+            // switchActivo no está disponible en el layout
             obtenerUbicacionActual(dialogBinding);
         }
         
         // Configurar botones de horario
-        dialogBinding.buttonHorarioApertura.setText(horarioAperturaSeleccionado);
-        dialogBinding.buttonHorarioCierre.setText(horarioCierreSeleccionado);
+        // dialogBinding.buttonHorarioApertura.setText(horarioAperturaSeleccionado);
+        dialogBinding.editTextHorario.setText(horarioCierreSeleccionado);
         
-        dialogBinding.buttonHorarioApertura.setOnClickListener(v -> 
-                mostrarSelectorHorario(true, dialogBinding));
+        // dialogBinding.buttonHorarioApertura.setOnClickListener(v -> 
+        //        mostrarSelectorHorario(true, dialogBinding));
         
-        dialogBinding.buttonHorarioCierre.setOnClickListener(v -> 
+        dialogBinding.editTextHorario.setOnClickListener(v -> 
                 mostrarSelectorHorario(false, dialogBinding));
         
         // Configurar botón de ubicación
-        dialogBinding.buttonSeleccionarUbicacion.setOnClickListener(v -> 
-                seleccionarUbicacionEnMapa(dialogBinding));
+        // dialogBinding.buttonSeleccionarUbicacion.setOnClickListener(v -> 
+        //        seleccionarUbicacionEnMapa(dialogBinding));
         
         // Configurar geocodificación inversa
-        dialogBinding.buttonBuscarDireccion.setOnClickListener(v -> 
-                buscarDireccion(dialogBinding));
+        // dialogBinding.buttonBuscarDireccion.setOnClickListener(v -> 
+        //        buscarDireccion(dialogBinding));
     }
     
     private void obtenerUbicacionActual(DialogSucursalBinding dialogBinding) {
@@ -482,8 +449,8 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
                             latitudSeleccionada = location.getLatitude();
                             longitudSeleccionada = location.getLongitude();
                             
-                            dialogBinding.textViewUbicacion.setText(
-                                    String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
+                            // dialogBinding.textViewUbicacion.setText(
+                            //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
                         }
                     });
         }
@@ -501,10 +468,10 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
                     
                     if (esApertura) {
                         horarioAperturaSeleccionado = horario;
-                        dialogBinding.buttonHorarioApertura.setText(horario);
+                        // dialogBinding.buttonHorarioApertura.setText(horario);
                     } else {
                         horarioCierreSeleccionado = horario;
-                        dialogBinding.buttonHorarioCierre.setText(horario);
+                        dialogBinding.editTextHorario.setText(horario);
                     }
                 },
                 hora, minuto, true
@@ -520,24 +487,24 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
     
     private void buscarDireccion(DialogSucursalBinding dialogBinding) {
         String direccion = dialogBinding.editTextDireccion.getText().toString().trim();
-        String ciudad = dialogBinding.editTextCiudad.getText().toString().trim();
+        // Campo ciudad no disponible en el layout
         
-        if (direccion.isEmpty() || ciudad.isEmpty()) {
-            Toast.makeText(getContext(), "Ingrese dirección y ciudad", Toast.LENGTH_SHORT).show();
+        if (direccion.isEmpty()) {
+            Toast.makeText(getContext(), "Ingrese dirección", Toast.LENGTH_SHORT).show();
             return;
         }
         
         try {
             List<Address> addresses = geocoder.getFromLocationName(
-                    direccion + ", " + ciudad + ", Colombia", 1);
+                    direccion + ", Colombia", 1);
             
             if (!addresses.isEmpty()) {
                 Address address = addresses.get(0);
                 latitudSeleccionada = address.getLatitude();
                 longitudSeleccionada = address.getLongitude();
                 
-                dialogBinding.textViewUbicacion.setText(
-                        String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
+                // dialogBinding.textViewUbicacion.setText(
+                //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
                 
                 Toast.makeText(getContext(), "Ubicación encontrada", Toast.LENGTH_SHORT).show();
             } else {
@@ -565,12 +532,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             esValido = false;
         }
         
-        // Validar ciudad
-        String ciudad = dialogBinding.editTextCiudad.getText().toString().trim();
-        if (ciudad.isEmpty()) {
-            dialogBinding.editTextCiudad.setError("La ciudad es obligatoria");
-            esValido = false;
-        }
+        // Campo ciudad no disponible en el layout
         
         // Validar coordenadas
         if (latitudSeleccionada == 0.0 || longitudSeleccionada == 0.0) {
@@ -578,20 +540,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             esValido = false;
         }
         
-        // Validar capacidad
-        String capacidadStr = dialogBinding.editTextCapacidad.getText().toString().trim();
-        if (!capacidadStr.isEmpty()) {
-            try {
-                int capacidad = Integer.parseInt(capacidadStr);
-                if (capacidad <= 0) {
-                    dialogBinding.editTextCapacidad.setError("La capacidad debe ser mayor a 0");
-                    esValido = false;
-                }
-            } catch (NumberFormatException e) {
-                dialogBinding.editTextCapacidad.setError("Ingrese una capacidad válida");
-                esValido = false;
-            }
-        }
+        // Campo capacidad no disponible en el layout
         
         return esValido;
     }
@@ -601,30 +550,25 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         
         sucursal.setNombre(dialogBinding.editTextNombre.getText().toString().trim());
         sucursal.setDireccion(dialogBinding.editTextDireccion.getText().toString().trim());
-        sucursal.setCiudad(dialogBinding.editTextCiudad.getText().toString().trim());
-        sucursal.setTelefono(dialogBinding.editTextTelefono.getText().toString().trim());
-        sucursal.setEmail(dialogBinding.editTextEmail.getText().toString().trim());
-        sucursal.setLatitud(latitudSeleccionada);
-        sucursal.setLongitud(longitudSeleccionada);
-        sucursal.setHorarioApertura(horarioAperturaSeleccionado);
-        sucursal.setHorarioCierre(horarioCierreSeleccionado);
-        sucursal.setDiasOperacion(String.join(",", diasSeleccionados));
-        sucursal.setGerente(dialogBinding.editTextGerente.getText().toString().trim());
-        sucursal.setDescripcion(dialogBinding.editTextDescripcion.getText().toString().trim());
-        sucursal.setActivo(dialogBinding.switchActivo.isChecked());
+        // Campos ciudad, telefono y email no disponibles en database.entities.SucursalEntity
+        sucursal.setLat(latitudSeleccionada);
+        sucursal.setLon(longitudSeleccionada);
+        // Usar horario combinado en database.entities
+        sucursal.setHorario(horarioAperturaSeleccionado + " - " + horarioCierreSeleccionado);
+        // Campo diasOperacion no disponible en database.entities.SucursalEntity
+        // if (!diasSeleccionados.isEmpty()) {
+        //     sucursal.setDiasOperacion(String.join(",", diasSeleccionados));
+        // }
+        // Campo gerente no disponible en database.entities.SucursalEntity
+        // Establecer estado activo por defecto
+        sucursal.setEstado("activo");
         
-        String capacidadStr = dialogBinding.editTextCapacidad.getText().toString().trim();
-        if (!capacidadStr.isEmpty()) {
-            sucursal.setCapacidadMaxima(Integer.parseInt(capacidadStr));
-        } else {
-            sucursal.setCapacidadMaxima(50); // Valor por defecto
-        }
+        // Campo capacidadMaxima no disponible en database.entities.SucursalEntity
         
         long currentTime = System.currentTimeMillis();
         sucursal.setFechaCreacion(currentTime);
         sucursal.setFechaModificacion(currentTime);
-        sucursal.setCreadoPor("admin");
-        sucursal.setModificadoPor("admin");
+        // Campos creadoPor y modificadoPor no disponibles en database.entities.SucursalEntity
         sucursal.setVersion(1);
         
         return sucursal;
@@ -634,26 +578,15 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         String detalles = String.format(
                 "Nombre: %s\n" +
                 "Dirección: %s\n" +
-                "Ciudad: %s\n" +
-                "Teléfono: %s\n" +
-                "Email: %s\n" +
-                "Horario: %s - %s\n" +
-                "Capacidad: %d personas\n" +
-                "Gerente: %s\n" +
+                "Horario: %s\n" +
                 "Estado: %s\n" +
                 "Coordenadas: %.6f, %.6f",
                 sucursal.getNombre(),
                 sucursal.getDireccion(),
-                sucursal.getCiudad(),
-                sucursal.getTelefono(),
-                sucursal.getEmail(),
-                sucursal.getHorarioApertura(),
-                sucursal.getHorarioCierre(),
-                sucursal.getCapacidadMaxima(),
-                sucursal.getGerente(),
-                sucursal.isActivo() ? "Activa" : "Inactiva",
-                sucursal.getLatitud(),
-                sucursal.getLongitud()
+                sucursal.getHorario(),
+                sucursal.isActiva() ? "Activa" : "Inactiva",
+                sucursal.getLat(),
+                sucursal.getLon()
         );
         
         new AlertDialog.Builder(getContext())
@@ -667,28 +600,31 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
     
     private void mostrarSucursalEnMapa(SucursalEntity sucursal) {
         if (mMap != null) {
-            LatLng posicion = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
+            LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(posicion, 15));
             
-            // Cambiar a vista de mapa
-            binding.layoutLista.setVisibility(View.GONE);
-            binding.layoutMapa.setVisibility(View.VISIBLE);
-            binding.buttonToggleVista.setText("Ver Lista");
+            // Cambiar a vista de mapa no implementado
+            // Los layouts no están disponibles
         }
     }
     
     private void toggleEstadoSucursal(SucursalEntity sucursal) {
-        String accion = sucursal.isActivo() ? "desactivar" : "activar";
+        String accion = sucursal.isActiva() ? "desactivar" : "activar";
         String mensaje = String.format("¿Está seguro que desea %s la sucursal '%s'?", accion, sucursal.getNombre());
         
         new AlertDialog.Builder(getContext())
                 .setTitle("Confirmar acción")
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
-                    if (sucursal.isActivo()) {
-                        viewModel.desactivarSucursal(sucursal.getId(), "Desactivada por administrador");
-                    } else {
-                        viewModel.activarSucursal(sucursal.getId());
+                    try {
+                        long sucursalId = Long.parseLong(sucursal.getId_sucursal());
+            if (sucursal.isActiva()) {
+                            viewModel.desactivarSucursal(sucursalId, "Desactivada por administrador");
+                        } else {
+                            viewModel.activarSucursal(sucursalId);
+                        }
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(getContext(), "Error: ID de sucursal inválido", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("No", null)
@@ -700,7 +636,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
                 .setTitle("Eliminar Sucursal")
                 .setMessage(String.format("¿Está seguro que desea eliminar la sucursal '%s'?\n\nEsta acción no se puede deshacer.", sucursal.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarSucursal(sucursal.getId());
+                    viewModel.eliminarSucursal(Long.parseLong(sucursal.getId_sucursal()));
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();

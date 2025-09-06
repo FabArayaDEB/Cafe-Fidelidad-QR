@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -132,12 +132,12 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
         }
         
         private void setupVigencia(Beneficio beneficio, Context context) {
-            if (beneficio.getFechaFin() != null) {
+            if (beneficio.getFechaFinVigencia() != null) {
                 Date now = new Date();
-                long diasRestantes = (beneficio.getFechaFin().getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                long diasRestantes = (beneficio.getFechaFinVigencia().getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
                 
                 if (diasRestantes > 7) {
-                    textVigencia.setText(String.format("Válido hasta %s", dateFormat.format(beneficio.getFechaFin())));
+                    textVigencia.setText(String.format("Válido hasta %s", dateFormat.format(beneficio.getFechaFinVigencia())));
                     textVigencia.setTextColor(ContextCompat.getColor(context, R.color.color_on_surface_variant));
                 } else if (diasRestantes > 0) {
                     textVigencia.setText(String.format("¡Expira en %d días!", diasRestantes));
@@ -191,7 +191,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
                     return "Descuento";
                 case DOS_POR_UNO:
                     return "2x1";
-                case PRODUCTO_GRATIS:
+                case PREMIO:
                     return "Gratis";
                 default:
                     return "Beneficio";
@@ -206,7 +206,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
                     return R.drawable.ic_discount;
                 case DOS_POR_UNO:
                     return R.drawable.ic_redeem;
-                case PRODUCTO_GRATIS:
+                case PREMIO:
                     return R.drawable.ic_redeem;
                 default:
                     return R.drawable.ic_redeem;
@@ -221,7 +221,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
                     return R.color.color_secondary;
                 case DOS_POR_UNO:
                     return R.color.color_tertiary;
-                case PRODUCTO_GRATIS:
+                case PREMIO:
                     return R.color.color_success;
                 default:
                     return R.color.color_primary;
@@ -236,7 +236,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
                     return String.format("$%.0f OFF", beneficio.getValor());
                 case DOS_POR_UNO:
                     return "¡2x1!";
-                case PRODUCTO_GRATIS:
+                case PREMIO:
                     return "¡GRATIS!";
                 default:
                     return "¡Disponible!";

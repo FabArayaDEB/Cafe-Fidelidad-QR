@@ -62,6 +62,11 @@ public class BeneficioEntity {
     public String getId_beneficio() { return id_beneficio; }
     public void setId_beneficio(@NonNull String id_beneficio) { this.id_beneficio = id_beneficio; }
     
+    // Método adicional para compatibilidad con long ID
+    public void setId(long id) {
+        this.id_beneficio = String.valueOf(id);
+    }
+    
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     

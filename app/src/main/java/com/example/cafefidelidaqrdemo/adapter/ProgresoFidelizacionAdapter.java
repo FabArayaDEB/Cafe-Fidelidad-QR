@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.model.Beneficio;
 import com.example.cafefidelidaqrdemo.viewmodel.ProgresoViewModel;
 import java.util.ArrayList;
 import java.util.List;

@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.example.cafefidelidaqrdemo.data.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 
 import java.util.List;
 

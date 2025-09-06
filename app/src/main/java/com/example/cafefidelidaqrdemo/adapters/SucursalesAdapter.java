@@ -78,7 +78,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     // Método para actualizar lista sin distancias
     public void submitList(List<SucursalItem> sucursales) {
         List<SucursalItem> items = sucursales.stream()
-            .map(sucursal -> new SucursalItem(sucursal, null))
+            .map(sucursal -> new SucursalItem(sucursal.getSucursal(), null))
             .collect(Collectors.toList());
         submitList(items);
     }
@@ -247,7 +247,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             
             @Override
             public boolean areItemsTheSame(@NonNull SucursalItem oldItem, @NonNull SucursalItem newItem) {
-                return oldItem.getSucursal().getIdSucursal() == newItem.getSucursal().getIdSucursal();
+                return oldItem.getSucursal().getId_sucursal().equals(newItem.getSucursal().getId_sucursal());
             }
             
             @Override
@@ -274,7 +274,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     public int getSucursalPosition(int idSucursal) {
         for (int i = 0; i < getItemCount(); i++) {
             SucursalItem item = getItem(i);
-            if (item != null && item.getSucursal().getIdSucursal() == idSucursal) {
+            if (item != null && item.getSucursal().getId_sucursal().equals(String.valueOf(idSucursal))) {
                 return i;
             }
         }

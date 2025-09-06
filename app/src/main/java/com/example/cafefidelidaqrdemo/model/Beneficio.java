@@ -6,12 +6,13 @@ import androidx.room.TypeConverters;
 import com.example.cafefidelidaqrdemo.database.Converters;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 @Entity(tableName = "beneficios")
 @TypeConverters(Converters.class)
-public class Beneficio {
+public class Beneficio implements Serializable {
     @PrimaryKey
     @SerializedName("id")
     private String id;
@@ -54,6 +55,24 @@ public class Beneficio {
 
     @SerializedName("vecesCanjeado")
     private int vecesCanjeado;
+
+    @SerializedName("montoTotalAhorrado")
+    private double montoTotalAhorrado;
+
+    @SerializedName("cantidadMaximaUsos")
+    private int cantidadMaximaUsos;
+
+    @SerializedName("fechaFinVigencia")
+    private Date fechaFinVigencia;
+
+    @SerializedName("fechaInicioVigencia")
+    private Date fechaInicioVigencia;
+
+    @SerializedName("esPersonalizado")
+    private boolean esPersonalizado;
+
+    @SerializedName("clienteId")
+    private String clienteId;
 
     // Enum para tipos de beneficio
     public enum TipoBeneficio {
@@ -215,6 +234,54 @@ public class Beneficio {
 
     public void setFechaModificacion(Date fechaModificacion) {
         this.fechaModificacion = fechaModificacion;
+    }
+
+    public double getMontoTotalAhorrado() {
+        return montoTotalAhorrado;
+    }
+
+    public void setMontoTotalAhorrado(double montoTotalAhorrado) {
+        this.montoTotalAhorrado = montoTotalAhorrado;
+    }
+
+    public int getCantidadMaximaUsos() {
+        return cantidadMaximaUsos;
+    }
+
+    public void setCantidadMaximaUsos(int cantidadMaximaUsos) {
+        this.cantidadMaximaUsos = cantidadMaximaUsos;
+    }
+
+    public Date getFechaFinVigencia() {
+        return fechaFinVigencia;
+    }
+
+    public void setFechaFinVigencia(Date fechaFinVigencia) {
+        this.fechaFinVigencia = fechaFinVigencia;
+    }
+
+    public Date getFechaInicioVigencia() {
+        return fechaInicioVigencia;
+    }
+
+    public void setFechaInicioVigencia(Date fechaInicioVigencia) {
+        this.fechaInicioVigencia = fechaInicioVigencia;
+    }
+
+    public boolean isEsPersonalizado() {
+        return esPersonalizado;
+    }
+
+    public void setEsPersonalizado(boolean esPersonalizado) {
+        this.esPersonalizado = esPersonalizado;
+    }
+
+    public String getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(String clienteId) {
+        this.clienteId = clienteId;
     }
 
     // Métodos de utilidad

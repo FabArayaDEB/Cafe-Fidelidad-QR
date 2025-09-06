@@ -28,6 +28,9 @@ public interface ProductoDao {
     @Delete
     void delete(ProductoEntity producto);
     
+    @Delete
+    void deleteProducto(ProductoEntity producto);
+    
     @Query("SELECT * FROM productos WHERE id_producto = :id")
     ProductoEntity getById(String id);
     
@@ -111,4 +114,16 @@ public interface ProductoDao {
     
     @Query("SELECT COUNT(*) FROM productos WHERE nombre = :nombre AND id_producto != :idExcluir")
     int existeProductoConNombre(String nombre, long idExcluir);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE codigo = :codigo")
+    int existeProductoPorCodigo(String codigo);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE nombre = :nombre")
+    String existeProductoPorNombre(String nombre);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE nombre = :nombre AND id_producto != :idExcluir")
+    int existeProductoPorNombreExcluyendoId(String nombre, String idExcluir);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE codigo = :codigo AND id_producto != :idExcluir")
+    int existeProductoPorCodigoExcluyendoId(String codigo, String idExcluir);
 }
