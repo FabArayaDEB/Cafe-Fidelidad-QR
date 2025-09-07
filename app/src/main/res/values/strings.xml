@@ -1,3 +1,34 @@
 <resources>
-    <string name="app_name">CafeFidelidadQR</string>
+    <string name="app_name">Cafe Fidelidad QR</string>
+    <string name="cafe_name">cafe_normal</string>
+    <string name="cafe_precio">$1500</string>
+
+    <string-array name="tipos_de_cafes">
+        <item>cafe_normal</item>
+        <item>awa</item>
+        <item>uwu</item>
+        <item>cafe_con_leche</item>
+        <item>espresso</item>
+        <item>capuchino</item>
+        <item>latte</item>
+        <item>mocha</item>
+        <item>frappe</item>
+        <item>te</item>
+        <item>cafe_con_leche2</item>
+    </string-array>
+
+    <string-array name="precios_de_cafes">
+        <item>$1500</item>
+        <item>$2000</item>
+        <item>$1800</item>
+        <item>$2200</item>
+        <item>$2100</item>
+        <item>$2500</item>
+        <item>$2300</item>
+        <item>$2400</item>
+        <item>$2600</item>
+        <item>$2700</item>
+        <item>$2800</item>
+    </string-array>
+
 </resources>
