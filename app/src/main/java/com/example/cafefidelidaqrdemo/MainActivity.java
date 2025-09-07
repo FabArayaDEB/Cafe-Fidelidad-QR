@@ -9,9 +9,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.cafefidelidaqrdemo.databinding.ActivityMainBinding;
-import com.example.cafefidelidaqrdemo.fragment.FragmentQR;
-import com.example.cafefidelidaqrdemo.fragment.FragmentPerfil;
-import com.example.cafefidelidaqrdemo.fragment.FragmentPuntos;
+import com.example.cafefidelidaqrdemo.fragments.FragmentQR;
+import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
+import com.example.cafefidelidaqrdemo.fragments.FragmentPuntos;
 import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
 import com.example.cafefidelidaqrdemo.CatalogoActivity;
 import com.example.cafefidelidaqrdemo.offline.OfflineManager;
@@ -36,7 +36,9 @@ public class MainActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
         if (firebaseAuth.getCurrentUser() == null){
+            android.util.Log.d("MainActivity", "Usuario no autenticado, redirigiendo a login");
             setLogin();
+            return;
         }
         
         // Inicializar OfflineManager y configurar sincronización automática

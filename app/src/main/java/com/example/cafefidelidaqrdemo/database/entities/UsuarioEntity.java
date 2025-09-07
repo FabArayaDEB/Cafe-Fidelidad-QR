@@ -2,6 +2,7 @@ package com.example.cafefidelidaqrdemo.database.entities;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.ColumnInfo;
 import androidx.annotation.NonNull;
 
 /**
@@ -25,7 +26,10 @@ public class UsuarioEntity {
     private long ultimaVisita;
     private String telefono;
     private String fechaNacimiento;
+    @ColumnInfo(name = "lastSync")
     private long lastSync; // Timestamp de última sincronización
+    
+    @ColumnInfo(name = "needsSync")
     private boolean needsSync; // Indica si necesita sincronización
     
     // Constructor vacío requerido por Room

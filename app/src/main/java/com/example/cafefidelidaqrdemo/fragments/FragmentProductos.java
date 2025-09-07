@@ -18,7 +18,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
-import com.example.cafefidelidaqrdemo.viewmodel.ProductosViewModel;
+import com.example.cafefidelidaqrdemo.viewmodels.ProductosViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;

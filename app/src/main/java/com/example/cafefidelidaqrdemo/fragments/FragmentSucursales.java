@@ -23,7 +23,7 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.SucursalesAdapter;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
-import com.example.cafefidelidaqrdemo.viewmodel.SucursalesViewModel;
+import com.example.cafefidelidaqrdemo.viewmodels.SucursalesViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.chip.Chip;

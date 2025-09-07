@@ -126,4 +126,10 @@ public interface ProductoDao {
     
     @Query("SELECT COUNT(*) FROM productos WHERE codigo = :codigo AND id_producto != :idExcluir")
     int existeProductoPorCodigoExcluyendoId(String codigo, String idExcluir);
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE estado = 'disponible'")
+    int getCountProductosActivosSync();
+    
+    @Query("SELECT COUNT(*) FROM productos WHERE estado != 'disponible'")
+    int getCountProductosInactivosSync();
 }

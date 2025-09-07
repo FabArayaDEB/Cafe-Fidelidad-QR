@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.model.Beneficio;
+import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -35,10 +35,10 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
     private Button buttonCerrar;
     
     // Data
-    private Beneficio beneficio;
+    private BeneficioEntity beneficio;
     private SimpleDateFormat dateFormat;
     
-    public static BeneficioDetailsDialogFragment newInstance(Beneficio beneficio) {
+    public static BeneficioDetailsDialogFragment newInstance(BeneficioEntity beneficio) {
         BeneficioDetailsDialogFragment fragment = new BeneficioDetailsDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_BENEFICIO, beneficio);
@@ -52,7 +52,7 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         
         if (getArguments() != null) {
-            beneficio = (Beneficio) getArguments().getSerializable(ARG_BENEFICIO);
+            beneficio = (BeneficioEntity) getArguments().getSerializable(ARG_BENEFICIO);
         }
     }
     
@@ -92,30 +92,43 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         if (beneficio == null) return;
         
         textNombre.setText(beneficio.getNombre());
-        textDescripcion.setText(beneficio.getDescripcion());
+        // Note: BeneficioEntity doesn't have getDescripcion method
+        textDescripcion.setText("Descripción no disponible");
         
         if (beneficio.getTipo() != null) {
-            textTipo.setText(beneficio.getTipo().toString());
+            textTipo.setText(beneficio.getTipo());
         }
         
-        textValor.setText(String.valueOf(beneficio.getValor()));
-        // textVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas())); // Método no existe
-        textVisitasRequeridas.setText("N/A"); // Simulación temporal
+        // Set valor based on tipo
+        if ("DESCUENTO_PORCENTAJE".equals(beneficio.getTipo()) && beneficio.getDescuento_pct() > 0) {
+            textValor.setText(String.valueOf(beneficio.getDescuento_pct()) + "%");
+        } else if (beneficio.getDescuento_monto() > 0) {
+            textValor.setText("$" + String.valueOf(beneficio.getDescuento_monto()));
+        } else {
+            textValor.setText("N/A");
+        }
         
-        if (beneficio.getFechaInicio() != null) {
-            textFechaInicio.setText(dateFormat.format(beneficio.getFechaInicio()));
+        if (beneficio.getRequisito_visitas() > 0) {
+            textVisitasRequeridas.setText(String.valueOf(beneficio.getRequisito_visitas()));
+        } else {
+            textVisitasRequeridas.setText("N/A");
+        }
+        
+        if (beneficio.getVigencia_ini() > 0) {
+            textFechaInicio.setText(dateFormat.format(new java.util.Date(beneficio.getVigencia_ini())));
         } else {
             textFechaInicio.setText("No especificada");
         }
         
-        if (beneficio.getFechaFin() != null) {
-            textFechaFin.setText(dateFormat.format(beneficio.getFechaFin()));
+        if (beneficio.getVigencia_fin() > 0) {
+            textFechaFin.setText(dateFormat.format(new java.util.Date(beneficio.getVigencia_fin())));
         } else {
             textFechaFin.setText("No especificada");
         }
         
         textEstado.setText(beneficio.isActivo() ? "Activo" : "Inactivo");
-        textVecesCanjeado.setText(String.valueOf(beneficio.getVecesCanjeado()));
+        // Note: BeneficioEntity doesn't have getVeces_canjeado method
+        textVecesCanjeado.setText("0"); // Default value since method doesn't exist
     }
     
     @Override

@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.data.entities.TableroEntity;
-import com.example.cafefidelidaqrdemo.data.repositories.TableroRepository;
+import com.example.cafefidelidaqrdemo.repository.TableroRepository;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,6 +72,24 @@ public class TableroClienteViewModel extends AndroidViewModel {
     
     public LiveData<Boolean> getIsProcessingAction() { return isProcessingAction; }
     public LiveData<String> getActionResult() { return actionResult; }
+    
+    // Método para obtener KPIs del cliente
+    public LiveData<KPIsCliente> getKPIsCliente() {
+        MutableLiveData<KPIsCliente> kpisLiveData = new MutableLiveData<>();
+        TableroEntity tablero = tableroCliente.getValue();
+        if (tablero != null) {
+            KPIsCliente kpis = new KPIsCliente(
+                tablero.getTotalVisitas(),
+                tablero.getPuntosDisponibles(),
+                tablero.getBeneficiosDisponibles(),
+                tablero.getTotalCanjes(),
+                tablero.getProgresoMetaVisitas(),
+                tablero.getNivelFidelidad()
+            );
+            kpisLiveData.setValue(kpis);
+        }
+        return kpisLiveData;
+    }
     
     // Métodos principales
     public void cargarTableroCliente(String clienteId) {
@@ -459,5 +477,31 @@ public class TableroClienteViewModel extends AndroidViewModel {
         public String getDescripcionCompleta() {
             return String.format("%s - %d puntos ($%.2f)", nombre, puntosRequeridos, valor);
         }
+    }
+    
+    public static class KPIsCliente {
+        private int totalVisitas;
+        private int puntosActuales;
+        private int beneficiosDisponibles;
+        private int totalCanjes;
+        private double progresoMeta;
+        private String nivelFidelidad;
+        
+        public KPIsCliente(int totalVisitas, int puntosActuales, int beneficiosDisponibles, 
+                          int totalCanjes, double progresoMeta, String nivelFidelidad) {
+            this.totalVisitas = totalVisitas;
+            this.puntosActuales = puntosActuales;
+            this.beneficiosDisponibles = beneficiosDisponibles;
+            this.totalCanjes = totalCanjes;
+            this.progresoMeta = progresoMeta;
+            this.nivelFidelidad = nivelFidelidad;
+        }
+        
+        public int getTotalVisitas() { return totalVisitas; }
+        public int getPuntosActuales() { return puntosActuales; }
+        public int getBeneficiosDisponibles() { return beneficiosDisponibles; }
+        public int getTotalCanjes() { return totalCanjes; }
+        public double getProgresoMeta() { return progresoMeta; }
+        public String getNivelFidelidad() { return nivelFidelidad; }
     }
 }
