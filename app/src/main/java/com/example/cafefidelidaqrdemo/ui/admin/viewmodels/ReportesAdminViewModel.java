@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.data.entities.ReporteEntity;
-import com.example.cafefidelidaqrdemo.data.repositories.ReportesRepository;
+import com.example.cafefidelidaqrdemo.repository.ReportesRepository;
 import com.example.cafefidelidaqrdemo.database.dao.ReporteDao;
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.models.TopCliente;

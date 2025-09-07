@@ -3,7 +3,7 @@ package com.example.cafefidelidaqrdemo.database;
 import androidx.room.TypeConverter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.example.cafefidelidaqrdemo.model.Beneficio;
+// Removed import for models.Beneficio as we now use String for tipo in BeneficioEntity
 
 import java.lang.reflect.Type;
 import java.util.Date;
@@ -47,19 +47,5 @@ public class Converters {
     }
     
     // Conversores para TipoBeneficio enum
-    @TypeConverter
-    public static Beneficio.TipoBeneficio fromTipoBeneficioString(String value) {
-        if (value == null) {
-            return null;
-        }
-        return Beneficio.TipoBeneficio.fromString(value);
-    }
-    
-    @TypeConverter
-    public static String fromTipoBeneficio(Beneficio.TipoBeneficio tipo) {
-        if (tipo == null) {
-            return null;
-        }
-        return tipo.getValor();
-    }
+    // TipoBeneficio converters removed as BeneficioEntity now uses String directly for tipo field
 }

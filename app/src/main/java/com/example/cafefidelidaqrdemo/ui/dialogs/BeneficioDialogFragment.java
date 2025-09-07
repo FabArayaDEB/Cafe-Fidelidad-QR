@@ -17,8 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.model.Beneficio;
-import com.example.cafefidelidaqrdemo.model.Beneficio.TipoBeneficio;
+import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -44,15 +43,15 @@ public class BeneficioDialogFragment extends DialogFragment {
     private Button buttonCancelar;
     
     // Data
-    private Beneficio beneficio;
+    private BeneficioEntity beneficio;
     private OnBeneficioSavedListener listener;
     private SimpleDateFormat dateFormat;
     
     public interface OnBeneficioSavedListener {
-        void onBeneficioSaved(Beneficio beneficio);
+        void onBeneficioSaved(BeneficioEntity beneficio);
     }
     
-    public static BeneficioDialogFragment newInstance(@Nullable Beneficio beneficio) {
+    public static BeneficioDialogFragment newInstance(@Nullable BeneficioEntity beneficio) {
         BeneficioDialogFragment fragment = new BeneficioDialogFragment();
         Bundle args = new Bundle();
         if (beneficio != null) {
@@ -68,7 +67,7 @@ public class BeneficioDialogFragment extends DialogFragment {
         dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         
         if (getArguments() != null) {
-            beneficio = (Beneficio) getArguments().getSerializable(ARG_BENEFICIO);
+            beneficio = (BeneficioEntity) getArguments().getSerializable(ARG_BENEFICIO);
         }
     }
     
@@ -105,10 +104,11 @@ public class BeneficioDialogFragment extends DialogFragment {
     }
     
     private void setupSpinner() {
-        ArrayAdapter<TipoBeneficio> adapter = new ArrayAdapter<>(
+        String[] tipos = {"DESCUENTO_PORCENTAJE", "DESCUENTO_MONTO", "DOS_POR_UNO", "PREMIO"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
             requireContext(),
             android.R.layout.simple_spinner_item,
-            TipoBeneficio.values()
+            tipos
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerTipo.setAdapter(adapter);
@@ -124,21 +124,35 @@ public class BeneficioDialogFragment extends DialogFragment {
     
     private void populateFields() {
         editNombre.setText(beneficio.getNombre());
-        editDescripcion.setText(beneficio.getDescripcion());
+        // Note: BeneficioEntity doesn't have getDescripcion method
         
         if (beneficio.getTipo() != null) {
-            spinnerTipo.setSelection(beneficio.getTipo().ordinal());
+            String[] tipos = {"DESCUENTO_PORCENTAJE", "DESCUENTO_MONTO", "DOS_POR_UNO", "PREMIO"};
+            for (int i = 0; i < tipos.length; i++) {
+                if (tipos[i].equals(beneficio.getTipo())) {
+                    spinnerTipo.setSelection(i);
+                    break;
+                }
+            }
         }
         
-        editValor.setText(String.valueOf(beneficio.getValor()));
-        // editVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas())); // Método no existe
-        
-        if (beneficio.getFechaInicioVigencia() != null) {
-            editFechaInicio.setText(dateFormat.format(beneficio.getFechaInicioVigencia()));
+        // Set valor based on tipo
+        if ("DESCUENTO_PORCENTAJE".equals(beneficio.getTipo()) && beneficio.getDescuento_pct() > 0) {
+            editValor.setText(String.valueOf(beneficio.getDescuento_pct()));
+        } else if (beneficio.getDescuento_monto() > 0) {
+            editValor.setText(String.valueOf(beneficio.getDescuento_monto()));
         }
         
-        if (beneficio.getFechaFinVigencia() != null) {
-            editFechaFin.setText(dateFormat.format(beneficio.getFechaFinVigencia()));
+        if (beneficio.getRequisito_visitas() > 0) {
+            editVisitasRequeridas.setText(String.valueOf(beneficio.getRequisito_visitas()));
+        }
+        
+        if (beneficio.getVigencia_ini() > 0) {
+            editFechaInicio.setText(dateFormat.format(new Date(beneficio.getVigencia_ini())));
+        }
+        
+        if (beneficio.getVigencia_fin() > 0) {
+            editFechaFin.setText(dateFormat.format(new Date(beneficio.getVigencia_fin())));
         }
         
         switchActivo.setChecked(beneficio.isActivo());
@@ -169,24 +183,33 @@ public class BeneficioDialogFragment extends DialogFragment {
         }
         
         if (beneficio == null) {
-            beneficio = new Beneficio();
+            beneficio = new BeneficioEntity();
         }
         
         // Populate beneficio with form data
         beneficio.setNombre(editNombre.getText().toString().trim());
-        beneficio.setDescripcion(editDescripcion.getText().toString().trim());
-        beneficio.setTipo((TipoBeneficio) spinnerTipo.getSelectedItem());
-        beneficio.setValor(Double.parseDouble(editValor.getText().toString()));
-        // beneficio.setVisitasRequeridas(Integer.parseInt(editVisitasRequeridas.getText().toString())); // Método no existe
-        beneficio.setActivo(switchActivo.isChecked());
+        // Note: BeneficioEntity doesn't have setDescripcion method
+        beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
+        double valor = Double.parseDouble(editValor.getText().toString());
+        // Set appropriate value based on tipo
+        String tipo = spinnerTipo.getSelectedItem().toString();
+        if (tipo.contains("PORCENTAJE")) {
+            beneficio.setDescuento_pct(valor);
+        } else if (tipo.contains("MONTO")) {
+            beneficio.setDescuento_monto(valor);
+        }
+        beneficio.setRequisito_visitas(Integer.parseInt(editVisitasRequeridas.getText().toString()));
+        beneficio.setEstado(switchActivo.isChecked() ? "activo" : "inactivo");
         
         // Set dates if provided
         try {
             if (!editFechaInicio.getText().toString().isEmpty()) {
-                beneficio.setFechaInicioVigencia(dateFormat.parse(editFechaInicio.getText().toString()));
+                Date fechaInicio = dateFormat.parse(editFechaInicio.getText().toString());
+                beneficio.setVigencia_ini(fechaInicio.getTime());
             }
             if (!editFechaFin.getText().toString().isEmpty()) {
-                beneficio.setFechaFinVigencia(dateFormat.parse(editFechaFin.getText().toString()));
+                Date fechaFin = dateFormat.parse(editFechaFin.getText().toString());
+                beneficio.setVigencia_fin(fechaFin.getTime());
             }
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error en formato de fecha", Toast.LENGTH_SHORT).show();

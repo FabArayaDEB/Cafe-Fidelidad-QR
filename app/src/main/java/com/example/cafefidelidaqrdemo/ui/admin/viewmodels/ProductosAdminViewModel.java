@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafefidelidaqrdemo.data.repositories.AdminRepository;
+import com.example.cafefidelidaqrdemo.repository.AdminRepository;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 
 import java.util.List;

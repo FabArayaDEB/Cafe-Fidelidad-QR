@@ -85,6 +85,9 @@ public class ReporteEntity {
     @ColumnInfo(name = "sincronizado")
     private boolean sincronizado;
     
+    @ColumnInfo(name = "estado_sincronizacion")
+    private String estadoSincronizacion;
+    
     // Constructor
     public ReporteEntity() {
         this.fechaGeneracion = new Date();
@@ -166,6 +169,9 @@ public class ReporteEntity {
     
     public boolean isSincronizado() { return sincronizado; }
     public void setSincronizado(boolean sincronizado) { this.sincronizado = sincronizado; }
+    
+    public String getEstadoSincronizacion() { return estadoSincronizacion; }
+    public void setEstadoSincronizacion(String estadoSincronizacion) { this.estadoSincronizacion = estadoSincronizacion; }
     
     // Métodos de utilidad
     public void incrementarVersion() {

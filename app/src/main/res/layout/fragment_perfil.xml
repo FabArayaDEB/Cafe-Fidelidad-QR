@@ -1,293 +1,251 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.FragmentPerfil">
+    android:padding="15dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragment.FragmentPerfil">
 
-    <!-- AppBar -->
-    <com.google.android.material.appbar.AppBarLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:layout_height="wrap_content">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/color_primario"
-            app:title="Mi Perfil"
-            app:titleTextColor="@android:color/white" />
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/item_perfil"
+            android:src="@drawable/ic_account"
+            android:layout_marginTop="30dp"
+            android:scaleType="centerCrop"
+            android:layout_centerHorizontal="true"
+            android:layout_width="120dp"
+            android:layout_height="120dp" />
 
-    </com.google.android.material.appbar.AppBarLayout>
+        <!-- Nombres -->
+        <TextView
+            android:id="@+id/txt_nombres"
+            android:text="@string/txt_nombres"
+            android:layout_below="@+id/item_perfil"
+            android:layout_marginTop="30dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_nombres"
+            android:text="@string/tv_nombres"
+            android:layout_below="@+id/txt_nombres"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-    <!-- Contenido principal -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!-- Email -->
+        <TextView
+            android:id="@+id/txt_email"
+            android:text="@string/txt_email"
+            android:layout_below="@+id/tv_nombres"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_email"
+            android:text="--"
+            android:layout_below="@+id/txt_email"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+        <!-- Teléfono -->
+        <TextView
+            android:id="@+id/txt_telefono"
+            android:text="@string/txt_telefono"
+            android:layout_below="@+id/tv_email"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_telefono"
+            android:text="--"
+            android:layout_below="@+id/txt_telefono"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-            <!-- Avatar y estado de sincronización -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
+        <!-- Fecha de Nacimiento -->
+        <TextView
+            android:id="@+id/txt_fecha_nacimiento"
+            android:text="@string/txt_fecha_nacimiento"
+            android:layout_below="@+id/tv_telefono"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_fecha_nacimiento"
+            android:text="--"
+            android:layout_below="@+id/txt_fecha_nacimiento"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                <!-- Avatar -->
-                <ImageView
-                    android:id="@+id/iv_avatar"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_person"
-                    android:background="@drawable/circle_background"
-                    android:padding="16dp"
-                    android:tint="@color/color_primario"
-                    tools:ignore="UseAppTint" />
+        <!-- Puntos Actuales -->
+        <TextView
+            android:id="@+id/txt_puntos"
+            android:text="@string/txt_puntos_actuales"
+            android:layout_below="@+id/tv_fecha_nacimiento"
+            android:layout_marginTop="20dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/coffee_primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_puntos"
+            android:text="0"
+            android:layout_below="@+id/txt_puntos"
+            android:layout_marginTop="5dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/coffee_primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                <!-- Info y estado -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+        <!-- Nivel de Lealtad -->
+        <TextView
+            android:id="@+id/txt_nivel"
+            android:text="@string/txt_nivel_lealtad"
+            android:layout_below="@+id/tv_puntos"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_nivel"
+            android:text="Bronce"
+            android:layout_below="@+id/txt_nivel"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                    <TextView
-                        android:id="@+id/tv_welcome"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bienvenido"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_texto_primario" />
+        <!-- Compras Totales -->
+        <TextView
+            android:id="@+id/txt_compras_totales"
+            android:text="@string/txt_compras_totales"
+            android:layout_below="@+id/tv_nivel"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_compras_totales"
+            android:text="$0"
+            android:layout_below="@+id/txt_compras_totales"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                    <!-- Estado de sincronización -->
-                    <LinearLayout
-                        android:id="@+id/layout_sync_status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+        <!-- Puntos para Siguiente Nivel -->
+        <TextView
+            android:id="@+id/txt_puntos_siguiente"
+            android:text="@string/txt_puntos_siguiente_nivel"
+            android:layout_below="@+id/tv_compras_totales"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_puntos_siguiente"
+            android:text="0"
+            android:layout_below="@+id/txt_puntos_siguiente"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                        <ImageView
-                            android:id="@+id/iv_sync_status"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_marginEnd="4dp"
-                            android:src="@drawable/ic_check_circle"
-                            android:tint="@color/color_enviado"
-                            tools:ignore="UseAppTint" />
+        <!-- Última Visita -->
+        <TextView
+            android:id="@+id/txt_ultima_visita"
+            android:text="@string/txt_ultima_visita"
+            android:layout_below="@+id/tv_puntos_siguiente"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_ultima_visita"
+            android:text="--"
+            android:layout_below="@+id/txt_ultima_visita"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-                        <TextView
-                            android:id="@+id/tv_sync_status"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Sincronizado"
-                            android:textSize="12sp"
-                            android:textColor="@color/color_enviado" />
+        <!-- Tiempo de registro -->
+        <TextView
+            android:id="@+id/txt_registro"
+            android:text="@string/txt_registro"
+            android:layout_below="@+id/tv_ultima_visita"
+            android:layout_marginTop="15dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/tv_registro"
+            android:text="@string/tv_registro"
+            android:layout_below="@+id/txt_registro"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/UpdateUserData"
+            android:text="@string/btn_UpdateUserData"
+            android:textAllCaps="true"
+            app:cornerRadius="30dp"
+            android:layout_below="@+id/tv_registro"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="25dp"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content" />
 
-                    </LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_historial"
+            android:text="@string/historial"
+            android:textAllCaps="true"
+            app:cornerRadius="30dp"
+            android:layout_below="@+id/UpdateUserData"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="15dp"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content" />
 
-                </LinearLayout>
-
-                <!-- Botón de editar -->
-                <ImageButton
-                    android:id="@+id/btn_edit"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_edit"
-                    android:tint="@color/color_primario"
-                    android:contentDescription="Editar perfil"
-                    tools:ignore="UseAppTint" />
-
-            </LinearLayout>
-
-            <!-- Formulario de datos -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Datos Personales"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_texto_primario"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Campo Nombre -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/til_nombre"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:startIconDrawable="@drawable/ic_person"
-                        app:errorEnabled="true"
-                        app:helperTextEnabled="true"
-                        app:helperText="Nombre completo">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_nombre"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Nombre completo"
-                            android:inputType="textPersonName|textCapWords"
-                            android:enabled="false" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Campo Email -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/til_email"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:startIconDrawable="@drawable/ic_email"
-                        app:errorEnabled="true"
-                        app:helperTextEnabled="true"
-                        app:helperText="Correo electrónico">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_email"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Correo electrónico"
-                            android:inputType="textEmailAddress"
-                            android:enabled="false" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Campo Teléfono -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/til_telefono"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:startIconDrawable="@drawable/ic_phone"
-                        app:errorEnabled="true"
-                        app:helperTextEnabled="true"
-                        app:helperText="Número de teléfono">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_telefono"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Teléfono"
-                            android:inputType="phone"
-                            android:enabled="false" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Campo Fecha de Nacimiento -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/til_fecha_nacimiento"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:startIconDrawable="@drawable/ic_calendar"
-                        app:errorEnabled="true"
-                        app:helperTextEnabled="true"
-                        app:helperText="Fecha de nacimiento">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_fecha_nacimiento"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Fecha de nacimiento"
-                            android:inputType="none"
-                            android:focusable="false"
-                            android:clickable="true"
-                            android:enabled="false" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Botones de acción -->
-            <LinearLayout
-                android:id="@+id/layout_buttons"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="end"
-                android:visibility="gone"
-                tools:visibility="visible">
-
-                <Button
-                    android:id="@+id/btn_cancel"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="Cancelar"
-                    android:textColor="@color/color_texto_secundario" />
-
-                <Button
-                    android:id="@+id/btn_save"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Guardar"
-                    android:enabled="false" />
-
-            </LinearLayout>
-
-            <!-- Indicador de carga -->
-            <LinearLayout
-                android:id="@+id/layout_loading"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:padding="16dp"
-                android:visibility="gone">
-
-                <ProgressBar
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:id="@+id/tv_loading_message"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Guardando cambios..."
-                    android:textSize="14sp"
-                    android:textColor="@color/color_texto_secundario" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
-
-    <!-- Snackbar para mensajes -->
-    <View
-        android:id="@+id/snackbar_anchor"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_gravity="bottom" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <com.google.android.material.button.MaterialButton
+            app:cornerRadius="30dp"
+            android:id="@+id/btn_Logout"
+            android:text="@string/btn_Logout"
+            android:textAllCaps="true"
+            android:layout_below="@+id/btn_historial"
+            android:layout_marginTop="15dp"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+</ScrollView>

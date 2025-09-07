@@ -1,427 +1,261 @@
 package com.example.cafefidelidaqrdemo.fragments;
 
-import android.app.DatePickerDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
-import com.example.cafefidelidaqrdemo.utils.ValidationUtils;
-import com.example.cafefidelidaqrdemo.viewmodels.PerfilViewModel;
-import com.google.android.material.textfield.TextInputLayout;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
-/**
- * Fragment para ver y editar el perfil del cliente (CU-02.1)
- */
+import com.bumptech.glide.Glide;
+import com.example.cafefidelidaqrdemo.R;
+import com.example.cafefidelidaqrdemo.HistorialActivity;
+import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
+import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
+import com.example.cafefidelidaqrdemo.EditarPerfilActivity;
+import com.example.cafefidelidaqrdemo.Contantes;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
+
 public class FragmentPerfil extends Fragment {
-    
-    // Views
-    private TextInputLayout tilNombre, tilEmail, tilTelefono, tilFechaNac;
-    private EditText etNombre, etEmail, etTelefono, etFechaNac;
-    private Button btnGuardar, btnCancelar;
-    private ProgressBar progressBar;
-    private TextView tvSyncStatus, tvLastSync;
-    
-    // ViewModel
-    private PerfilViewModel viewModel;
-    
-    // Estado
-    private ClienteEntity clienteOriginal;
-    private boolean isEditing = false;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-    
-    @Nullable
+    private FragmentPerfilBinding binding;
+    private Context mContext;
+    private FirebaseAuth firebaseAuth;
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_perfil, container, false);
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        this.mContext = context;
+    }
+
+    public FragmentPerfil() {
+        // Required empty public constructor
+    }
+    
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        binding = FragmentPerfilBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
     
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        initViews(view);
-        initViewModel();
-        setupListeners();
-        loadClienteData();
-    }
-    
-    private void initViews(View view) {
-        // TextInputLayouts
-        tilNombre = view.findViewById(R.id.til_nombre);
-        tilEmail = view.findViewById(R.id.til_email);
-        tilTelefono = view.findViewById(R.id.til_telefono);
-        // tilFechaNac = view.findViewById(R.id.til_fecha_nac); // No existe en el layout
+        // Inicializar Firebase Auth
+        firebaseAuth = FirebaseAuth.getInstance();
         
-        // EditTexts
-        etNombre = view.findViewById(R.id.et_nombre);
-        etEmail = view.findViewById(R.id.et_email);
-        etTelefono = view.findViewById(R.id.et_telefono);
-        // etFechaNac = view.findViewById(R.id.et_fecha_nac); // No existe en el layout
-        
-        // Buttons
-        btnGuardar = view.findViewById(R.id.btn_guardar);
-        btnCancelar = view.findViewById(R.id.btn_cancelar);
-        
-        // Status views
-        progressBar = view.findViewById(R.id.progress_bar);
-        tvSyncStatus = view.findViewById(R.id.tv_sync_status);
-        // tvLastSync = view.findViewById(R.id.tv_last_sync); // No existe en el layout
-        
-        // Inicialmente en modo solo lectura
-        setEditMode(false);
-    }
-    
-    private void initViewModel() {
-        viewModel = new ViewModelProvider(this).get(PerfilViewModel.class);
-        
-        // Observar datos del cliente
-        viewModel.getCliente().observe(getViewLifecycleOwner(), this::updateUI);
-        
-        // Observar estado de carga
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            btnGuardar.setEnabled(!isLoading);
+        // Configurar listeners para los botones
+        binding.UpdateUserData.setOnClickListener(v -> {
+            startActivity(new Intent(mContext, EditarPerfilActivity.class));
         });
         
-        // Observar errores
-        viewModel.getError().observe(getViewLifecycleOwner(), error -> {
-            if (error != null) {
-                if (error.startsWith("CONFLICT:")) {
-                    showConflictDialog(error.substring(9));
-                } else {
-                    showError(error);
-                }
-                viewModel.clearError();
-            }
+        binding.btnHistorial.setOnClickListener(v -> {
+            startActivity(new Intent(mContext, HistorialActivity.class));
         });
         
-        // Observar estado de sincronización
-        viewModel.getSyncStatus().observe(getViewLifecycleOwner(), this::updateSyncStatus);
-        
-        // Observar éxito en guardado
-        viewModel.getSaveSuccess().observe(getViewLifecycleOwner(), success -> {
-            if (success) {
-                Toast.makeText(getContext(), "Perfil guardado exitosamente", Toast.LENGTH_SHORT).show();
-                setEditMode(false);
-            }
-        });
-    }
-    
-    private void setupListeners() {
-        // Botón guardar
-        btnGuardar.setOnClickListener(v -> {
-            if (isEditing) {
-                saveChanges();
-            } else {
-                setEditMode(true);
-            }
+        binding.btnLogout.setOnClickListener(v -> {
+            // Cerrar sesión de Firebase
+            firebaseAuth.signOut();
+            
+            // Cerrar sesión de Google también
+            GoogleSignIn.getClient(mContext, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+            
+            startActivity(new Intent(mContext, OpcionesLoginActivity.class));
+            getActivity().finishAffinity();
         });
         
-        // Botón cancelar
-        btnCancelar.setOnClickListener(v -> {
-            if (isEditing) {
-                cancelChanges();
-            }
-        });
-        
-        // Selector de fecha
-        etFechaNac.setOnClickListener(v -> showDatePicker());
-        
-        // Validación en tiempo real
-        setupRealTimeValidation();
+        // Cargar información del usuario
+        loadUserInfo();
     }
     
-    private void setupRealTimeValidation() {
-        etEmail.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (isEditing) {
-                    validateEmail();
-                }
-            }
-            
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-        
-        etTelefono.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (isEditing) {
-                    validateTelefono();
-                }
-            }
-            
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-        
-        etNombre.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (isEditing) {
-                    validateNombre();
-                }
-            }
-            
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-    }
-    
-    private void loadClienteData() {
-        // Obtener ID del cliente desde SharedPreferences o argumentos
-        String clienteId = getClienteId();
-        if (clienteId != null) {
-            viewModel.loadCliente(clienteId);
-        }
-    }
-    
-    private String getClienteId() {
-        // Implementar lógica para obtener ID del cliente actual
-        // Por ejemplo, desde SharedPreferences o argumentos del fragment
-        return "cliente_actual_id"; // Placeholder
-    }
-    
-    private void updateUI(ClienteEntity cliente) {
-        if (cliente != null) {
-            clienteOriginal = cliente;
-            
-            etNombre.setText(cliente.getNombre());
-            etEmail.setText(cliente.getEmail());
-            etTelefono.setText(cliente.getTelefono());
-            
-            if (cliente.getFecha_nac() != null) {
-                etFechaNac.setText(dateFormat.format(cliente.getFecha_nac()));
-            }
-            
-            updateLastSyncInfo(cliente);
-        }
-    }
-    
-    private void updateSyncStatus(Boolean isSynced) {
-        if (isSynced != null) {
-            if (isSynced) {
-                tvSyncStatus.setText("✓ Sincronizado");
-                tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            } else {
-                tvSyncStatus.setText("⚠ Pendiente de sincronización");
-                tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
-            }
-        }
-    }
-    
-    private void updateLastSyncInfo(ClienteEntity cliente) {
-        if (cliente.getLastSync() > 0) {
-            Date lastSync = new Date(cliente.getLastSync());
-            SimpleDateFormat syncFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-            // tvLastSync.setText("Última sincronización: " + syncFormat.format(lastSync)); // No existe en el layout
-        } else {
-            // tvLastSync.setText("Sin sincronizar"); // No existe en el layout
-        }
-    }
-    
-    private void setEditMode(boolean editing) {
-        isEditing = editing;
-        
-        // Habilitar/deshabilitar campos
-        etNombre.setEnabled(editing);
-        etEmail.setEnabled(editing);
-        etTelefono.setEnabled(editing);
-        etFechaNac.setEnabled(editing);
-        
-        // Cambiar texto del botón
-        btnGuardar.setText(editing ? "Guardar" : "Editar");
-        
-        // Mostrar/ocultar botón cancelar
-        btnCancelar.setVisibility(editing ? View.VISIBLE : View.GONE);
-        
-        // Limpiar errores de validación
-        if (!editing) {
-            clearValidationErrors();
-        }
-    }
-    
-    private void saveChanges() {
-        if (validateAllFields()) {
-            ClienteEntity updatedCliente = createUpdatedCliente();
-            viewModel.updateCliente(updatedCliente);
-        }
-    }
-    
-    private void cancelChanges() {
-        // Restaurar valores originales
-        if (clienteOriginal != null) {
-            updateUI(clienteOriginal);
-        }
-        setEditMode(false);
-    }
-    
-    private boolean validateAllFields() {
-        boolean isValid = true;
-        
-        isValid &= validateNombre();
-        isValid &= validateEmail();
-        isValid &= validateTelefono();
-        isValid &= validateFechaNacimiento();
-        
-        return isValid;
-    }
-    
-    private boolean validateNombre() {
-        String nombre = etNombre.getText().toString().trim();
-        ValidationUtils.ValidationResult nameResult = ValidationUtils.validateName(nombre);
-        if (!nameResult.isValid()) {
-            tilNombre.setError("Nombre debe tener al menos 2 caracteres");
-            return false;
-        }
-        tilNombre.setError(null);
-        return true;
-    }
-    
-    private boolean validateEmail() {
-        String email = etEmail.getText().toString().trim();
-        ValidationUtils.ValidationResult emailResult = ValidationUtils.validateEmail(email);
-        if (!emailResult.isValid()) {
-            tilEmail.setError("Email no válido");
-            return false;
-        }
-        tilEmail.setError(null);
-        return true;
-    }
-    
-    private boolean validateTelefono() {
-        String telefono = etTelefono.getText().toString().trim();
-        ValidationUtils.ValidationResult phoneResult = ValidationUtils.validatePhone(telefono);
-        if (!phoneResult.isValid()) {
-            tilTelefono.setError("Teléfono debe tener 10 dígitos");
-            return false;
-        }
-        tilTelefono.setError(null);
-        return true;
-    }
-    
-    private boolean validateFechaNacimiento() {
-        String fechaStr = etFechaNac.getText().toString().trim();
-        ValidationUtils.ValidationResult birthResult = ValidationUtils.validateBirthDate(fechaStr);
-        if (!birthResult.isValid()) {
-            tilFechaNac.setError("Fecha no válida o mayor a 120 años");
-            return false;
-        }
-        tilFechaNac.setError(null);
-        return true;
-    }
-    
-    private void clearValidationErrors() {
-        tilNombre.setError(null);
-        tilEmail.setError(null);
-        tilTelefono.setError(null);
-        tilFechaNac.setError(null);
-    }
-    
-    private ClienteEntity createUpdatedCliente() {
-        ClienteEntity updated = new ClienteEntity();
-        updated.setId_cliente(clienteOriginal.getId_cliente());
-        updated.setNombre(etNombre.getText().toString().trim());
-        updated.setEmail(etEmail.getText().toString().trim());
-        updated.setTelefono(etTelefono.getText().toString().trim());
-        
-        // Convertir fecha
-        try {
-            String fechaStr = etFechaNac.getText().toString().trim();
-            if (!fechaStr.isEmpty()) {
-                updated.setFecha_nac(fechaStr); // Guardar como String
-            }
-        } catch (Exception e) {
-            // Mantener fecha original si hay error
-            updated.setFecha_nac(clienteOriginal.getFecha_nac());
+    private void loadUserInfo() {
+        if (firebaseAuth.getCurrentUser() == null) {
+            return;
         }
         
-        updated.setEstado(clienteOriginal.getEstado());
-        updated.setCreado_en(clienteOriginal.getCreado_en());
-        
-        return updated;
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
+        ref.child(firebaseAuth.getUid())
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!snapshot.exists()) {
+                            // Usuario no existe en la base de datos, crear datos por defecto
+                            crearDatosUsuarioPorDefecto();
+                            return;
+                        }
+                        
+                        String nombres = snapshot.child("names").getValue() != null ? 
+            snapshot.child("names").getValue().toString() : "Usuario";
+        String email = snapshot.child("email").getValue() != null ? 
+            snapshot.child("email").getValue().toString() : "";
+        String telefono = snapshot.child("telefono").getValue() != null ? 
+            snapshot.child("telefono").getValue().toString() : "";
+        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue() != null ? 
+            snapshot.child("fechaNacimiento").getValue().toString() : "";
+        String proveedor = snapshot.child("proveedor").getValue() != null ? 
+            snapshot.child("proveedor").getValue().toString() : "";
+                        Object registroObj = snapshot.child("date").getValue();
+                        String imagen = snapshot.child("imagen").getValue() != null ? 
+                            snapshot.child("imagen").getValue().toString() : "";
+                        
+                        // Información específica del programa de fidelidad
+                        Object puntosObj = snapshot.child("puntos").getValue();
+                        String nivel = snapshot.child("nivel").getValue() != null ? 
+                            snapshot.child("nivel").getValue().toString() : "";
+                        Object totalComprasObj = snapshot.child("totalCompras").getValue();
+                        Object ultimaVisitaObj = snapshot.child("ultimaVisita").getValue();
+
+                        // Procesar fecha de registro
+                        long registroTimestamp = 0;
+                        if (registroObj != null) {
+                            try {
+                                registroTimestamp = Long.parseLong(registroObj.toString());
+                            } catch (NumberFormatException e) {
+                                registroTimestamp = System.currentTimeMillis();
+                            }
+                        } else {
+                            registroTimestamp = System.currentTimeMillis();
+                        }
+                        String date = Contantes.DateFormat(registroTimestamp);
+                        
+                        // Procesar puntos
+                        int puntos = 0;
+                        if (puntosObj != null) {
+                            try {
+                                puntos = Integer.parseInt(puntosObj.toString());
+                            } catch (NumberFormatException e) {
+                                puntos = 0;
+                            }
+                        }
+                        
+                        // Procesar total de compras
+                        double totalCompras = 0;
+                        if (totalComprasObj != null) {
+                            try {
+                                totalCompras = Double.parseDouble(totalComprasObj.toString());
+                            } catch (NumberFormatException e) {
+                                totalCompras = 0;
+                            }
+                        }
+                        
+                        // Procesar última visita
+                        String ultimaVisita = "No disponible";
+                        if (ultimaVisitaObj != null) {
+                            try {
+                                long ultimaVisitaTimestamp = Long.parseLong(ultimaVisitaObj.toString());
+                                ultimaVisita = Contantes.DateFormat(ultimaVisitaTimestamp);
+                            } catch (NumberFormatException e) {
+                                ultimaVisita = "No disponible";
+                            }
+                        }
+                        
+                        // Calcular nivel si no existe
+                        if (nivel.isEmpty()) {
+                            nivel = Contantes.calcularNivel(puntos);
+                        }
+
+                        // Establecer valores en la UI
+                        binding.tvNombres.setText(nombres);
+                        binding.tvEmail.setText(email);
+                        if (binding.tvTelefono != null) {
+                            binding.tvTelefono.setText(telefono.isEmpty() ? "No especificado" : telefono);
+                        }
+                        if (binding.tvFechaNacimiento != null) {
+                            binding.tvFechaNacimiento.setText(fechaNacimiento.isEmpty() ? "No especificado" : fechaNacimiento);
+                        }
+                        binding.tvRegistro.setText("Miembro desde: " + date);
+                        
+                        // Información del programa de fidelidad
+                        if (binding.tvPuntos != null) {
+                            binding.tvPuntos.setText(String.valueOf(puntos));
+                        }
+                        if (binding.tvNivel != null) {
+                            binding.tvNivel.setText(nivel);
+                        }
+                        if (binding.tvComprasTotales != null) {
+                            binding.tvComprasTotales.setText("$" + String.format("%.2f", totalCompras));
+                        }
+                        if (binding.tvUltimaVisita != null) {
+                            binding.tvUltimaVisita.setText(ultimaVisita);
+                        }
+                        
+                        // Mostrar puntos para siguiente nivel
+                        if (binding.tvPuntosSiguiente != null) {
+                            int puntosParaSiguiente = Contantes.puntosParaSiguienteNivel(puntos);
+                            if (puntosParaSiguiente > 0) {
+                                binding.tvPuntosSiguiente.setText(String.valueOf(puntosParaSiguiente));
+                            } else {
+                                binding.tvPuntosSiguiente.setText("0");
+                            }
+                        }
+
+                        Glide.with(mContext)
+                                .load(imagen)
+                                .placeholder(R.drawable.ic_account)
+                                .into(binding.itemPerfil);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        // Manejar error
+                    }
+                });
     }
     
-    private void showDatePicker() {
-        if (!isEditing) return;
-        
-        Calendar calendar = Calendar.getInstance();
-        
-        // Si hay fecha actual, usarla como inicial
-        if (clienteOriginal != null && clienteOriginal.getFecha_nac() != null) {
-            try {
-                Date fechaNac = dateFormat.parse(clienteOriginal.getFecha_nac());
-                calendar.setTime(fechaNac);
-            } catch (Exception e) {
-                // Si no se puede parsear, usar fecha actual
-            }
+    private void crearDatosUsuarioPorDefecto() {
+        if (firebaseAuth.getCurrentUser() == null) {
+            return;
         }
         
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                requireContext(),
-                (view, year, month, dayOfMonth) -> {
-                    Calendar selectedDate = Calendar.getInstance();
-                    selectedDate.set(year, month, dayOfMonth);
-                    etFechaNac.setText(dateFormat.format(selectedDate.getTime()));
-                    validateFechaNacimiento();
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
+        String uid = firebaseAuth.getUid();
+        String email = firebaseAuth.getCurrentUser().getEmail();
+        String nombre = firebaseAuth.getCurrentUser().getDisplayName();
         
-        // Establecer límites de fecha
-        Calendar maxDate = Calendar.getInstance();
-        maxDate.add(Calendar.YEAR, -13); // Mínimo 13 años
-        datePickerDialog.getDatePicker().setMaxDate(maxDate.getTimeInMillis());
+        if (nombre == null || nombre.isEmpty()) {
+            nombre = "Usuario";
+        }
         
-        Calendar minDate = Calendar.getInstance();
-        minDate.add(Calendar.YEAR, -120); // Máximo 120 años
-        datePickerDialog.getDatePicker().setMinDate(minDate.getTimeInMillis());
+        HashMap<String, Object> userData = new HashMap<>();
+        userData.put("names", nombre);
+        userData.put("email", email != null ? email : "");
+        userData.put("telefono", "");
+        userData.put("fechaNacimiento", "");
+        userData.put("proveedor", "Email");
+        userData.put("date", System.currentTimeMillis());
+        userData.put("imagen", "");
+        userData.put("puntos", 0);
+        userData.put("nivel", "Bronce");
+        userData.put("totalCompras", 0.0);
+        userData.put("ultimaVisita", System.currentTimeMillis());
         
-        datePickerDialog.show();
-    }
-    
-    private void showConflictDialog(String message) {
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Conflicto de datos")
-                .setMessage(message)
-                .setPositiveButton("Recargar", (dialog, which) -> {
-                    loadClienteData();
-                    setEditMode(false);
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
+        ref.child(uid).setValue(userData)
+                .addOnSuccessListener(aVoid -> {
+                    // Datos creados exitosamente, recargar información
+                    loadUserInfo();
                 })
-                .setNegativeButton("Cancelar", null)
-                .show();
+                .addOnFailureListener(e -> {
+                    // Error al crear datos
+                });
     }
-    
-    private void showError(String error) {
-        Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

@@ -14,7 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.viewmodel.ProgresoViewModel;
+import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
 
 public class ProximoBeneficioDialogFragment extends DialogFragment {
     

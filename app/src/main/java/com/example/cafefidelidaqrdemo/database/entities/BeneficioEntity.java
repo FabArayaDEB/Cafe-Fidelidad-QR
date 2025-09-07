@@ -3,13 +3,14 @@ package com.example.cafefidelidaqrdemo.database.entities;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.annotation.NonNull;
+import java.io.Serializable;
 
 /**
  * Entidad Room para Beneficio según modelo ER lógico
  * Define qué se gana y cómo cuando se cumplen las condiciones
  */
 @Entity(tableName = "beneficios")
-public class BeneficioEntity {
+public class BeneficioEntity implements Serializable {
     @PrimaryKey
     @NonNull
     private String id_beneficio; // Identificador único del beneficio
