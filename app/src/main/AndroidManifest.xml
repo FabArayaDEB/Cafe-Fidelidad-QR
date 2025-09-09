@@ -12,6 +12,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CafeFidelidadQR">
         <activity
+            android:name=".ReportesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ClientesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BeneficiosActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProductosActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SucursalesActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CafeFidelidadQR" />
+        <activity
+            android:name=".AdminPanelActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
