@@ -1,1 +1,216 @@
-��
+# Café Fidelidad QR Demo
+
+Aplicación Android de sistema de fidelidad para cafeterías que utiliza códigos QR para el registro de compras y acumulación de puntos.
+
+## 📱 Características Principales
+
+- **Sistema de Autenticación**: Registro e inicio de sesión con Firebase Authentication
+- **Perfil de Usuario**: Gestión de datos personales y visualización de información
+- **Sistema de Puntos**: Acumulación y seguimiento de puntos de fidelidad
+- **Escaneo QR**: Lectura de códigos QR para registrar compras
+- **Historial de Transacciones**: Registro completo de compras y puntos ganados
+- **Panel de Administración**: Gestión de productos, beneficios y sucursales
+- **Beneficios**: Sistema de recompensas basado en puntos acumulados
+
+## 🏗️ Estructura del Proyecto
+
+```
+cafeFidelidaQRdemo/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/example/cafefidelidaqrdemo/
+│   │   │   │   ├── activities/           # Actividades específicas
+│   │   │   │   │   └── QRScannerActivity.java
+│   │   │   │   ├── adapters/            # Adaptadores para RecyclerView
+│   │   │   │   │   ├── BeneficioAdapter.java
+│   │   │   │   │   ├── HistorialAdapter.java
+│   │   │   │   │   ├── ProductoAdapter.java
+│   │   │   │   │   └── SucursalAdapter.java
+│   │   │   │   ├── database/            # Modelos de base de datos
+│   │   │   │   │   └── models/
+│   │   │   │   │       ├── Beneficio.java
+│   │   │   │   │       ├── Cliente.java
+│   │   │   │   │       ├── Producto.java
+│   │   │   │   │       ├── Sucursal.java
+│   │   │   │   │       ├── TopCliente.java
+│   │   │   │   │       └── Transaccion.java
+│   │   │   │   ├── fragments/           # Fragmentos principales
+│   │   │   │   │   ├── FragmentHistorial.java
+│   │   │   │   │   ├── FragmentPerfil.java
+│   │   │   │   │   ├── FragmentPuntos.java
+│   │   │   │   │   └── FragmentQR.java
+│   │   │   │   ├── ui/                  # UI específica
+│   │   │   │   │   └── admin/           # Panel de administración
+│   │   │   │   │       ├── FragmentAdminDashboard.java
+│   │   │   │   │       ├── FragmentProductosAdmin.java
+│   │   │   │   │       └── FragmentSucursalesAdmin.java
+│   │   │   │   ├── utils/               # Utilidades
+│   │   │   │   │   ├── QRCodeGenerator.java
+│   │   │   │   │   └── QRScanResult.java
+│   │   │   │   ├── BeneficiosActivity.java
+│   │   │   │   ├── DatosPersonalesActivity.java
+│   │   │   │   ├── EditarPerfilActivity.java
+│   │   │   │   ├── HistorialActivity.java
+│   │   │   │   ├── LoginActivity.java
+│   │   │   │   ├── MainActivity.java
+│   │   │   │   ├── OpcionesLoginActivity.java
+│   │   │   │   ├── RecuperarPassActivity.java
+│   │   │   │   └── RegistroActivity.java
+│   │   │   ├── res/
+│   │   │   │   ├── drawable/            # Recursos gráficos
+│   │   │   │   ├── layout/              # Layouts XML
+│   │   │   │   ├── values/              # Valores (colores, strings, etc.)
+│   │   │   │   └── xml/                 # Configuraciones XML
+│   │   │   └── AndroidManifest.xml
+│   │   └── androidTest/                 # Tests de instrumentación
+│   ├── build.gradle                     # Configuración de build del módulo
+│   └── google-services.json            # Configuración de Firebase
+├── gradle/                              # Wrapper de Gradle
+├── build.gradle                         # Configuración de build del proyecto
+├── gradle.properties                    # Propiedades de Gradle
+└── settings.gradle                      # Configuración de settings
+```
+
+## 🔧 Arquitectura
+
+### Patrón de Arquitectura
+La aplicación sigue una arquitectura **MVP (Model-View-Presenter)** simplificada con los siguientes componentes:
+
+- **Activities**: Controlan el ciclo de vida y la navegación
+- **Fragments**: Manejan la UI específica de cada sección
+- **Adapters**: Gestionan la presentación de datos en listas
+- **Models**: Representan las entidades de datos
+- **Utils**: Funciones auxiliares y utilidades
+
+### Tecnologías Utilizadas
+
+- **Firebase Authentication**: Autenticación de usuarios
+- **Firebase Realtime Database**: Base de datos en tiempo real
+- **Firebase Storage**: Almacenamiento de archivos
+- **ZXing**: Librería para escaneo de códigos QR
+- **Glide**: Carga y cache de imágenes
+- **Material Design**: Componentes de UI
+
+## 🚀 Funcionalidades Detalladas
+
+### 1. Sistema de Autenticación
+- Registro de nuevos usuarios con email y contraseña
+- Inicio de sesión seguro
+- Recuperación de contraseña
+- Validación de datos de entrada
+
+### 2. Perfil de Usuario
+- Visualización de información personal
+- Código QR personal para identificación
+- Acceso a "Mi Cuenta" para editar datos
+- Navegación a historial y configuraciones
+
+### 3. Mi Cuenta (Datos Personales)
+- Edición de nombre y apellido
+- Actualización de número de teléfono
+- Modificación de fecha de nacimiento
+- Sincronización automática con Firebase
+
+### 4. Sistema de Puntos
+- Visualización de puntos actuales
+- Nivel de fidelidad (bajo, medio, alto)
+- Historial de transacciones
+- Puntos necesarios para siguiente nivel
+
+### 5. Escaneo QR
+- Escáner de códigos QR en tiempo real
+- Validación de códigos de cliente
+- Registro de compras (para administradores)
+- Control de flash y entrada manual
+
+### 6. Beneficios
+- Lista de beneficios disponibles
+- Filtros por estado (Disponibles, Usados, Expirados)
+- Sistema de canje por puntos
+- Actualización automática de estado
+
+### 7. Panel de Administración
+- Gestión de productos del catálogo
+- Administración de sucursales
+- Control de beneficios y promociones
+- Estadísticas y reportes
+
+## 📋 Requisitos del Sistema
+
+- **Android API Level**: Mínimo 21 (Android 5.0)
+- **Target SDK**: 34 (Android 14)
+- **Permisos requeridos**:
+  - `CAMERA`: Para escaneo QR
+  - `INTERNET`: Para conexión a Firebase
+  - `ACCESS_NETWORK_STATE`: Para verificar conectividad
+
+## 🛠️ Configuración del Proyecto
+
+### 1. Clonar el Repositorio
+```bash
+git clone [URL_DEL_REPOSITORIO]
+cd cafeFidelidaQRdemo
+```
+
+### 2. Configurar Firebase
+1. Crear un proyecto en [Firebase Console](https://console.firebase.google.com/)
+2. Agregar una aplicación Android
+3. Descargar `google-services.json` y colocarlo en `app/`
+4. Habilitar Authentication y Realtime Database
+
+### 3. Compilar y Ejecutar
+```bash
+./gradlew assembleDebug
+```
+
+## 📱 Flujo de Usuario
+
+### Cliente
+1. **Registro/Login** → Crear cuenta o iniciar sesión
+2. **Perfil** → Ver información personal y QR
+3. **Mi Cuenta** → Editar datos personales
+4. **Puntos** → Consultar saldo y historial
+5. **Beneficios** → Ver y canjear recompensas
+6. **QR** → Mostrar código para escaneo
+
+### Administrador
+1. **Login** → Acceso con credenciales de admin
+2. **Dashboard** → Panel de control principal
+3. **Productos** → Gestionar catálogo
+4. **Sucursales** → Administrar ubicaciones
+5. **Escáner** → Registrar compras de clientes
+
+## 🔐 Seguridad
+
+- Autenticación segura con Firebase
+- Validación de datos en cliente y servidor
+- Reglas de seguridad en Firebase Database
+- Encriptación de comunicaciones HTTPS
+
+## 🐛 Problemas Conocidos
+
+- Algunos warnings de deprecación en Gradle
+- Optimización pendiente para dispositivos de baja gama
+- Mejoras en la UI para tablets
+
+## 🤝 Contribución
+
+Para contribuir al proyecto:
+1. Fork el repositorio
+2. Crear una rama para la nueva funcionalidad
+3. Realizar los cambios y commits
+4. Crear un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 📞 Contacto
+
+Para soporte o consultas, contactar al equipo de desarrollo.
+
+---
+
+**Versión**: 1.0.0  
+**Última actualización**: Enero 2025

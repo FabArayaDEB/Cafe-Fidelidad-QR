@@ -1,232 +1,179 @@
 package com.example.cafefidelidaqrdemo.viewmodels;
 
 import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.repository.VisitaRepository;
-import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.network.ApiClient;
-import java.util.List;
 
-/**
- * ViewModel para el escáner de códigos QR
- * Maneja la lógica de procesamiento de QR y registro de visitas
- */
+import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
+import com.example.cafefidelidaqrdemo.repository.CompraRepository;
+import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.CompraEntity;
+import com.example.cafefidelidaqrdemo.utils.QRGenerator;
+import com.example.cafefidelidaqrdemo.utils.SessionManager;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class QRScannerViewModel extends AndroidViewModel {
+    private ClienteRepository clienteRepository;
+    private CompraRepository compraRepository;
+    private SessionManager sessionManager;
+    private ExecutorService executor;
     
-    private final VisitaRepository visitaRepository;
+    private MutableLiveData<ScanResult> scanResult = new MutableLiveData<>();
+    private MutableLiveData<Boolean> purchaseResult = new MutableLiveData<>();
     
-    // Estados de procesamiento
-    private final MutableLiveData<EstadoProcesamiento> _estadoProcesamiento = new MutableLiveData<>(EstadoProcesamiento.IDLE);
-    private final MutableLiveData<String> _mensaje = new MutableLiveData<>();
-    private final MutableLiveData<String> _error = new MutableLiveData<>();
-    private final MutableLiveData<String> _progresoActualizado = new MutableLiveData<>();
-    
-    // Datos de visitas
-    private final LiveData<List<VisitaEntity>> visitasPendientes;
-    private final LiveData<Integer> contadorPendientes;
-    private final LiveData<Integer> visitasHoy;
-    
-    public QRScannerViewModel(@NonNull Application application, LiveData<List<VisitaEntity>> visitasPendientes, LiveData<Integer> contadorPendientes, LiveData<Integer> visitasHoy) {
+    public QRScannerViewModel(@NonNull Application application) {
         super(application);
-        
-        // Inicializar repository
-        this.visitaRepository = new VisitaRepository(application);
-        
-        // TODO: Implementar métodos en VisitaRepository
-        // this.visitasPendientes = visitaRepository.obtenerPendientes();
-        // this.contadorPendientes = visitaRepository.contarPendientes();
-        // this.visitasHoy = visitaRepository.contarVisitasHoy();
-        
-        // Observar mensajes del repository
-        // visitaRepository.getMensajeEstado().observeForever(mensaje -> {
-        //     if (mensaje != null) {
-        //         _mensaje.postValue(mensaje);
-        //     }
-        // });
-        this.visitasPendientes = visitasPendientes;
-        this.contadorPendientes = contadorPendientes;
-        this.visitasHoy = visitasHoy;
+        clienteRepository = new ClienteRepository(application);
+        compraRepository = new CompraRepository(application);
+        sessionManager = new SessionManager(application);
+        executor = Executors.newFixedThreadPool(2);
     }
     
-    // Getters para LiveData
-    public LiveData<EstadoProcesamiento> getEstadoProcesamiento() {
-        return _estadoProcesamiento;
+    public LiveData<ScanResult> getScanResult() {
+        return scanResult;
     }
     
-    public LiveData<String> getMensaje() {
-        return _mensaje;
+    public LiveData<Boolean> getPurchaseResult() {
+        return purchaseResult;
     }
     
-    public LiveData<String> getError() {
-        return _error;
-    }
-    
-    public LiveData<String> getProgresoActualizado() {
-        return _progresoActualizado;
-    }
-    
-    public LiveData<List<VisitaEntity>> getVisitasPendientes() {
-        return visitasPendientes;
-    }
-    
-    public LiveData<Integer> getContadorPendientes() {
-        return contadorPendientes;
-    }
-    
-    public LiveData<Integer> getVisitasHoy() {
-        return visitasHoy;
-    }
-    
-    /**
-     * Procesar código QR escaneado
-     */
-    public void procesarQR(String qrContent) {
-        // TODO: Implementar procesamiento de QR con VisitaRepository
-        /*
-        if (qrContent == null || qrContent.trim().isEmpty()) {
-            _error.postValue("QR vacío o inválido");
-            return;
-        }
-        
-        // Limpiar mensajes anteriores
-        _mensaje.postValue("");
-        _error.postValue("");
-        _progresoActualizado.postValue("");
-        
-        // Cambiar estado a procesando
-        _estadoProcesamiento.postValue(EstadoProcesamiento.PROCESSING);
-        
-        // Procesar QR con el repository
-        visitaRepository.procesarQR(qrContent, new VisitaRepository.QRProcessCallback() {
-            @Override
-            public void onSuccess(String mensaje, String progreso) {
-                _estadoProcesamiento.postValue(EstadoProcesamiento.SUCCESS);
-                _mensaje.postValue(mensaje);
-                
-                if (progreso != null && !progreso.isEmpty()) {
-                    _progresoActualizado.postValue(progreso);
+    public void processQRCode(String qrContent) {
+        executor.execute(() -> {
+            try {
+                // Validar y parsear el código QR
+                if (!QRGenerator.isValidClientQR(qrContent)) {
+                    scanResult.postValue(new ScanResult(false, "Código QR inválido", null));
+                    return;
                 }
                 
-                // Volver a estado idle después de un breve delay
-                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                    _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
-                }, 2000);
-            }
-            
-            @Override
-            public void onError(String error) {
-                _estadoProcesamiento.postValue(EstadoProcesamiento.ERROR);
-                _error.postValue(error);
+                QRGenerator.ClienteQRData qrData = QRGenerator.parseClientQR(qrContent);
+                if (qrData == null) {
+                    scanResult.postValue(new ScanResult(false, "No se pudo leer la información del cliente", null));
+                    return;
+                }
                 
-                // Volver a estado idle después de mostrar el error
-                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                    _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
-                }, 3000);
+                // Verificar que el cliente existe en la base de datos
+                ClienteEntity cliente = clienteRepository.getClienteByEmailSync(qrData.getEmail());
+                if (cliente == null) {
+                    scanResult.postValue(new ScanResult(false, "Cliente no encontrado en el sistema", null));
+                    return;
+                }
+                
+                // Verificar que los datos del QR coinciden con los de la base de datos
+                if (!verifyClientData(cliente, qrData)) {
+                    scanResult.postValue(new ScanResult(false, "Los datos del QR no coinciden con el cliente registrado", null));
+                    return;
+                }
+                
+                scanResult.postValue(new ScanResult(true, "Cliente verificado", qrData));
+                
+            } catch (Exception e) {
+                scanResult.postValue(new ScanResult(false, "Error al procesar el código QR: " + e.getMessage(), null));
             }
         });
-        */
     }
     
-    /**
-     * Sincronizar visitas pendientes
-     */
-    public void sincronizarPendientes() {
-        // TODO: Implementar sincronización con VisitaRepository
-        /*
-        _estadoProcesamiento.postValue(EstadoProcesamiento.PROCESSING);
-        visitaRepository.sincronizarPendientes();
-        
-        // Volver a estado idle
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
-        }, 2000);
-        */
+    private boolean verifyClientData(ClienteEntity cliente, QRGenerator.ClienteQRData qrData) {
+        // Verificar que los datos básicos coinciden
+        return cliente.getEmail().equals(qrData.getEmail()) &&
+               cliente.getNombre().equals(qrData.getNombre());
     }
     
-    /**
-     * Reintentar visitas con error
-     */
-    public void reintentarErrores() {
-        // TODO: Implementar reintento de errores con VisitaRepository
-        /*
-        _estadoProcesamiento.postValue(EstadoProcesamiento.PROCESSING);
-        visitaRepository.reintentarErrores();
-        
-        // Volver a estado idle
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            _estadoProcesamiento.postValue(EstadoProcesamiento.IDLE);
-        }, 2000);
-        */
-    }
-    
-    /**
-     * Limpiar mensajes
-     */
-    public void limpiarMensajes() {
-        _mensaje.postValue("");
-        _error.postValue("");
-        _progresoActualizado.postValue("");
-    }
-    
-    /**
-     * Validar formato básico de QR antes de procesar
-     */
-    public boolean validarFormatoBasico(String qrContent) {
-        if (qrContent == null || qrContent.trim().isEmpty()) {
-            return false;
-        }
-        
-        // Verificar que empiece con el protocolo esperado
-        return qrContent.startsWith("qr://cafe/sucursal/");
-    }
-    
-    /**
-     * Obtener información básica del QR sin procesarlo completamente
-     */
-    public String obtenerInfoQR(String qrContent) {
-        if (!validarFormatoBasico(qrContent)) {
-            return "QR inválido";
-        }
-        
-        try {
-            // Extraer ID de sucursal del QR
-            String[] parts = qrContent.split("/");
-            if (parts.length >= 4) {
-                String sucursalId = parts[3];
-                return "Sucursal: " + sucursalId;
+    public void registerPurchase(QRGenerator.ClienteQRData clienteData, double amount, String description) {
+        executor.execute(() -> {
+            try {
+                // Obtener información del trabajador actual
+                String trabajadorEmail = sessionManager.getUserEmail();
+                if (trabajadorEmail == null || trabajadorEmail.isEmpty()) {
+                    purchaseResult.postValue(false);
+                    return;
+                }
+                
+                // Obtener cliente de la base de datos
+                ClienteEntity cliente = clienteRepository.getClienteByEmailSync(clienteData.getEmail());
+                if (cliente == null) {
+                    purchaseResult.postValue(false);
+                    return;
+                }
+                
+                // Crear nueva compra
+                CompraEntity compra = new CompraEntity(
+                    Long.parseLong(cliente.getId_cliente()),
+                    amount,
+                    new java.util.Date(),
+                    description.isEmpty() ? "Compra registrada" : description,
+                    cliente.getId_cliente()
+                );
+                
+                // Calcular puntos ganados (1 punto por cada peso gastado)
+                int puntosGanados = (int) Math.floor(amount);
+                
+                // Insertar compra
+                long compraId = compraRepository.insertCompraSync(compra);
+                
+                if (compraId > 0) {
+                    // Marcar como pendiente de sincronización
+                    cliente.setNeedsSync(true);
+                    
+                    // Guardar cambios
+                    clienteRepository.updateCliente(cliente);
+                    
+                    purchaseResult.postValue(true);
+                } else {
+                    purchaseResult.postValue(false);
+                }
+                
+            } catch (Exception e) {
+                purchaseResult.postValue(false);
             }
-        } catch (Exception e) {
-            // Ignorar errores de parsing
-        }
-        
-        return "QR de sucursal";
+        });
     }
     
-    /**
-     * Limpiar datos antiguos
-     */
-    public void limpiarDatosAntiguos() {
-        // TODO: Implementar limpieza de datos antiguos con VisitaRepository
-        // visitaRepository.limpiarDatosAntiguos();
+    private String calculateLevel(int puntos) {
+        if (puntos >= 1000) {
+            return "Oro";
+        } else if (puntos >= 500) {
+            return "Plata";
+        } else {
+            return "Bronce";
+        }
     }
     
     @Override
     protected void onCleared() {
         super.onCleared();
-        // Limpiar recursos si es necesario
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
     
-    /**
-     * Estados de procesamiento del QR
-     */
-    public enum EstadoProcesamiento {
-        IDLE,       // Sin actividad
-        PROCESSING, // Procesando QR
-        SUCCESS,    // QR procesado exitosamente
-        ERROR       // Error al procesar QR
+    // Clase para encapsular el resultado del escaneo
+    public static class ScanResult {
+        private boolean success;
+        private String errorMessage;
+        private QRGenerator.ClienteQRData clienteData;
+        
+        public ScanResult(boolean success, String errorMessage, QRGenerator.ClienteQRData clienteData) {
+            this.success = success;
+            this.errorMessage = errorMessage;
+            this.clienteData = clienteData;
+        }
+        
+        public boolean isSuccess() {
+            return success;
+        }
+        
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+        
+        public QRGenerator.ClienteQRData getClienteData() {
+            return clienteData;
+        }
     }
 }

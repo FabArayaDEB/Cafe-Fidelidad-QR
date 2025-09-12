@@ -7,7 +7,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
-import com.example.cafefidelidaqrdemo.data.entities.ReporteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import java.util.Date;
 import java.util.List;
 

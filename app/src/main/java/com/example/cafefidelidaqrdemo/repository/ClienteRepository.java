@@ -275,4 +275,18 @@ public class ClienteRepository {
     public void clearError() {
         errorLiveData.postValue(null);
     }
+    
+    /**
+     * Obtiene un cliente por ID de forma síncrona
+     */
+    public ClienteEntity getClienteById(String clienteId) {
+        return clienteDao.getById(clienteId);
+    }
+    
+    /**
+     * Obtiene un cliente por email de forma síncrona
+     */
+    public ClienteEntity getClienteByEmailSync(String email) {
+        return clienteDao.getByEmail(email);
+    }
 }

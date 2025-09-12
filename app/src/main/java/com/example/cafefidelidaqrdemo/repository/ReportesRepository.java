@@ -4,7 +4,7 @@ import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.database.dao.ReporteDao;
-import com.example.cafefidelidaqrdemo.data.entities.ReporteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import com.example.cafefidelidaqrdemo.database.models.MetricasVisitas;
 import com.example.cafefidelidaqrdemo.database.models.MetricasCanjes;
 import com.example.cafefidelidaqrdemo.database.models.TopCliente;
