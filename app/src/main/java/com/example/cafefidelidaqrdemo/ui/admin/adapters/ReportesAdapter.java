@@ -7,7 +7,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.data.entities.ReporteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.text.SimpleDateFormat;

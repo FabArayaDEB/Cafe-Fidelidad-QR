@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.data.entities.ReporteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import com.example.cafefidelidaqrdemo.database.models.TopCliente;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.ReportesAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.TopClientesAdapter;

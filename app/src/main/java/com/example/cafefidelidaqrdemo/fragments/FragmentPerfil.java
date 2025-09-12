@@ -2,10 +2,12 @@ package com.example.cafefidelidaqrdemo.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,22 +19,25 @@ import com.example.cafefidelidaqrdemo.HistorialActivity;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.EditarPerfilActivity;
-import com.example.cafefidelidaqrdemo.Contantes;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
+import com.example.cafefidelidaqrdemo.utils.QRGenerator;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.HashMap;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class FragmentPerfil extends Fragment {
     private FragmentPerfilBinding binding;
     private Context mContext;
     private FirebaseAuth firebaseAuth;
+    private DatabaseReference databaseReference;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -55,27 +60,36 @@ public class FragmentPerfil extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        // Inicializar Firebase Auth
+        // Inicializar Firebase
         firebaseAuth = FirebaseAuth.getInstance();
+        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         
-        // Configurar listeners para los botones
-        binding.UpdateUserData.setOnClickListener(v -> {
-            startActivity(new Intent(mContext, EditarPerfilActivity.class));
-        });
+        // Configurar listeners
         
         binding.btnHistorial.setOnClickListener(v -> {
-            startActivity(new Intent(mContext, HistorialActivity.class));
+            Intent intent = new Intent(mContext, HistorialActivity.class);
+            startActivity(intent);
         });
         
         binding.btnLogout.setOnClickListener(v -> {
-            // Cerrar sesión de Firebase
+            // Cerrar sesión
             firebaseAuth.signOut();
             
-            // Cerrar sesión de Google también
-            GoogleSignIn.getClient(mContext, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
-            
-            startActivity(new Intent(mContext, OpcionesLoginActivity.class));
-            getActivity().finishAffinity();
+            // Redirigir a la pantalla de login
+            Intent intent = new Intent(mContext, OpcionesLoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+        
+        // Configurar listener para refrescar QR
+        binding.ivQrPersonal.setOnClickListener(v -> {
+            refreshQRCode();
+        });
+        
+        // Configurar listener para Mi Cuenta
+        binding.layoutMiCuenta.setOnClickListener(v -> {
+            Intent intent = new Intent(mContext, DatosPersonalesActivity.class);
+            startActivity(intent);
         });
         
         // Cargar información del usuario
@@ -83,176 +97,115 @@ public class FragmentPerfil extends Fragment {
     }
     
     private void loadUserInfo() {
-        if (firebaseAuth.getCurrentUser() == null) {
-            return;
-        }
-        
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
-        ref.child(firebaseAuth.getUid())
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) {
-                            // Usuario no existe en la base de datos, crear datos por defecto
-                            crearDatosUsuarioPorDefecto();
-                            return;
-                        }
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            
+            databaseReference.child(userId).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String nombre = snapshot.child("nombre").getValue(String.class);
+                        String email = snapshot.child("email").getValue(String.class);
+                        String telefono = snapshot.child("telefono").getValue(String.class);
+                        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue(String.class);
                         
-                        String nombres = snapshot.child("names").getValue() != null ? 
-            snapshot.child("names").getValue().toString() : "Usuario";
-        String email = snapshot.child("email").getValue() != null ? 
-            snapshot.child("email").getValue().toString() : "";
-        String telefono = snapshot.child("telefono").getValue() != null ? 
-            snapshot.child("telefono").getValue().toString() : "";
-        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue() != null ? 
-            snapshot.child("fechaNacimiento").getValue().toString() : "";
-        String proveedor = snapshot.child("proveedor").getValue() != null ? 
-            snapshot.child("proveedor").getValue().toString() : "";
-                        Object registroObj = snapshot.child("date").getValue();
-                        String imagen = snapshot.child("imagen").getValue() != null ? 
-                            snapshot.child("imagen").getValue().toString() : "";
-                        
-                        // Información específica del programa de fidelidad
-                        Object puntosObj = snapshot.child("puntos").getValue();
-                        String nivel = snapshot.child("nivel").getValue() != null ? 
-                            snapshot.child("nivel").getValue().toString() : "";
-                        Object totalComprasObj = snapshot.child("totalCompras").getValue();
-                        Object ultimaVisitaObj = snapshot.child("ultimaVisita").getValue();
-
-                        // Procesar fecha de registro
-                        long registroTimestamp = 0;
-                        if (registroObj != null) {
-                            try {
-                                registroTimestamp = Long.parseLong(registroObj.toString());
-                            } catch (NumberFormatException e) {
-                                registroTimestamp = System.currentTimeMillis();
-                            }
+                        // Configurar saludo personalizado
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH", Locale.getDefault());
+                        int hour = Integer.parseInt(sdf.format(new Date()));
+                        String greeting;
+                        if (hour < 12) {
+                            greeting = "¡Buenos días, " + (nombre != null ? nombre : "Usuario") + "!";
+                        } else if (hour < 18) {
+                            greeting = "¡Buenas tardes, " + (nombre != null ? nombre : "Usuario") + "!";
                         } else {
-                            registroTimestamp = System.currentTimeMillis();
+                            greeting = "¡Buenas noches, " + (nombre != null ? nombre : "Usuario") + "!";
                         }
-                        String date = Contantes.DateFormat(registroTimestamp);
+                        binding.tvSaludo.setText(greeting);
+                         
+                         // Generar McID único basado en el userId
+                         String mcId = "MC" + userId.substring(0, Math.min(6, userId.length())).toUpperCase();
+                         binding.tvMcid.setText(mcId);
+                         
+                         // Mostrar datos del usuario
+                         binding.tvNombres.setText(nombre != null ? nombre : "No especificado");
+                         binding.tvEmail.setText(email != null ? email : "No especificado");
                         
-                        // Procesar puntos
-                        int puntos = 0;
-                        if (puntosObj != null) {
-                            try {
-                                puntos = Integer.parseInt(puntosObj.toString());
-                            } catch (NumberFormatException e) {
-                                puntos = 0;
-                            }
-                        }
-                        
-                        // Procesar total de compras
-                        double totalCompras = 0;
-                        if (totalComprasObj != null) {
-                            try {
-                                totalCompras = Double.parseDouble(totalComprasObj.toString());
-                            } catch (NumberFormatException e) {
-                                totalCompras = 0;
-                            }
-                        }
-                        
-                        // Procesar última visita
-                        String ultimaVisita = "No disponible";
-                        if (ultimaVisitaObj != null) {
-                            try {
-                                long ultimaVisitaTimestamp = Long.parseLong(ultimaVisitaObj.toString());
-                                ultimaVisita = Contantes.DateFormat(ultimaVisitaTimestamp);
-                            } catch (NumberFormatException e) {
-                                ultimaVisita = "No disponible";
-                            }
-                        }
-                        
-                        // Calcular nivel si no existe
-                        if (nivel.isEmpty()) {
-                            nivel = Contantes.calcularNivel(puntos);
-                        }
-
-                        // Establecer valores en la UI
-                        binding.tvNombres.setText(nombres);
-                        binding.tvEmail.setText(email);
-                        if (binding.tvTelefono != null) {
-                            binding.tvTelefono.setText(telefono.isEmpty() ? "No especificado" : telefono);
-                        }
-                        if (binding.tvFechaNacimiento != null) {
-                            binding.tvFechaNacimiento.setText(fechaNacimiento.isEmpty() ? "No especificado" : fechaNacimiento);
-                        }
-                        binding.tvRegistro.setText("Miembro desde: " + date);
-                        
-                        // Información del programa de fidelidad
+                        // Mostrar información de fidelidad si está disponible
                         if (binding.tvPuntos != null) {
-                            binding.tvPuntos.setText(String.valueOf(puntos));
+                            binding.tvPuntos.setText("0"); // Puntos por defecto
                         }
                         if (binding.tvNivel != null) {
-                            binding.tvNivel.setText(nivel);
-                        }
-                        if (binding.tvComprasTotales != null) {
-                            binding.tvComprasTotales.setText("$" + String.format("%.2f", totalCompras));
-                        }
-                        if (binding.tvUltimaVisita != null) {
-                            binding.tvUltimaVisita.setText(ultimaVisita);
+                            binding.tvNivel.setText("Bronce"); // Nivel por defecto
                         }
                         
-                        // Mostrar puntos para siguiente nivel
-                        if (binding.tvPuntosSiguiente != null) {
-                            int puntosParaSiguiente = Contantes.puntosParaSiguienteNivel(puntos);
-                            if (puntosParaSiguiente > 0) {
-                                binding.tvPuntosSiguiente.setText(String.valueOf(puntosParaSiguiente));
-                            } else {
-                                binding.tvPuntosSiguiente.setText("0");
-                            }
-                        }
-
-                        Glide.with(mContext)
-                                .load(imagen)
-                                .placeholder(R.drawable.ic_account)
-                                .into(binding.itemPerfil);
+                        // Generar código QR
+                        generateClientQR();
                     }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        // Manejar error
-                    }
-                });
+                }
+                
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(mContext, "Error al cargar datos del usuario", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
     
-    private void crearDatosUsuarioPorDefecto() {
-        if (firebaseAuth.getCurrentUser() == null) {
-            return;
+    private void generateClientQR() {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            String mcId = "MC" + userId.substring(0, Math.min(6, userId.length())).toUpperCase();
+            
+            // Obtener datos del usuario desde Firebase para generar QR
+            databaseReference.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String nombre = snapshot.child("nombre").getValue(String.class);
+                        String email = snapshot.child("email").getValue(String.class);
+                        
+                        // Generar QR con los datos del cliente
+                        try {
+                            Bitmap qrBitmap = QRGenerator.generateClientQR(
+                                userId,
+                                nombre != null ? nombre : "Usuario",
+                                email != null ? email : currentUser.getEmail(),
+                                mcId,
+                                0 // Puntos por defecto
+                            );
+                            if (qrBitmap != null) {
+                                binding.ivQrPersonal.setImageBitmap(qrBitmap);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(mContext, "Error al generar código QR", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(mContext, "Error al obtener datos para QR", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
-        
-        String uid = firebaseAuth.getUid();
-        String email = firebaseAuth.getCurrentUser().getEmail();
-        String nombre = firebaseAuth.getCurrentUser().getDisplayName();
-        
-        if (nombre == null || nombre.isEmpty()) {
-            nombre = "Usuario";
-        }
-        
-        HashMap<String, Object> userData = new HashMap<>();
-        userData.put("names", nombre);
-        userData.put("email", email != null ? email : "");
-        userData.put("telefono", "");
-        userData.put("fechaNacimiento", "");
-        userData.put("proveedor", "Email");
-        userData.put("date", System.currentTimeMillis());
-        userData.put("imagen", "");
-        userData.put("puntos", 0);
-        userData.put("nivel", "Bronce");
-        userData.put("totalCompras", 0.0);
-        userData.put("ultimaVisita", System.currentTimeMillis());
-        
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
-        ref.child(uid).setValue(userData)
-                .addOnSuccessListener(aVoid -> {
-                    // Datos creados exitosamente, recargar información
-                    loadUserInfo();
-                })
-                .addOnFailureListener(e -> {
-                    // Error al crear datos
-                });
     }
-
+    
+    private void refreshQRCode() {
+        // Mostrar indicador de actualización
+        binding.ivQrPersonal.setAlpha(0.5f);
+        
+        // Refrescar QR
+        generateClientQR();
+        
+        Toast.makeText(mContext, "Código QR actualizado", Toast.LENGTH_SHORT).show();
+        
+        // Restaurar opacidad
+        binding.ivQrPersonal.setAlpha(1.0f);
+    }
+    
     @Override
     public void onDestroyView() {
         super.onDestroyView();

@@ -1,0 +1,103 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+  
+  <!-- QR Code Pattern Simulation -->
+  <group>
+    <!-- Corner squares -->
+    <path android:fillColor="#000000"
+          android:pathData="M20,20h40v40h-40z"/>
+    <path android:fillColor="#FFFFFF"
+          android:pathData="M30,30h20v20h-20z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M180,20h40v40h-40z"/>
+    <path android:fillColor="#FFFFFF"
+          android:pathData="M190,30h20v20h-20z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M20,180h40v40h-40z"/>
+    <path android:fillColor="#FFFFFF"
+          android:pathData="M30,190h20v20h-20z"/>
+    
+    <!-- Center square -->
+    <path android:fillColor="#000000"
+          android:pathData="M100,100h40v40h-40z"/>
+    <path android:fillColor="#FFFFFF"
+          android:pathData="M110,110h20v20h-20z"/>
+    
+    <!-- Random pattern blocks -->
+    <path android:fillColor="#000000"
+          android:pathData="M80,20h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M100,20h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M130,20h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M150,20h10v10h-10z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M20,80h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M20,100h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M20,130h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M20,150h10v10h-10z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M80,40h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M120,40h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M160,40h10v10h-10z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M40,80h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M40,120h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M40,160h10v10h-10z"/>
+    
+    <!-- More random blocks -->
+    <path android:fillColor="#000000"
+          android:pathData="M70,70h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M160,70h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M70,160h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M160,160h10v10h-10z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M90,90h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M140,90h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M90,140h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M140,140h10v10h-10z"/>
+    
+    <!-- Additional pattern elements -->
+    <path android:fillColor="#000000"
+          android:pathData="M200,80h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M200,100h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M200,120h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M200,140h10v10h-10z"/>
+    
+    <path android:fillColor="#000000"
+          android:pathData="M80,200h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M100,200h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M120,200h10v10h-10z"/>
+    <path android:fillColor="#000000"
+          android:pathData="M140,200h10v10h-10z"/>
+  </group>
+  
+</vector>

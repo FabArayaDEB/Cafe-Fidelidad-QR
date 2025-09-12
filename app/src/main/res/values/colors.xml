@@ -82,4 +82,9 @@
     <color name="color_on_warning">#FFFFFF</color>
     <color name="color_text_secondary">#757575</color>
     <color name="color_tertiary">#CD853F</color>
+    
+    <!-- Missing colors -->
+    <color name="gray">#757575</color>
+    <color name="light_gray">#E0E0E0</color>
+    <color name="secondary">#A0522D</color>
 </resources>

@@ -50,6 +50,13 @@
             android:name=".OpcionesLoginActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.QRScannerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".DatosPersonalesActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
