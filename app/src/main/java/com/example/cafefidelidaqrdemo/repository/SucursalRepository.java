@@ -156,22 +156,26 @@ public class SucursalRepository {
         });
     }
     
-    public void getSucursalesWithDistance(double userLat, double userLon, DistanceCallback callback) {
+    public void getSucursalesWithDistance(double userLat, double userLon, SucursalRepository.DistanceCallback callback) {
         executor.execute(() -> {
-            List<SucursalEntity> entities = sucursalDao.getAllSucursalesSync();
-            List<SucursalWithDistance> sucursalesWithDistance = new ArrayList<>();
-            
-            for (SucursalEntity entity : entities) {
-                if (entity.getLat() != 0.0 && entity.getLon() != 0.0) {
-                    double distance = calculateDistance(userLat, userLon, entity.getLat(), entity.getLon());
-                    sucursalesWithDistance.add(new SucursalWithDistance(convertToModel(entity), distance));
+            try {
+                List<SucursalEntity> entities = sucursalDao.getAllSucursalesSync();
+                List<SucursalWithDistance> sucursalesWithDistance = new ArrayList<>();
+                
+                for (SucursalEntity entity : entities) {
+                    if (entity.getLat() != 0.0 && entity.getLon() != 0.0) {
+                        double distance = calculateDistance(userLat, userLon, entity.getLat(), entity.getLon());
+                        sucursalesWithDistance.add(new SucursalWithDistance(convertToModel(entity), distance));
+                    }
                 }
+                
+                // Ordenar por distancia
+                sucursalesWithDistance.sort((a, b) -> Double.compare(a.getDistance(), b.getDistance()));
+                
+                callback.onResults(sucursalesWithDistance);
+            } catch (Exception e) {
+                callback.onError("Error al calcular distancias: " + e.getMessage());
             }
-            
-            // Ordenar por distancia
-            sucursalesWithDistance.sort((a, b) -> Double.compare(a.getDistance(), b.getDistance()));
-            
-            callback.onResults(sucursalesWithDistance);
         });
     }
     
@@ -367,5 +371,6 @@ public class SucursalRepository {
     
     public interface DistanceCallback {
         void onResults(List<SucursalWithDistance> sucursales);
+        void onError(String error);
     }
 }

@@ -15,6 +15,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
+import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
 
 public class ProximoBeneficioDialogFragment extends DialogFragment {
     
@@ -30,9 +31,9 @@ public class ProximoBeneficioDialogFragment extends DialogFragment {
     private Button buttonCerrar;
     
     // Data
-    private ProgresoViewModel.ProximoBeneficio proximoBeneficio;
+    private ProximoBeneficio proximoBeneficio;
     
-    public static ProximoBeneficioDialogFragment newInstance(ProgresoViewModel.ProximoBeneficio proximoBeneficio) {
+    public static ProximoBeneficioDialogFragment newInstance(ProximoBeneficio proximoBeneficio) {
         ProximoBeneficioDialogFragment fragment = new ProximoBeneficioDialogFragment();
         Bundle args = new Bundle();
         // args.putSerializable(ARG_PROXIMO_BENEFICIO, proximoBeneficio); // ProximoBeneficio no implementa Serializable
@@ -45,7 +46,7 @@ public class ProximoBeneficioDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         
         if (getArguments() != null) {
-            proximoBeneficio = (ProgresoViewModel.ProximoBeneficio) getArguments().getSerializable(ARG_PROXIMO_BENEFICIO);
+            proximoBeneficio = (ProximoBeneficio) getArguments().getSerializable(ARG_PROXIMO_BENEFICIO);
         }
     }
     

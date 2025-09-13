@@ -1,6 +1,7 @@
 package com.example.cafefidelidaqrdemo.fragments;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -88,8 +89,7 @@ public class FragmentSucursales extends Fragment {
         // Verificar permisos de ubicación
         checkLocationPermission();
         
-        // Cargar datos iniciales
-        viewModel.loadSucursales();
+        // Los datos se cargan automáticamente en el ViewModel
     }
     
     private void initializeViews(View view) {
@@ -346,6 +346,7 @@ public class FragmentSucursales extends Fragment {
         }
     }
     
+    @SuppressLint("MissingPermission")
     private void getCurrentLocation() {
         if (!locationPermissionGranted) return;
         
@@ -389,15 +390,21 @@ public class FragmentSucursales extends Fragment {
         // Ordenar según criterio seleccionado
         if ("distancia".equals(ordenSeleccionado) && userLocation != null) {
             viewModel.getSucursalesWithDistance(userLocation.getLatitude(), 
-                userLocation.getLongitude(), sucursalesWithDistance -> {
-                    // Convertir SucursalRepository.SucursalWithDistance a SucursalesAdapter.SucursalItem
-                    List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
-                    for (SucursalRepository.SucursalWithDistance item : sucursalesWithDistance) {
-                        // Convertir Sucursal a SucursalEntity (necesitamos crear un método de conversión)
-                        SucursalEntity entity = convertToEntity(item.getSucursal());
-                        items.add(new SucursalesAdapter.SucursalItem(entity, item.getDistance()));
+                userLocation.getLongitude(), new SucursalesViewModel.DistanceCallback() {
+                    @Override
+                    public void onSuccess(List<SucursalEntity> sucursales) {
+                        // Convertir SucursalEntity a SucursalesAdapter.SucursalItem
+                        List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
+                        for (SucursalEntity entity : sucursales) {
+                            items.add(new SucursalesAdapter.SucursalItem(entity, 0.0)); // Distancia ya calculada
+                        }
+                        adapter.submitListWithDistance(items);
                     }
-                    adapter.submitListWithDistance(items);
+                    
+                    @Override
+                    public void onError(String error) {
+                        showError(error);
+                    }
                 });
         } else {
             // Ordenar por nombre
@@ -501,10 +508,7 @@ public class FragmentSucursales extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refrescar datos si es necesario
-        if (sucursalesOriginales.isEmpty()) {
-            viewModel.loadSucursales();
-        }
+        // Los datos se refrescan automáticamente a través del ViewModel
         
         // Verificar permisos de ubicación por si cambiaron
         checkLocationPermission();

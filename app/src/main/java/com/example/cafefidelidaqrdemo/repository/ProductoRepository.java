@@ -6,37 +6,41 @@ import com.example.cafefidelidaqrdemo.database.dao.ProductoDao;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
+import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+import com.example.cafefidelidaqrdemo.repository.interfaces.IProductoRepository;
 
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import com.example.cafefidelidaqrdemo.utils.SearchManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ProductoRepository {
+/**
+ * Repository para gestión de productos siguiendo arquitectura MVVM
+ * Maneja cache local, sincronización y búsquedas
+ * Implementa IProductoRepository
+ */
+public class ProductoRepository extends BaseRepository implements IProductoRepository {
     private final ProductoDao productoDao;
     private final ApiService apiService;
     private final SearchManager searchManager;
-    private final Executor executor;
     
-    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
-    private final MutableLiveData<String> error = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isOffline = new MutableLiveData<>(false);
+    // LiveData específicos de productos
+    private final MutableLiveData<List<ProductoEntity>> _searchResults = new MutableLiveData<>();
     
     public ProductoRepository(ProductoDao productoDao, ApiService apiService) {
+        super(2); // Pool de 2 threads para operaciones de productos
         this.productoDao = productoDao;
         this.apiService = apiService;
         this.searchManager = new SearchManager();
-        this.executor = Executors.newFixedThreadPool(2);
     }
     
-    // LiveData getters
+    // ==================== GETTERS PARA LIVEDATA ====================
+    
     public LiveData<List<ProductoEntity>> getAllProductos() {
         return productoDao.getAllProductos();
     }
@@ -49,151 +53,226 @@ public class ProductoRepository {
         return productoDao.getProductosDisponibles();
     }
     
-    public LiveData<Boolean> getIsLoading() {
-        return isLoading;
+    public LiveData<List<ProductoEntity>> getSearchResults() {
+        return _searchResults;
     }
     
-    public LiveData<String> getError() {
-        return error;
-    }
+    // ==================== OPERACIONES PRINCIPALES ====================
     
-    public LiveData<Boolean> getIsOffline() {
-        return isOffline;
-    }
-    
-    // Métodos principales
+    /**
+     * Refresca la lista de productos desde la API
+     */
     public void refreshProductos() {
+        refreshProductos(null);
+    }
+    
+    /**
+     * Refresca la lista de productos con callback
+     */
+    public void refreshProductos(SimpleCallback callback) {
         if (!NetworkUtils.isNetworkAvailable()) {
-            isOffline.postValue(true);
+            setOffline(true);
+            if (callback != null) callback.onError("Sin conexión a internet");
             return;
         }
         
-        isLoading.postValue(true);
-        isOffline.postValue(false);
-        error.postValue(null);
+        setLoading(true);
+        setOffline(false);
+        clearError();
         
         apiService.getProductos().enqueue(new Callback<List<Producto>>() {
             @Override
             public void onResponse(Call<List<Producto>> call, Response<List<Producto>> response) {
-                isLoading.postValue(false);
-                
                 if (response.isSuccessful() && response.body() != null) {
                     List<Producto> productos = response.body();
-                    executor.execute(() -> {
-                        // Convertir y guardar en cache local
-                        List<ProductoEntity> entities = new ArrayList<>();
-                        for (Producto producto : productos) {
-                            entities.add(convertToEntity(producto));
+                    executeInBackground(() -> {
+                        try {
+                            // Convertir y guardar en cache local
+                            List<ProductoEntity> entities = new ArrayList<>();
+                            for (Producto producto : productos) {
+                                entities.add(convertToEntity(producto));
+                            }
+                            
+                            // Limpiar cache anterior y insertar nuevos datos
+                            productoDao.deleteAll();
+                            productoDao.insertAll(entities);
+                            
+                            setSuccess("Productos actualizados exitosamente");
+                            if (callback != null) callback.onSuccess();
+                        } catch (Exception e) {
+                            String error = "Error al guardar productos: " + e.getMessage();
+                            setError(error);
+                            if (callback != null) callback.onError(error);
                         }
-                        
-                        // Limpiar cache anterior y insertar nuevos datos
-                        productoDao.deleteAll();
-                        productoDao.insertAll(entities);
                     });
                 } else {
-                    error.postValue("Error al cargar productos: " + response.message());
+                    String error = "Error al cargar productos: " + response.message();
+                    setError(error);
+                    if (callback != null) callback.onError(error);
                 }
             }
             
             @Override
             public void onFailure(Call<List<Producto>> call, Throwable t) {
-                isLoading.postValue(false);
-                error.postValue("Error de conexión: " + t.getMessage());
+                String error = "Error de conexión: " + t.getMessage();
+                setError(error);
+                setOffline(true);
+                if (callback != null) callback.onError(error);
             }
         });
     }
     
-    public void getProductoById(Long idProducto, ProductoCallback callback) {
-        executor.execute(() -> {
-            ProductoEntity entity = productoDao.getProductoById(idProducto);
-            if (entity != null) {
-                callback.onSuccess(convertToModel(entity));
-            } else {
-                // Si no está en cache, intentar obtener de API
-                if (NetworkUtils.isNetworkAvailable()) {
+    /**
+     * Obtiene un producto por ID con callback
+     */
+    public void getProductoById(Long idProducto, RepositoryCallback<ProductoEntity> callback) {
+        executeInBackground(() -> {
+            try {
+                ProductoEntity entity = productoDao.getProductoById(idProducto);
+                if (entity != null) {
+                    if (callback != null) callback.onSuccess(entity);
+                } else {
+                    // Si no está en cache, buscar en API
                     fetchProductoFromApi(idProducto, callback);
-                } else {
-                    callback.onError("Producto no encontrado y sin conexión");
                 }
+            } catch (Exception e) {
+                String error = "Error al obtener producto: " + e.getMessage();
+                setError(error);
+                if (callback != null) callback.onError(error);
             }
         });
     }
     
-    private void fetchProductoFromApi(Long idProducto, ProductoCallback callback) {
-        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<Producto>() {
-            @Override
-            public void onResponse(Call<Producto> call, Response<Producto> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Producto producto = response.body();
-                    executor.execute(() -> {
-                        // Guardar en cache
-                        ProductoEntity entity = convertToEntity(producto);
-                        productoDao.insert(entity);
-                    });
-                    callback.onSuccess(producto);
-                } else {
-                    callback.onError("Error al obtener producto: " + response.message());
-                }
-            }
-            
-            @Override
-            public void onFailure(Call<Producto> call, Throwable t) {
-                callback.onError("Error de conexión: " + t.getMessage());
-            }
-        });
-    }
-    
-    public void searchProductos(String query, SearchCallback callback) {
-        executor.execute(() -> {
-            List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-            // TODO: Implementar searchProductosLocal en SearchManager
-            // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, null, null);
-            List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
-            List<Producto> productos = new ArrayList<>();
-            for (ProductoEntity entity : results) {
-                productos.add(convertToModel(entity));
-            }
-            callback.onResults(productos);
-        });
-    }
-    
-    public void searchProductosByCategory(String query, String categoria, Boolean disponible, SearchCallback callback) {
-        executor.execute(() -> {
-            List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-            // TODO: Implementar searchProductosLocal en SearchManager
-            // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, categoria, disponible);
-            List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
-            List<Producto> productos = new ArrayList<>();
-            for (ProductoEntity entity : results) {
-                productos.add(convertToModel(entity));
-            }
-            callback.onResults(productos);
-        });
-    }
-    
-    public void searchProductosRemote(String query, String categoria, RemoteSearchCallback callback) {
+    private void fetchProductoFromApi(Long idProducto, RepositoryCallback<ProductoEntity> callback) {
         if (!NetworkUtils.isNetworkAvailable()) {
-            callback.onError("Sin conexión a internet");
+            setOffline(true);
+            if (callback != null) callback.onError("Sin conexión a internet");
             return;
         }
         
-        // Implementar búsqueda remota cuando esté disponible en la API
-        // Por ahora, usar búsqueda local como fallback
-        searchProductosByCategory(query, categoria, null, new SearchCallback() {
+        setLoading(true);
+        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<Producto>() {
             @Override
-            public void onResults(List<Producto> productos) {
-                callback.onResults(productos, false); // false = no hay más resultados remotos
+            public void onResponse(Call<Producto> call, Response<Producto> response) {
+                setLoading(false);
+                if (response.isSuccessful() && response.body() != null) {
+                    Producto producto = response.body();
+                    ProductoEntity entity = convertToEntity(producto);
+                    // Guardar en cache
+                    executeInBackground(() -> {
+                        try {
+                            productoDao.insert(entity);
+                        } catch (Exception e) {
+                            // Log error but don't fail the operation
+                        }
+                    });
+                    if (callback != null) callback.onSuccess(entity);
+                } else {
+                    String error = "Producto no encontrado";
+                    setError(error);
+                    if (callback != null) callback.onError(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Producto> call, Throwable t) {
+                setLoading(false);
+                String error = "Error de conexión: " + t.getMessage();
+                setError(error);
+                setOffline(true);
+                if (callback != null) callback.onError(error);
             }
         });
     }
     
-    public void forceSyncProductos() {
-        // SyncManager solo tiene métodos estáticos, no necesita instancia
-        // Se puede implementar sincronización específica aquí si es necesario
+    /**
+     * Busca productos localmente
+     */
+    public void searchProductos(String query, RepositoryCallback<List<ProductoEntity>> callback) {
+        executeInBackground(() -> {
+            try {
+                List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
+                // TODO: Implementar searchProductosLocal en SearchManager
+                // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, null, null);
+                List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
+                _searchResults.postValue(results);
+                if (callback != null) callback.onSuccess(results);
+            } catch (Exception e) {
+                String error = "Error en búsqueda: " + e.getMessage();
+                setError(error);
+                if (callback != null) callback.onError(error);
+            }
+        });
     }
     
-    public void clearError() {
-        error.postValue(null);
+    /**
+     * Busca productos por categoría
+     */
+    public void searchProductosByCategory(String query, String categoria, Boolean disponible, RepositoryCallback<List<ProductoEntity>> callback) {
+        executeInBackground(() -> {
+            try {
+                List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
+                // TODO: Implementar searchProductosLocal en SearchManager
+                // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, categoria, disponible);
+                List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
+                _searchResults.postValue(results);
+                if (callback != null) callback.onSuccess(results);
+            } catch (Exception e) {
+                String error = "Error en búsqueda por categoría: " + e.getMessage();
+                setError(error);
+                if (callback != null) callback.onError(error);
+            }
+        });
+    }
+    
+    /**
+     * Busca productos remotamente
+     */
+    public void searchProductosRemote(String query, String categoria, RepositoryCallback<List<ProductoEntity>> callback) {
+        if (!NetworkUtils.isNetworkAvailable()) {
+            setOffline(true);
+            // Fallback a búsqueda local
+            searchProductosByCategory(query, categoria, true, callback);
+            return;
+        }
+        
+        setLoading(true);
+        // Por ahora, usar búsqueda local como fallback
+        // TODO: Implementar búsqueda remota real cuando esté disponible la API
+        searchProductosByCategory(query, categoria, true, new RepositoryCallback<List<ProductoEntity>>() {
+            @Override
+            public void onSuccess(List<ProductoEntity> result) {
+                setLoading(false);
+                if (callback != null) callback.onSuccess(result);
+            }
+            
+            @Override
+            public void onError(String error) {
+                setLoading(false);
+                if (callback != null) callback.onError(error);
+            }
+        });
+    }
+    
+    /**
+     * Fuerza la sincronización de productos
+     */
+    public void forceSyncProductos() {
+        forceSyncProductos(null);
+    }
+    
+    /**
+     * Fuerza la sincronización de productos con callback
+     */
+    public void forceSyncProductos(SimpleCallback callback) {
+        refreshProductos(callback);
+    }
+    
+    /**
+     * Limpia los resultados de búsqueda
+     */
+    public void clearSearchResults() {
+        _searchResults.postValue(new ArrayList<>());
     }
     
     // Métodos de conversión
@@ -217,18 +296,31 @@ public class ProductoRepository {
         return producto;
     }
     
-    // Interfaces de callback
-    public interface ProductoCallback {
-        void onSuccess(Producto producto);
-        void onError(String error);
+    // Los métodos de conversión ya están definidos arriba, eliminando duplicados
+    
+    /**
+     * Estado de error (implementación de IProductoRepository)
+     */
+    @Override
+    public LiveData<String> getError() {
+        return getErrorMessage();
     }
     
-    public interface SearchCallback {
-        void onResults(List<Producto> productos);
-    }
-    
-    public interface RemoteSearchCallback {
-        void onResults(List<Producto> productos, boolean hasMore);
-        void onError(String error);
+    /**
+     * Limpia cache local
+     */
+    @Override
+    public void clearCache(SimpleCallback callback) {
+        executeInBackground(() -> {
+            try {
+                productoDao.deleteAll();
+                _searchResults.postValue(new ArrayList<>());
+                if (callback != null) callback.onSuccess();
+            } catch (Exception e) {
+                String error = "Error al limpiar cache: " + e.getMessage();
+                setError(error);
+                if (callback != null) callback.onError(error);
+            }
+        });
     }
 }

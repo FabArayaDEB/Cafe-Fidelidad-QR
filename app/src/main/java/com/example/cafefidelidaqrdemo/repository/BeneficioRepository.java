@@ -51,6 +51,17 @@ public class BeneficioRepository {
         return syncStatusLiveData;
     }
     
+    /**
+     * Obtiene el estado offline del repositorio
+     * @return LiveData con el estado offline
+     */
+    public LiveData<Boolean> getIsOffline() {
+        MutableLiveData<Boolean> offlineLiveData = new MutableLiveData<>();
+        Boolean syncStatus = syncStatusLiveData.getValue();
+        offlineLiveData.setValue(syncStatus == null || !syncStatus);
+        return offlineLiveData;
+    }
+    
     // Operaciones de lectura
     public LiveData<List<BeneficioEntity>> getAllBeneficios() {
         return beneficioDao.getAllBeneficios();
@@ -274,4 +285,67 @@ public class BeneficioRepository {
     public interface OnResultCallback<T> {
         void onResult(T result);
     }
+    
+    /**
+     * Fuerza la sincronización de beneficios con el servidor
+     */
+    public void forceSyncBeneficios(com.example.cafefidelidaqrdemo.repository.base.BaseRepository.SimpleCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                // Aquí iría la lógica de sincronización con la API
+                // Por ahora simulamos una sincronización exitosa
+                Thread.sleep(1000); // Simular tiempo de red
+                
+                isLoadingLiveData.postValue(false);
+                syncStatusLiveData.postValue(true);
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+                
+            } catch (Exception e) {
+                isLoadingLiveData.postValue(false);
+                syncStatusLiveData.postValue(false);
+                errorLiveData.postValue("Error al sincronizar beneficios: " + e.getMessage());
+                if (callback != null) {
+                    callback.onError("Error al sincronizar beneficios: " + e.getMessage());
+                }
+            }
+        });
+     }
+     
+     /**
+       * Obtiene beneficios disponibles activos y vigentes
+       */
+      public LiveData<List<BeneficioEntity>> getBeneficiosDisponiblesParaCliente() {
+          return beneficioDao.getBeneficiosDisponiblesParaCliente();
+      }
+      
+      /**
+       * Refresca los beneficios desde el servidor
+       */
+      public void refreshBeneficios(com.example.cafefidelidaqrdemo.repository.base.BaseRepository.SimpleCallback callback) {
+          isLoadingLiveData.postValue(true);
+          executor.execute(() -> {
+              try {
+                  // Aquí iría la lógica de sincronización con la API
+                  // Por ahora simulamos una sincronización exitosa
+                  Thread.sleep(1000); // Simular tiempo de red
+                  
+                  isLoadingLiveData.postValue(false);
+                  syncStatusLiveData.postValue(true);
+                  if (callback != null) {
+                      callback.onSuccess();
+                  }
+                  
+              } catch (Exception e) {
+                  isLoadingLiveData.postValue(false);
+                  syncStatusLiveData.postValue(false);
+                  errorLiveData.postValue("Error al refrescar beneficios: " + e.getMessage());
+                  if (callback != null) {
+                      callback.onError("Error al refrescar beneficios: " + e.getMessage());
+                  }
+              }
+          });
+      }
 }

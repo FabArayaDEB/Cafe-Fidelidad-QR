@@ -76,6 +76,52 @@ public class ClienteEntity {
     public boolean isSynced() { return synced; }
     public void setSynced(boolean synced) { this.synced = synced; }
     
+    /**
+     * Genera y retorna un McID único basado en los datos del cliente
+     * @return McID generado
+     */
+    public String getMcId() {
+        if (nombre == null || email == null) {
+            return "MC000";
+        }
+        
+        // Generar McID basado en nombre y email
+        String nombreUpper = nombre.toUpperCase();
+        String emailLower = email.toLowerCase();
+        
+        // Tomar primera letra del nombre
+        String iniciales = "";
+        if (nombreUpper.length() > 0) iniciales += nombreUpper.charAt(0);
+        
+        // Tomar parte del email antes del @
+        String emailPart = emailLower.split("@")[0];
+        if (emailPart.length() > 4) {
+            emailPart = emailPart.substring(0, 4);
+        }
+        
+        return "MC" + iniciales + emailPart.toUpperCase();
+    }
+    
+    /**
+     * Método para obtener puntos (alias para compatibilidad)
+     * @return puntos del cliente
+     */
+    public int getPuntos() {
+        // Como esta entidad no tiene campo puntos, retornamos 0
+        // TODO: Implementar lógica de puntos si es necesario
+        return 0;
+    }
+    
+    /**
+     * Método para obtener nivel de fidelidad (alias para compatibilidad)
+     * @return nivel de fidelidad del cliente
+     */
+    public String getNivel() {
+        // Como esta entidad no tiene campo nivel, retornamos un valor por defecto
+        // TODO: Implementar lógica de nivel si es necesario
+        return "Bronce";
+    }
+    
     // Métodos de utilidad
     public boolean isActivo() {
         return "activo".equalsIgnoreCase(estado);

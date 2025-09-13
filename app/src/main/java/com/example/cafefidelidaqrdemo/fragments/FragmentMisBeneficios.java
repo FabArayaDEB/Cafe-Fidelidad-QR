@@ -320,7 +320,7 @@ public class FragmentMisBeneficios extends Fragment {
         super.onResume();
         // Verificar si hay un OTP activo al volver al fragment
         if (viewModel != null && clienteId != null) {
-            viewModel.verificarOtpActivo(clienteId);
+            viewModel.verificarOtpActivo();
         }
     }
 }

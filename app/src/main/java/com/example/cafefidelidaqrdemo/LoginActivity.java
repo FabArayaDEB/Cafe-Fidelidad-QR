@@ -10,33 +10,50 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 import com.example.cafefidelidaqrdemo.databinding.ActivityLoginEmailBinding;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.cafefidelidaqrdemo.viewmodels.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
 
     private ActivityLoginEmailBinding binding;
-    private FirebaseAuth firebaseAuth;
+    private LoginViewModel viewModel;
     private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityLoginEmailBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        firebaseAuth = FirebaseAuth.getInstance();
+        
+        // Configurar Data Binding
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_login_email);
+        
+        // Inicializar ViewModel
+        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+        binding.setViewModel(viewModel);
+        binding.setLifecycleOwner(this);
+        
+        // Configurar ProgressDialog
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Iniciando Sesión en Café Fidelidad");
         progressDialog.setCanceledOnTouchOutside(false);
+        
+        // Configurar observadores
+        setupObservers();
 
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                validateInfo();
+                // Obtener datos de los campos
+                String email = binding.lbEmail.getText().toString().trim();
+                String password = binding.lbPass.getText().toString().trim();
+                
+                // Actualizar ViewModel
+                viewModel.setEmail(email);
+                viewModel.setPassword(password);
+                
+                // Realizar login
+                viewModel.login();
             }
         });
 
@@ -48,50 +65,58 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, RecuperarPassActivity.class));
         });
     }
-
-    private String email, pass;
-    private void validateInfo() {
-        email = binding.lbEmail.getText().toString().trim();
-        pass = binding.lbPass.getText().toString().trim();
-        if (email.isEmpty()) {
-            binding.lbEmail.setError("Correo Inválido");
-            binding.lbEmail.requestFocus();
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.lbEmail.setError("Email Inválido");
-            binding.lbEmail.requestFocus();
-        } else if (pass.isEmpty()) {
-            binding.lbPass.setError("Contraseña Inválida");
-            binding.lbPass.requestFocus();
-        }
-        else {
-            loginUser();
-        }
+    
+    /**
+     * Configura los observadores del ViewModel
+     */
+    private void setupObservers() {
+        // Observar estado de carga
+        viewModel.getIsLoadingLiveData().observe(this, isLoading -> {
+            if (isLoading != null && isLoading) {
+                progressDialog.show();
+            } else {
+                progressDialog.dismiss();
+            }
+        });
+        
+        // Observar errores
+        viewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                // Mostrar error al usuario
+                android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_LONG).show();
+                viewModel.clearError();
+            }
+        });
+        
+        // Observar éxito en login
+        viewModel.getLoginSuccessLiveData().observe(this, success -> {
+            if (success != null && success) {
+                // Redirigir a MainActivity
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                viewModel.clearLoginSuccess();
+            }
+        });
+        
+        // Observar errores de validación de email
+        viewModel.getEmailErrorLiveData().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                binding.lbEmail.setError(error);
+            } else {
+                binding.lbEmail.setError(null);
+            }
+        });
+        
+        // Observar errores de validación de contraseña
+        viewModel.getPasswordErrorLiveData().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                binding.lbPass.setError(error);
+            } else {
+                binding.lbPass.setError(null);
+            }
+        });
     }
 
-    private void loginUser() {
-        progressDialog.setMessage("Accediendo a tu cuenta de fidelidad...");
-        progressDialog.show();
-
-        // Corregido: usar signInWithEmailAndPassword para login
-        firebaseAuth.signInWithEmailAndPassword(email, pass)
-                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-                        progressDialog.dismiss();
-                        Toast.makeText(LoginActivity.this, "¡Bienvenido a Café Fidelidad!", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finishAffinity();
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        progressDialog.dismiss();
-                        Toast.makeText(
-                                LoginActivity.this,
-                                "Error al iniciar sesión: " + e.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
-    }
+    // Métodos de validación y login ahora manejados por el ViewModel
 }

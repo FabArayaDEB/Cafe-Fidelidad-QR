@@ -12,22 +12,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.HistorialActivity;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
-import com.example.cafefidelidaqrdemo.EditarPerfilActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
-import com.example.cafefidelidaqrdemo.utils.QRGenerator;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.example.cafefidelidaqrdemo.viewmodels.PerfilViewModel;
+import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
+
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,8 +30,7 @@ import java.util.Locale;
 public class FragmentPerfil extends Fragment {
     private FragmentPerfilBinding binding;
     private Context mContext;
-    private FirebaseAuth firebaseAuth;
-    private DatabaseReference databaseReference;
+    private PerfilViewModel viewModel;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -60,20 +53,65 @@ public class FragmentPerfil extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        // Inicializar Firebase
-        firebaseAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+        // Inicializar ViewModel
+        viewModel = new ViewModelProvider(this).get(PerfilViewModel.class);
+        
+        // Configurar observadores
+        setupObservers();
         
         // Configurar listeners
+        setupClickListeners();
         
+        // Cargar información del usuario
+        viewModel.loadPerfilData();
+    }
+    
+    private void setupObservers() {
+        // Observar datos del cliente
+        viewModel.getClienteData().observe(getViewLifecycleOwner(), this::updateClienteInfo);
+        
+        // Observar QR del cliente
+        viewModel.getClienteQR().observe(getViewLifecycleOwner(), qrBitmap -> {
+            if (qrBitmap != null) {
+                binding.ivQrPersonal.setImageBitmap(qrBitmap);
+                binding.ivQrPersonal.setAlpha(1.0f);
+            }
+        });
+        
+        // Observar estado de carga
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            // Mostrar/ocultar indicador de carga si es necesario
+            if (isLoading) {
+                binding.ivQrPersonal.setAlpha(0.5f);
+            }
+        });
+        
+        // Observar errores
+        viewModel.getError().observe(getViewLifecycleOwner(), error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                viewModel.clearError();
+            }
+        });
+        
+        // Observar mensajes de éxito
+        viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message != null && !message.isEmpty()) {
+                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+                viewModel.clearSuccessMessage();
+            }
+        });
+    }
+    
+    private void setupClickListeners() {
         binding.btnHistorial.setOnClickListener(v -> {
             Intent intent = new Intent(mContext, HistorialActivity.class);
             startActivity(intent);
         });
         
         binding.btnLogout.setOnClickListener(v -> {
-            // Cerrar sesión
-            firebaseAuth.signOut();
+            // Cerrar sesión usando ViewModel
+            viewModel.logout();
             
             // Redirigir a la pantalla de login
             Intent intent = new Intent(mContext, OpcionesLoginActivity.class);
@@ -83,7 +121,7 @@ public class FragmentPerfil extends Fragment {
         
         // Configurar listener para refrescar QR
         binding.ivQrPersonal.setOnClickListener(v -> {
-            refreshQRCode();
+            viewModel.refreshQRCode();
         });
         
         // Configurar listener para Mi Cuenta
@@ -91,120 +129,41 @@ public class FragmentPerfil extends Fragment {
             Intent intent = new Intent(mContext, DatosPersonalesActivity.class);
             startActivity(intent);
         });
-        
-        // Cargar información del usuario
-        loadUserInfo();
     }
     
-    private void loadUserInfo() {
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
+    private void updateClienteInfo(ClienteEntity cliente) {
+        if (cliente != null) {
+            // Configurar saludo personalizado
+            SimpleDateFormat sdf = new SimpleDateFormat("HH", Locale.getDefault());
+            int hour = Integer.parseInt(sdf.format(new Date()));
+            String greeting;
+            if (hour < 12) {
+                greeting = "¡Buenos días, " + cliente.getNombre() + "!";
+            } else if (hour < 18) {
+                greeting = "¡Buenas tardes, " + cliente.getNombre() + "!";
+            } else {
+                greeting = "¡Buenas noches, " + cliente.getNombre() + "!";
+            }
+            binding.tvSaludo.setText(greeting);
             
-            databaseReference.child(userId).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        String nombre = snapshot.child("nombre").getValue(String.class);
-                        String email = snapshot.child("email").getValue(String.class);
-                        String telefono = snapshot.child("telefono").getValue(String.class);
-                        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue(String.class);
-                        
-                        // Configurar saludo personalizado
-                        SimpleDateFormat sdf = new SimpleDateFormat("HH", Locale.getDefault());
-                        int hour = Integer.parseInt(sdf.format(new Date()));
-                        String greeting;
-                        if (hour < 12) {
-                            greeting = "¡Buenos días, " + (nombre != null ? nombre : "Usuario") + "!";
-                        } else if (hour < 18) {
-                            greeting = "¡Buenas tardes, " + (nombre != null ? nombre : "Usuario") + "!";
-                        } else {
-                            greeting = "¡Buenas noches, " + (nombre != null ? nombre : "Usuario") + "!";
-                        }
-                        binding.tvSaludo.setText(greeting);
-                         
-                         // Generar McID único basado en el userId
-                         String mcId = "MC" + userId.substring(0, Math.min(6, userId.length())).toUpperCase();
-                         binding.tvMcid.setText(mcId);
-                         
-                         // Mostrar datos del usuario
-                         binding.tvNombres.setText(nombre != null ? nombre : "No especificado");
-                         binding.tvEmail.setText(email != null ? email : "No especificado");
-                        
-                        // Mostrar información de fidelidad si está disponible
-                        if (binding.tvPuntos != null) {
-                            binding.tvPuntos.setText("0"); // Puntos por defecto
-                        }
-                        if (binding.tvNivel != null) {
-                            binding.tvNivel.setText("Bronce"); // Nivel por defecto
-                        }
-                        
-                        // Generar código QR
-                        generateClientQR();
-                    }
-                }
-                
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(mContext, "Error al cargar datos del usuario", Toast.LENGTH_SHORT).show();
-                }
-            });
+            // Mostrar McID
+            binding.tvMcid.setText(cliente.getMcId());
+            
+            // Mostrar datos del usuario
+            binding.tvNombres.setText(cliente.getNombre());
+            binding.tvEmail.setText(cliente.getEmail());
+            
+            // Mostrar información de fidelidad
+            if (binding.tvPuntos != null) {
+                binding.tvPuntos.setText(String.valueOf(cliente.getPuntos()));
+            }
+            if (binding.tvNivel != null) {
+                binding.tvNivel.setText(cliente.getNivel());
+            }
         }
     }
     
-    private void generateClientQR() {
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
-            String mcId = "MC" + userId.substring(0, Math.min(6, userId.length())).toUpperCase();
-            
-            // Obtener datos del usuario desde Firebase para generar QR
-            databaseReference.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        String nombre = snapshot.child("nombre").getValue(String.class);
-                        String email = snapshot.child("email").getValue(String.class);
-                        
-                        // Generar QR con los datos del cliente
-                        try {
-                            Bitmap qrBitmap = QRGenerator.generateClientQR(
-                                userId,
-                                nombre != null ? nombre : "Usuario",
-                                email != null ? email : currentUser.getEmail(),
-                                mcId,
-                                0 // Puntos por defecto
-                            );
-                            if (qrBitmap != null) {
-                                binding.ivQrPersonal.setImageBitmap(qrBitmap);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Toast.makeText(mContext, "Error al generar código QR", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-                
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(mContext, "Error al obtener datos para QR", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-    
-    private void refreshQRCode() {
-        // Mostrar indicador de actualización
-        binding.ivQrPersonal.setAlpha(0.5f);
-        
-        // Refrescar QR
-        generateClientQR();
-        
-        Toast.makeText(mContext, "Código QR actualizado", Toast.LENGTH_SHORT).show();
-        
-        // Restaurar opacidad
-        binding.ivQrPersonal.setAlpha(1.0f);
-    }
+
     
     @Override
     public void onDestroyView() {

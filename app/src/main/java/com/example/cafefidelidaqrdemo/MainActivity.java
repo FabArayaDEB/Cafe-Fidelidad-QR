@@ -8,7 +8,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 import com.example.cafefidelidaqrdemo.databinding.ActivityMainBinding;
+import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
 import com.example.cafefidelidaqrdemo.fragments.FragmentQR;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPuntos;
@@ -25,26 +28,64 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
-    private FirebaseAuth firebaseAuth;
+    private MainViewModel viewModel;
     private OfflineManager offlineManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        firebaseAuth = FirebaseAuth.getInstance();
-        if (firebaseAuth.getCurrentUser() == null){
-            android.util.Log.d("MainActivity", "Usuario no autenticado, redirigiendo a login");
-            setLogin();
-            return;
-        }
+        
+        // Configurar Data Binding
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        
+        // Inicializar ViewModel
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        binding.setViewModel(viewModel);
+        binding.setLifecycleOwner(this);
+        
+        // Configurar observadores
+        setupObservers();
         
         // Inicializar OfflineManager y configurar sincronización automática
         offlineManager = OfflineManager.getInstance(this);
         configurarSincronizacionAutomatica();
         
+        // Configurar navegación
+        setupNavigation();
+        
+        // Verificar autenticación
+        viewModel.checkAuthenticationStatus();
+    }
+    
+    /**
+     * Configura los observadores del ViewModel
+     */
+    private void setupObservers() {
+        // Observar estado de autenticación
+        viewModel.getIsAuthenticatedLiveData().observe(this, isAuthenticated -> {
+            if (isAuthenticated != null && !isAuthenticated) {
+                // Redirigir a LoginActivity si no está autenticado
+                Intent intent = new Intent(this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        
+        // Observar errores
+        viewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                // Mostrar error al usuario
+                // TODO: Implementar manejo de errores
+            }
+        });
+        
+        // El título se maneja automáticamente con Data Binding
+    }
+    
+    /**
+     * Configura la navegación del bottom navigation
+     */
+    private void setupNavigation() {
         verFragPerfil();
         binding.bottomNV.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
 
@@ -53,9 +94,11 @@ public class MainActivity extends AppCompatActivity {
                 int itemId = menuItem.getItemId();
                 if (itemId == R.id.item_perfil) {
                     verFragPerfil();
+                    viewModel.setToolbarTitle("Mi Perfil");
                     return true;
                 } else if (itemId == R.id.item_puntos) {
                     verFragPuntos();
+                    viewModel.setToolbarTitle("Mis Puntos");
                     return true;
                 } else if (itemId == R.id.item_catalogo) {
                     verCatalogo();
@@ -65,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 } else if (itemId == R.id.item_qr) {
                     verFragQR();
+                    viewModel.setToolbarTitle("Escanear QR");
                     return true;
                 }
                 else {

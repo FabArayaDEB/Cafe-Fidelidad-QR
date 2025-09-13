@@ -1,404 +1,512 @@
 package com.example.cafefidelidaqrdemo.viewmodels;
 
 import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
+
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.dao.VisitaDao;
-import com.example.cafefidelidaqrdemo.database.dao.CanjeDao;
-import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
-import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
 import com.example.cafefidelidaqrdemo.models.HistorialItem;
-import com.example.cafefidelidaqrdemo.sync.SyncManager;
-import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
-import java.util.ArrayList;
-import java.util.Collections;
+import com.example.cafefidelidaqrdemo.network.ApiService;
+import com.example.cafefidelidaqrdemo.network.ApiClient;
+import com.example.cafefidelidaqrdemo.repository.HistorialRepository;
+import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * ViewModel para el historial de visitas y canjes
+ * ViewModel para gestión del historial siguiendo patrones MVVM estrictos
+ * Se enfoca únicamente en la preparación de datos para la UI
  */
 public class HistorialViewModel extends AndroidViewModel {
     
+    // ==================== CONSTANTES ====================
     public static final int PAGE_SIZE = 20;
     
-    private final VisitaDao visitaDao;
-    private final CanjeDao canjeDao;
-    private final ExecutorService executor;
+    // ==================== DEPENDENCIAS ====================
+    private final HistorialRepository repository;
     
-    // LiveData
-    private final MutableLiveData<List<HistorialItem>> historialItemsLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> syncStatusLiveData = new MutableLiveData<>(true);
-    private final MutableLiveData<Boolean> networkStatusLiveData = new MutableLiveData<>(true);
+    // ==================== ESTADO DE LA UI ====================
+    private final MutableLiveData<String> _clienteId = new MutableLiveData<>();
+    private final MutableLiveData<String> clienteId = new MutableLiveData<>();
+    private final MutableLiveData<FiltroTipo> _filtroTipo = new MutableLiveData<>(FiltroTipo.TODOS);
+    private final MutableLiveData<FiltroEstado> _filtroEstado = new MutableLiveData<>(FiltroEstado.TODOS);
+    private final MutableLiveData<Date> _fechaInicio = new MutableLiveData<>();
+    private final MutableLiveData<Date> _fechaFin = new MutableLiveData<>();
+    private final MutableLiveData<Integer> _currentPage = new MutableLiveData<>(0);
+    private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> _isLoadingMore = new MutableLiveData<>(false);
     
-    // Estado de paginación
-    private int currentPage = 0;
-    private String currentClienteId = null;
-    private FiltroTipo currentFiltroTipo = FiltroTipo.TODOS;
-    private FiltroEstado currentFiltroEstado = FiltroEstado.TODOS;
-    private Date currentFechaInicio = null;
-    private Date currentFechaFin = null;
+    // ==================== DATOS OBSERVABLES ====================
+    private final LiveData<List<HistorialItem>> historialItems;
+    private final LiveData<Boolean> isLoading;
+    private final LiveData<String> error;
+    private final LiveData<Boolean> isOffline;
     
-    // Cache de datos
-    private final List<HistorialItem> allItems = new ArrayList<>();
+    // ==================== DATOS DERIVADOS ====================
+    private final LiveData<Boolean> hasData;
+    private final LiveData<Boolean> showEmptyState;
+    private final LiveData<Boolean> canLoadMore;
+    private final LiveData<String> statusMessage;
+    private final LiveData<String> filtroSummary;
+    
+    // ==================== ENUMS ====================
     
     public enum FiltroTipo {
-        TODOS, VISITAS, CANJES
+        TODOS("Todos"),
+        VISITAS("Visitas"),
+        CANJES("Canjes");
+        
+        private final String displayName;
+        
+        FiltroTipo(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
     }
     
     public enum FiltroEstado {
-        TODOS, PENDIENTES, ENVIADOS
+        TODOS("Todos"),
+        PENDIENTES("Pendientes"),
+        ENVIADOS("Enviados");
+        
+        private final String displayName;
+        
+        FiltroEstado(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
     }
     
     public HistorialViewModel(@NonNull Application application) {
         super(application);
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
-        this.visitaDao = database.visitaDao();
-        this.canjeDao = database.canjeDao();
-        this.executor = Executors.newFixedThreadPool(4);
         
-        // Verificar estado de red inicial
-        networkStatusLiveData.setValue(NetworkUtils.isNetworkAvailable(application));
+        // Inicializar repositorio
+        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
+        repository = new HistorialRepository(
+            database.visitaDao(),
+            database.canjeDao(),
+            ApiClient.getApiService()
+        );
+        
+        // Configurar observables del repositorio
+        isLoading = repository.getIsLoading();
+        error = repository.getError();
+        isOffline = repository.getIsOffline();
+        
+        // Configurar LiveData reactivo para el historial
+        historialItems = Transformations.switchMap(_clienteId, clienteId -> {
+            if (clienteId != null && !clienteId.isEmpty()) {
+                FiltroTipo tipo = _filtroTipo.getValue();
+                FiltroEstado estado = _filtroEstado.getValue();
+                Date fechaInicio = _fechaInicio.getValue();
+                Date fechaFin = _fechaFin.getValue();
+                Integer page = _currentPage.getValue();
+                
+                return repository.getHistorialItems(
+                    clienteId,
+                    tipo != null ? tipo : FiltroTipo.TODOS,
+                    estado != null ? estado : FiltroEstado.TODOS,
+                    fechaInicio,
+                    fechaFin,
+                    page != null ? page : 0,
+                    PAGE_SIZE
+                );
+            }
+            return new MutableLiveData<>(null);
+        });
+        
+        // Configurar datos derivados para la UI
+        hasData = Transformations.map(historialItems, items -> 
+            items != null && !items.isEmpty()
+        );
+        
+        showEmptyState = Transformations.map(historialItems, items -> {
+            Boolean loading = isLoading.getValue();
+            Boolean refreshing = _isRefreshing.getValue();
+            return (loading == null || !loading) && 
+                   (refreshing == null || !refreshing) && 
+                   (items == null || items.isEmpty());
+        });
+        
+        canLoadMore = Transformations.map(historialItems, items -> {
+            Boolean loading = isLoading.getValue();
+            Boolean loadingMore = _isLoadingMore.getValue();
+            return (loading == null || !loading) && 
+                   (loadingMore == null || !loadingMore) && 
+                   items != null && items.size() >= PAGE_SIZE;
+        });
+        
+        statusMessage = Transformations.map(isOffline, offline -> {
+            if (offline != null && offline) {
+                return "Modo sin conexión - Mostrando datos locales";
+            }
+            return null;
+        });
+        
+        filtroSummary = Transformations.map(_filtroTipo, tipo -> {
+            FiltroEstado estado = _filtroEstado.getValue();
+            Date fechaInicio = _fechaInicio.getValue();
+            Date fechaFin = _fechaFin.getValue();
+            
+            StringBuilder summary = new StringBuilder();
+            
+            if (tipo != null && tipo != FiltroTipo.TODOS) {
+                summary.append(tipo.getDisplayName());
+            }
+            
+            if (estado != null && estado != FiltroEstado.TODOS) {
+                if (summary.length() > 0) summary.append(" • ");
+                summary.append(estado.getDisplayName());
+            }
+            
+            if (fechaInicio != null || fechaFin != null) {
+                if (summary.length() > 0) summary.append(" • ");
+                summary.append("Con filtro de fecha");
+            }
+            
+            return summary.length() > 0 ? summary.toString() : "Sin filtros";
+        });
+    }
+    
+    // ==================== OBSERVABLES PARA LA UI ====================
+    
+    /**
+     * Lista de elementos del historial
+     */
+    public LiveData<List<HistorialItem>> getHistorialItems() {
+        return historialItems;
+    }
+    
+    /**
+     * Estado de carga
+     */
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+    
+    /**
+     * Mensajes de error
+     */
+    public LiveData<String> getError() {
+        return error;
+    }
+    
+    /**
+     * Estado offline
+     */
+    public LiveData<Boolean> getIsOffline() {
+        return isOffline;
+    }
+    
+    /**
+     * Indica si hay datos disponibles
+     */
+    public LiveData<Boolean> getHasData() {
+        return hasData;
+    }
+    
+    /**
+     * Indica si mostrar estado vacío
+     */
+    public LiveData<Boolean> getShowEmptyState() {
+        return showEmptyState;
+    }
+    
+    /**
+     * Estado de refresco
+     */
+    public LiveData<Boolean> getIsRefreshing() {
+        return _isRefreshing;
+    }
+    
+    /**
+     * Estado de carga de más elementos
+     */
+    public LiveData<Boolean> getIsLoadingMore() {
+        return _isLoadingMore;
+    }
+    
+    /**
+     * Indica si se pueden cargar más elementos
+     */
+    public LiveData<Boolean> getCanLoadMore() {
+        return canLoadMore;
+    }
+    
+    /**
+     * Mensaje de estado para la UI
+     */
+    public LiveData<String> getStatusMessage() {
+        return statusMessage;
+    }
+    
+    /**
+     * Resumen de filtros aplicados
+     */
+    public LiveData<String> getFiltroSummary() {
+        return filtroSummary;
+    }
+    
+    /**
+     * Filtro de tipo actual
+     */
+    public LiveData<FiltroTipo> getFiltroTipo() {
+        return _filtroTipo;
+    }
+    
+    /**
+     * Filtro de estado actual
+     */
+    public LiveData<FiltroEstado> getFiltroEstado() {
+        return _filtroEstado;
+    }
+    
+    /**
+     * Fecha de inicio del filtro
+     */
+    public LiveData<Date> getFechaInicio() {
+        return _fechaInicio;
+    }
+    
+    /**
+     * Fecha de fin del filtro
+     */
+    public LiveData<Date> getFechaFin() {
+        return _fechaFin;
+    }
+    
+    /**
+     * Página actual
+     */
+    public LiveData<Integer> getCurrentPage() {
+        return _currentPage;
+    }
+    
+    /**
+     * Estado de sincronización
+     */
+    public LiveData<Boolean> getSyncStatus() {
+        return repository.getIsLoading();
+    }
+    
+    /**
+     * Estado de la red
+     */
+    public LiveData<Boolean> getNetworkStatus() {
+        return repository.getIsOffline();
+    }
+    
+    // ==================== ACCIONES DE LA UI ====================
+    
+    /**
+     * Aplica filtros al historial
+     */
+    public void applyFilters(FiltroTipo filtroTipo, FiltroEstado filtroEstado, Date fechaInicio, Date fechaFin) {
+        _filtroTipo.setValue(filtroTipo);
+        _filtroEstado.setValue(filtroEstado);
+        _fechaInicio.setValue(fechaInicio);
+        _fechaFin.setValue(fechaFin);
+        _currentPage.setValue(1);
+        
+        // Recargar historial con nuevos filtros
+        String clienteId = this.clienteId.getValue();
+        if (clienteId != null) {
+            loadHistorial(clienteId);
+        }
     }
     
     /**
      * Carga el historial inicial
      */
     public void loadHistorial(String clienteId) {
-        currentClienteId = clienteId;
-        currentPage = 0;
-        allItems.clear();
-        loadHistorialData(true);
+        if (clienteId != null && !clienteId.isEmpty()) {
+            _clienteId.setValue(clienteId);
+            _currentPage.setValue(0);
+            _isRefreshing.setValue(false);
+            _isLoadingMore.setValue(false);
+        }
     }
     
     /**
      * Refresca el historial desde el servidor
      */
     public void refreshHistorial(String clienteId) {
-        currentClienteId = clienteId;
-        currentPage = 0;
-        allItems.clear();
-        
-        // Verificar conectividad
-        boolean isConnected = NetworkUtils.isNetworkAvailable(getApplication());
-        networkStatusLiveData.setValue(isConnected);
-        
-        if (isConnected) {
-            // Programar sincronización para obtener datos frescos
-            SyncManager.scheduleVisitaSync(getApplication());
-            SyncManager.scheduleCanjeSync(getApplication());
-        }
-        
-        loadHistorialData(true);
+        _clienteId.setValue(clienteId);
+        refreshHistorial();
     }
     
     /**
-     * Carga más datos para paginación
+     * Refresca el historial desde el servidor
+     */
+    public void refreshHistorial() {
+        String currentClienteId = _clienteId.getValue();
+        if (currentClienteId != null && !currentClienteId.isEmpty()) {
+            _isRefreshing.setValue(true);
+            _currentPage.setValue(0);
+            
+            repository.refreshHistorial(currentClienteId, new BaseRepository.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    _isRefreshing.postValue(false);
+                }
+                
+                @Override
+                public void onError(String error) {
+                    _isRefreshing.postValue(false);
+                    // El error se maneja automáticamente por el repositorio
+                }
+            });
+        }
+    }
+    
+    /**
+     * Carga más elementos para paginación
      */
     public void loadMoreHistorial(String clienteId) {
-        if (!isLoadingLiveData.getValue() && clienteId.equals(currentClienteId)) {
-            currentPage++;
-            loadHistorialData(false);
-        }
+        _clienteId.setValue(clienteId);
+        loadMoreHistorial();
     }
     
     /**
-     * Aplica filtros al historial
+     * Carga más elementos para paginación
      */
-    public void applyFilters(FiltroTipo tipo, FiltroEstado estado, Date fechaInicio, Date fechaFin) {
-        currentFiltroTipo = tipo;
-        currentFiltroEstado = estado;
-        currentFechaInicio = fechaInicio;
-        currentFechaFin = fechaFin;
-        currentPage = 0;
-        allItems.clear();
-        
-        if (currentClienteId != null) {
-            loadHistorialData(true);
-        }
-    }
-    
-    /**
-     * Carga los datos del historial
-     */
-    private void loadHistorialData(boolean isRefresh) {
-        if (currentClienteId == null) return;
-        
-        isLoadingLiveData.setValue(true);
-        
-        executor.execute(() -> {
-            try {
-                List<HistorialItem> newItems = new ArrayList<>();
-                
-                // Calcular offset para paginación
-                int offset = currentPage * PAGE_SIZE;
-                
-                // Cargar visitas si corresponde
-                if (currentFiltroTipo == FiltroTipo.TODOS || currentFiltroTipo == FiltroTipo.VISITAS) {
-                    List<VisitaEntity> visitas = loadVisitasWithFilters(offset, PAGE_SIZE);
-                    for (VisitaEntity visita : visitas) {
-                        newItems.add(convertVisitaToHistorialItem(visita));
-                    }
-                }
-                
-                // Cargar canjes si corresponde
-                if (currentFiltroTipo == FiltroTipo.TODOS || currentFiltroTipo == FiltroTipo.CANJES) {
-                    List<CanjeEntity> canjes = loadCanjesWithFilters(offset, PAGE_SIZE);
-                    for (CanjeEntity canje : canjes) {
-                        newItems.add(convertCanjeToHistorialItem(canje));
-                    }
-                }
-                
-                // Ordenar por fecha (más reciente primero)
-                Collections.sort(newItems, (a, b) -> b.getFechaHora().compareTo(a.getFechaHora()));
-                
-                // Aplicar límite de página
-                if (newItems.size() > PAGE_SIZE) {
-                    newItems = newItems.subList(0, PAGE_SIZE);
-                }
-                
-                // Actualizar cache
-                if (isRefresh) {
-                    allItems.clear();
-                }
-                allItems.addAll(newItems);
-                
-                // Actualizar UI
-                historialItemsLiveData.postValue(new ArrayList<>(allItems));
-                
-                // Verificar estado de sincronización
-                checkSyncStatus();
-                
-            } catch (Exception e) {
-                errorLiveData.postValue("Error al cargar historial: " + e.getMessage());
-            } finally {
-                isLoadingLiveData.postValue(false);
-            }
-        });
-    }
-    
-    /**
-     * Carga visitas con filtros aplicados
-     */
-    private List<VisitaEntity> loadVisitasWithFilters(int offset, int limit) {
-        if (currentFechaInicio != null && currentFechaFin != null) {
-            // Usar método que existe en VisitaDao
-            List<VisitaEntity> allVisitas = visitaDao.getByClienteAndRangoFecha(currentClienteId, 
-                currentFechaInicio.getTime(), currentFechaFin.getTime());
-            return paginateList(allVisitas, offset, limit);
-        } else if (currentFechaInicio != null) {
-            // Filtrar manualmente por fecha de inicio
-            List<VisitaEntity> allVisitas = visitaDao.getByCliente(currentClienteId);
-            List<VisitaEntity> filtered = new ArrayList<>();
-            for (VisitaEntity visita : allVisitas) {
-                if (visita.getFecha_hora() >= currentFechaInicio.getTime()) {
-                    filtered.add(visita);
-                }
-            }
-            return paginateList(filtered, offset, limit);
-        } else if (currentFechaFin != null) {
-            // Filtrar manualmente por fecha fin
-            List<VisitaEntity> allVisitas = visitaDao.getByCliente(currentClienteId);
-            List<VisitaEntity> filtered = new ArrayList<>();
-            for (VisitaEntity visita : allVisitas) {
-                if (visita.getFecha_hora() <= currentFechaFin.getTime()) {
-                    filtered.add(visita);
-                }
-            }
-            return paginateList(filtered, offset, limit);
-        } else {
-            // Sin filtros de fecha, obtener todas las visitas del cliente
-            List<VisitaEntity> allVisitas = visitaDao.getByCliente(currentClienteId);
+    public void loadMoreHistorial() {
+        Boolean canLoad = canLoadMore.getValue();
+        if (canLoad != null && canLoad) {
+            _isLoadingMore.setValue(true);
+            Integer currentPageValue = _currentPage.getValue();
+            int nextPage = (currentPageValue != null ? currentPageValue : 0) + 1;
+            _currentPage.setValue(nextPage);
             
-            // Filtrar por estado si es necesario
-            if (currentFiltroEstado == FiltroEstado.PENDIENTES) {
-                List<VisitaEntity> filtered = new ArrayList<>();
-                for (VisitaEntity visita : allVisitas) {
-                    if ("PENDIENTE".equals(visita.getEstado_sync())) {
-                        filtered.add(visita);
-                    }
-                }
-                return paginateList(filtered, offset, limit);
-            } else if (currentFiltroEstado == FiltroEstado.ENVIADOS) {
-                List<VisitaEntity> filtered = new ArrayList<>();
-                for (VisitaEntity visita : allVisitas) {
-                    if ("ENVIADO".equals(visita.getEstado_sync())) {
-                        filtered.add(visita);
-                    }
-                }
-                return paginateList(filtered, offset, limit);
-            } else {
-                return paginateList(allVisitas, offset, limit);
-            }
+            // Simular delay para mostrar loading
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                _isLoadingMore.setValue(false);
+            }, 500);
         }
     }
     
     /**
-     * Método auxiliar para paginar una lista
+     * Aplica filtro de tipo
      */
-    private <T> List<T> paginateList(List<T> list, int offset, int limit) {
-        if (list == null || list.isEmpty()) {
-            return new ArrayList<>();
+    public void setFiltroTipo(FiltroTipo tipo) {
+        if (tipo != null) {
+            _filtroTipo.setValue(tipo);
+            _currentPage.setValue(0);
         }
-        
-        int start = Math.min(offset, list.size());
-        int end = Math.min(offset + limit, list.size());
-        
-        if (start >= end) {
-            return new ArrayList<>();
+    }
+    
+    /**
+     * Aplica filtro de estado
+     */
+    public void setFiltroEstado(FiltroEstado estado) {
+        if (estado != null) {
+            _filtroEstado.setValue(estado);
+            _currentPage.setValue(0);
         }
-        
-        return new ArrayList<>(list.subList(start, end));
     }
     
     /**
-     * Carga canjes con filtros aplicados
+     * Aplica filtro de fechas
      */
-    private List<CanjeEntity> loadCanjesWithFilters(int offset, int limit) {
-        // Obtener todos los canjes del cliente
-        List<CanjeEntity> allCanjes = new ArrayList<>();
-        LiveData<List<CanjeEntity>> canjesLiveData = canjeDao.getCanjesByCliente(currentClienteId);
-        
-        // Como necesitamos datos síncronos, usamos un enfoque simplificado
-        // En una implementación real, esto debería manejarse de forma asíncrona
-        
-        // Filtrar por fechas si están definidas
-        List<CanjeEntity> filteredCanjes = new ArrayList<>();
-        
-        if (currentFechaInicio != null && currentFechaFin != null) {
-            // Usar el método que existe en CanjeDao
-            LiveData<List<CanjeEntity>> rangeCanjes = canjeDao.getCanjesClienteEnRango(
-                currentClienteId, currentFechaInicio.getTime(), currentFechaFin.getTime());
-            // TODO: Convertir LiveData a List síncrono
-        } else {
-            // Obtener todos los canjes y filtrar manualmente
-            // TODO: Implementar filtrado manual por fechas y estado
-            
-            // Filtrar por estado si es necesario
-            if (currentFiltroEstado == FiltroEstado.PENDIENTES) {
-                LiveData<List<CanjeEntity>> estadoCanjes = canjeDao.getCanjesByClienteYEstado(currentClienteId, "PENDIENTE");
-                // TODO: Convertir LiveData a List síncrono
-            } else if (currentFiltroEstado == FiltroEstado.ENVIADOS) {
-                LiveData<List<CanjeEntity>> estadoCanjes = canjeDao.getCanjesByClienteYEstado(currentClienteId, "ENVIADO");
-                // TODO: Convertir LiveData a List síncrono
-            }
-        }
-        
-        // Aplicar paginación
-        return paginateList(filteredCanjes, offset, limit);
+    public void setFiltroFechas(Date fechaInicio, Date fechaFin) {
+        _fechaInicio.setValue(fechaInicio);
+        _fechaFin.setValue(fechaFin);
+        _currentPage.setValue(0);
     }
     
     /**
-     * Convierte VisitaEntity a HistorialItem
+     * Limpia todos los filtros
      */
-    private HistorialItem convertVisitaToHistorialItem(VisitaEntity visita) {
-        HistorialItem item = new HistorialItem();
-        item.setId(visita.getId_visita());
-        item.setTipo(HistorialItem.Tipo.VISITA);
-        item.setFechaHora(new Date(visita.getFecha_hora()));
-        item.setEstadoSync(visita.getEstado_sync());
-        item.setSucursalId(visita.getId_sucursal());
-        item.setOrigen(visita.getOrigen());
-        item.setHashQr(visita.getHash_qr());
-        return item;
+    public void clearFilters() {
+        _filtroTipo.setValue(FiltroTipo.TODOS);
+        _filtroEstado.setValue(FiltroEstado.TODOS);
+        _fechaInicio.setValue(null);
+        _fechaFin.setValue(null);
+        _currentPage.setValue(0);
     }
     
     /**
-     * Convierte CanjeEntity a HistorialItem
+     * Limpia errores
      */
-    private HistorialItem convertCanjeToHistorialItem(CanjeEntity canje) {
-        HistorialItem item = new HistorialItem();
-        item.setId(canje.getId_canje());
-        item.setTipo(HistorialItem.Tipo.CANJE);
-        item.setFechaHora(new Date(canje.getFecha_solicitud()));
-        item.setEstadoSync(canje.getEstado());
-        item.setSucursalId(canje.getId_sucursal());
-        item.setBeneficioId(canje.getId_beneficio());
-        item.setCodigoOtp(canje.getOtp_codigo());
-        return item;
-    }
-    
-    /**
-     * Verifica el estado de sincronización
-     */
-    private void checkSyncStatus() {
-        executor.execute(() -> {
-            try {
-                // Verificar si hay datos pendientes
-                // Usar métodos que existen en los DAOs
-                long tiempoActual = System.currentTimeMillis();
-                int canjesPendientes = canjeDao.getCanjesPendientesValidos(tiempoActual).size();
-                
-                // Para visitas, simplificar la verificación
-                boolean hasPendingData = canjesPendientes > 0;
-                syncStatusLiveData.postValue(!hasPendingData);
-                
-            } catch (Exception e) {
-                // Ignorar errores de verificación de sync
-                syncStatusLiveData.postValue(true); // Asumir sincronizado en caso de error
-            }
-        });
+    public void clearError() {
+        repository.clearError();
     }
     
     /**
      * Fuerza la sincronización
      */
     public void forceSync() {
-        SyncManager.forceSyncAll(getApplication());
-        
-        // Recargar datos después de un breve delay
-        executor.execute(() -> {
-            try {
-                Thread.sleep(2000); // Esperar 2 segundos
-                if (currentClienteId != null) {
-                    loadHistorialData(true);
+        String currentClienteId = _clienteId.getValue();
+        if (currentClienteId != null && !currentClienteId.isEmpty()) {
+            repository.syncPendingData(new BaseRepository.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    // Recargar datos después de la sincronización
+                    refreshHistorial();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+                
+                @Override
+                public void onError(String error) {
+                    // El error se maneja automáticamente por el repositorio
+                }
+            });
+        }
+    }
+    
+    // ==================== MÉTODOS DE UTILIDAD ====================
+    
+    /**
+     * Verifica si hay conexión de red
+     */
+    public boolean hasNetworkConnection() {
+        Boolean offline = isOffline.getValue();
+        return offline == null || !offline;
     }
     
     /**
-     * Limpia el error actual
+     * Verifica si hay datos del historial
      */
-    public void clearError() {
-        errorLiveData.setValue(null);
+    public boolean hasHistorialData() {
+        List<HistorialItem> items = historialItems.getValue();
+        return items != null && !items.isEmpty();
     }
     
-    // Getters para LiveData
-    public LiveData<List<HistorialItem>> getHistorialItems() {
-        return historialItemsLiveData;
+    /**
+     * Verifica si hay filtros aplicados
+     */
+    public boolean hasActiveFilters() {
+        FiltroTipo tipo = _filtroTipo.getValue();
+        FiltroEstado estado = _filtroEstado.getValue();
+        Date fechaInicio = _fechaInicio.getValue();
+        Date fechaFin = _fechaFin.getValue();
+        
+        return (tipo != null && tipo != FiltroTipo.TODOS) ||
+               (estado != null && estado != FiltroEstado.TODOS) ||
+               fechaInicio != null || fechaFin != null;
     }
     
-    public LiveData<Boolean> getIsLoading() {
-        return isLoadingLiveData;
-    }
-    
-    public LiveData<String> getError() {
-        return errorLiveData;
-    }
-    
-    public LiveData<Boolean> getSyncStatus() {
-        return syncStatusLiveData;
-    }
-    
-    public LiveData<Boolean> getNetworkStatus() {
-        return networkStatusLiveData;
+    /**
+     * Obtiene el número total de elementos
+     */
+    public int getTotalItemCount() {
+        List<HistorialItem> items = historialItems.getValue();
+        return items != null ? items.size() : 0;
     }
     
     @Override
     protected void onCleared() {
         super.onCleared();
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-        }
+        // El repositorio maneja su propia limpieza
     }
 }
