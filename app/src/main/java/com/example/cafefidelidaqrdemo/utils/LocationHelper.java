@@ -6,14 +6,14 @@ import android.location.Location;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+// import com.google.android.gms.location.FusedLocationProviderClient;
+// import com.google.android.gms.location.LocationCallback;
+// import com.google.android.gms.location.LocationRequest;
+// import com.google.android.gms.location.LocationResult;
+// import com.google.android.gms.location.LocationServices;
+// import com.google.android.gms.location.Priority;
+// import com.google.android.gms.tasks.OnFailureListener;
+// import com.google.android.gms.tasks.OnSuccessListener;
 
 /**
  * Helper para obtener ubicación del usuario usando Google Play Services
@@ -21,23 +21,24 @@ import com.google.android.gms.tasks.OnSuccessListener;
 public class LocationHelper {
 
     private final Context context;
-    private final FusedLocationProviderClient fusedLocationClient;
-    private LocationCallback locationCallback;
+    // private final FusedLocationProviderClient fusedLocationClient;
+    // private LocationCallback locationCallback;
     private LocationUtils.LocationCallback callback;
 
     // Configuración de solicitud de ubicación
-    private static final long UPDATE_INTERVAL = 10000; // 10 segundos
-    private static final long FASTEST_INTERVAL = 5000; // 5 segundos
-    private static final long MAX_WAIT_TIME = 30000; // 30 segundos
+    // private static final long UPDATE_INTERVAL = 10000; // 10 segundos
+    // private static final long FASTEST_INTERVAL = 5000; // 5 segundos
+    // private static final long MAX_WAIT_TIME = 30000; // 30 segundos
 
     public LocationHelper(Context context) {
         this.context = context;
-        this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        // this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
     }
 
     /**
      * Obtiene la última ubicación conocida
      */
+    /*
     @SuppressLint("MissingPermission")
     public void getLastKnownLocation(LocationUtils.LocationCallback callback) {
         if (!LocationUtils.hasLocationPermissions(context)) {
@@ -69,10 +70,17 @@ public class LocationHelper {
                     }
                 });
     }
+    */
+
+    // Método simplificado sin Google Play Services
+    public void getLastKnownLocation(LocationUtils.LocationCallback callback) {
+        callback.onLocationError("Funcionalidad de ubicación temporalmente deshabilitada");
+    }
 
     /**
      * Solicita la ubicación actual
      */
+    /*
     @SuppressLint("MissingPermission")
     public void requestCurrentLocation(LocationUtils.LocationCallback callback) {
         if (!LocationUtils.hasLocationPermissions(context)) {
@@ -121,10 +129,17 @@ public class LocationHelper {
             }
         });
     }
+    */
+
+    // Método simplificado sin Google Play Services
+    public void requestCurrentLocation(LocationUtils.LocationCallback callback) {
+        callback.onLocationError("Funcionalidad de ubicación temporalmente deshabilitada");
+    }
 
     /**
      * Inicia actualizaciones continuas de ubicación
      */
+    /*
     @SuppressLint("MissingPermission")
     public void startLocationUpdates(LocationUtils.LocationCallback callback) {
         if (!LocationUtils.hasLocationPermissions(context)) {
@@ -171,15 +186,28 @@ public class LocationHelper {
             }
         });
     }
+    */
+
+    // Método simplificado sin Google Play Services
+    public void startLocationUpdates(LocationUtils.LocationCallback callback) {
+        callback.onLocationError("Funcionalidad de ubicación temporalmente deshabilitada");
+    }
 
     /**
      * Detiene las actualizaciones de ubicación
      */
+    /*
     public void stopLocationUpdates() {
         if (locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
             locationCallback = null;
         }
+    }
+    */
+
+    // Método simplificado sin Google Play Services
+    public void stopLocationUpdates() {
+        // No hay nada que detener sin Google Play Services
     }
 
     /**
@@ -277,6 +305,7 @@ public class LocationHelper {
     /**
      * Builder para configurar LocationHelper
      */
+    /*
     public static class Builder {
         private final Context context;
         private long updateInterval = UPDATE_INTERVAL;
@@ -298,7 +327,6 @@ public class LocationHelper {
             return this;
         }
 
-        public Builder setMaxWaitTime(long maxWaitTime) {
             this.maxWaitTime = maxWaitTime;
             return this;
         }
@@ -312,4 +340,5 @@ public class LocationHelper {
             return new LocationHelper(context);
         }
     }
+    */
 }

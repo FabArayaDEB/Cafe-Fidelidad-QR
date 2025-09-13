@@ -186,12 +186,12 @@ public class BeneficioDialogFragment extends DialogFragment {
             beneficio = new BeneficioEntity();
         }
         
-        // Populate beneficio with form data
+
         beneficio.setNombre(editNombre.getText().toString().trim());
-        // Note: BeneficioEntity doesn't have setDescripcion method
+
         beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
         double valor = Double.parseDouble(editValor.getText().toString());
-        // Set appropriate value based on tipo
+
         String tipo = spinnerTipo.getSelectedItem().toString();
         if (tipo.contains("PORCENTAJE")) {
             beneficio.setDescuento_pct(valor);
@@ -201,7 +201,7 @@ public class BeneficioDialogFragment extends DialogFragment {
         beneficio.setRequisito_visitas(Integer.parseInt(editVisitasRequeridas.getText().toString()));
         beneficio.setEstado(switchActivo.isChecked() ? "activo" : "inactivo");
         
-        // Set dates if provided
+
         try {
             if (!editFechaInicio.getText().toString().isEmpty()) {
                 Date fechaInicio = dateFormat.parse(editFechaInicio.getText().toString());

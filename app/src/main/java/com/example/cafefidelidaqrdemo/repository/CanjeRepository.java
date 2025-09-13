@@ -44,7 +44,7 @@ public class CanjeRepository {
         this.application = application;
         CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
         canjeDao = database.canjeDao();
-        apiService = RetrofitClient.getInstance().getApiService();
+        apiService = RetrofitClient.getInstance(application).getApiService();
         executor = Executors.newFixedThreadPool(4);
     }
     

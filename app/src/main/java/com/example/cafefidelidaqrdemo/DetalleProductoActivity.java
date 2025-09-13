@@ -14,11 +14,11 @@ import androidx.appcompat.widget.Toolbar;
 import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.ValueEventListener;
 
 public class DetalleProductoActivity extends AppCompatActivity {
 
@@ -32,7 +32,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
 
     private String productoId;
     private Producto producto;
-    private DatabaseReference productosRef;
+    // private DatabaseReference productosRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,29 +91,32 @@ public class DetalleProductoActivity extends AppCompatActivity {
     }
 
     private void setupFirebase() {
-        productosRef = FirebaseDatabase.getInstance().getReference("productos");
+        // productosRef = FirebaseDatabase.getInstance().getReference("productos");
     }
 
     private void loadProductoDetails() {
-        productosRef.child(productoId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    producto = snapshot.getValue(Producto.class);
-                    if (producto != null) {
-                        displayProductoDetails();
-                    }
-                } else {
-                    Toast.makeText(DetalleProductoActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(DetalleProductoActivity.this, "Error al cargar producto: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        // productosRef.child(productoId).addValueEventListener(new ValueEventListener() {
+        //     @Override
+        //     public void onDataChange(@NonNull DataSnapshot snapshot) {
+        //         if (snapshot.exists()) {
+        //             producto = snapshot.getValue(Producto.class);
+        //             if (producto != null) {
+        //                 displayProductoDetails();
+        //             }
+        //         } else {
+        //             Toast.makeText(DetalleProductoActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
+        //             finish();
+        //         }
+        //     }
+        //
+        //     @Override
+        //     public void onCancelled(@NonNull DatabaseError error) {
+        //         Toast.makeText(DetalleProductoActivity.this, "Error al cargar producto: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+        //     }
+        // });
+        
+        // Método deshabilitado - Firebase removido
+        Toast.makeText(this, "Carga de productos deshabilitada", Toast.LENGTH_SHORT).show();
     }
 
     private void displayProductoDetails() {

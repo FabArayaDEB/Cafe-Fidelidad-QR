@@ -18,12 +18,16 @@ import com.example.cafefidelidaqrdemo.fragments.FragmentPuntos;
 import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
 import com.example.cafefidelidaqrdemo.CatalogoActivity;
 import com.example.cafefidelidaqrdemo.offline.OfflineManager;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentAdminDashboard;
+import com.example.cafefidelidaqrdemo.ui.cliente.FragmentTableroCliente;
+import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.Firebase;
-import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.Firebase;
+// import com.google.firebase.auth.FirebaseAuth;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import java.util.concurrent.TimeUnit;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,48 +38,70 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("MainActivity", "onCreate iniciado");
         
         // Configurar Data Binding
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        Log.d("MainActivity", "Data binding configurado");
+        
+        // Configurar AuthRepository con contexto ANTES de inicializar ViewModel
+        AuthRepository authRepository = AuthRepository.getInstance();
+        authRepository.setContext(this);
+        Log.d("MainActivity", "AuthRepository configurado con contexto");
         
         // Inicializar ViewModel
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         binding.setViewModel(viewModel);
         binding.setLifecycleOwner(this);
+        Log.d("MainActivity", "ViewModel inicializado");
         
-        // Configurar observadores
+        // Ocultar contenido hasta verificar autenticación
+        hideMainContent();
+        Log.d("MainActivity", "Contenido principal ocultado");
+        
+        // Configurar observadores ANTES de verificar autenticación
         setupObservers();
+        Log.d("MainActivity", "Observadores configurados");
         
-        // Inicializar OfflineManager y configurar sincronización automática
-        offlineManager = OfflineManager.getInstance(this);
-        configurarSincronizacionAutomatica();
-        
-        // Configurar navegación
-        setupNavigation();
-        
-        // Verificar autenticación
-        viewModel.checkAuthenticationStatus();
+        // Verificar autenticación con un pequeño delay para permitir que la sesión se establezca
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            viewModel.checkAuthenticationStatus();
+            Log.d("MainActivity", "Verificación de autenticación iniciada");
+        }, 100); // 100ms delay
     }
     
     /**
      * Configura los observadores del ViewModel
      */
     private void setupObservers() {
+        Log.d("MainActivity", "setupObservers iniciado");
         // Observar estado de autenticación
         viewModel.getIsAuthenticatedLiveData().observe(this, isAuthenticated -> {
-            if (isAuthenticated != null && !isAuthenticated) {
-                // Redirigir a LoginActivity si no está autenticado
-                Intent intent = new Intent(this, LoginActivity.class);
-                startActivity(intent);
-                finish();
+            Log.d("MainActivity", "Observador de autenticación ejecutado. isAuthenticated: " + isAuthenticated);
+            if (isAuthenticated != null) {
+                if (!isAuthenticated) {
+                    Log.d("MainActivity", "Usuario NO autenticado - redirigiendo a OpcionesLoginActivity");
+                    // Redirigir a OpcionesLoginActivity si no está autenticado
+                    Intent intent = new Intent(this, OpcionesLoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Log.d("MainActivity", "Usuario autenticado - inicializando aplicación principal");
+                    // Usuario autenticado - inicializar el resto de la aplicación
+                    initializeMainApp();
+                }
+            } else {
+                Log.d("MainActivity", "isAuthenticated es null - esperando resultado");
             }
         });
         
         // Observar errores
         viewModel.getErrorLiveData().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
-                // Mostrar error al usuario
-                // TODO: Implementar manejo de errores
+                // Si hay error en autenticación, redirigir a login
+                Intent intent = new Intent(this, OpcionesLoginActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
         
@@ -171,6 +197,83 @@ public class MainActivity extends AppCompatActivity {
         
         // Iniciar sincronización inmediata si hay datos pendientes
         offlineManager.iniciarSincronizacion();
+    }
+    
+    /**
+     * Oculta el contenido principal durante la carga
+     */
+    private void hideMainContent() {
+        if (binding != null) {
+            binding.bottomNV.setVisibility(android.view.View.GONE);
+            binding.fragmentFL.setVisibility(android.view.View.GONE);
+        }
+    }
+    
+    /**
+     * Configura la interfaz para usuarios administradores
+     */
+    private void setupAdminInterface() {
+        Log.d("MainActivity", "Configurando interfaz de administrador");
+        
+        // Ocultar bottom navigation para admin
+        if (binding != null) {
+            binding.bottomNV.setVisibility(android.view.View.GONE);
+        }
+        
+        // Mostrar dashboard de admin
+        FragmentAdminDashboard adminDashboard = new FragmentAdminDashboard();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentFL, adminDashboard)
+                .commit();
+    }
+    
+    /**
+     * Configura la interfaz para usuarios clientes
+     */
+    private void setupClienteInterface() {
+        Log.d("MainActivity", "Configurando interfaz de cliente");
+        
+        // Mostrar bottom navigation para clientes
+        if (binding != null) {
+            binding.bottomNV.setVisibility(android.view.View.VISIBLE);
+        }
+        
+        // Configurar navegación normal para clientes
+        setupNavigation();
+        
+        // Mostrar tablero de cliente por defecto
+        FragmentTableroCliente tableroCliente = new FragmentTableroCliente();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentFL, tableroCliente)
+                .commit();
+    }
+    
+    /**
+     * Inicializa la aplicación principal después de verificar autenticación
+     */
+    private void initializeMainApp() {
+        // Mostrar contenido principal
+        if (binding != null) {
+            binding.bottomNV.setVisibility(android.view.View.VISIBLE);
+            binding.fragmentFL.setVisibility(android.view.View.VISIBLE);
+        }
+        
+        // Inicializar OfflineManager y configurar sincronización automática
+        offlineManager = OfflineManager.getInstance(this);
+        configurarSincronizacionAutomatica();
+        
+        // Determinar qué interfaz mostrar según el tipo de usuario
+        AuthRepository authRepository = AuthRepository.getInstance();
+        if (authRepository.isCurrentUserAdmin()) {
+            Log.d("MainActivity", "Usuario administrador detectado, mostrando dashboard admin");
+            setupAdminInterface();
+        } else if (authRepository.isCurrentUserCliente()) {
+            Log.d("MainActivity", "Usuario cliente detectado, mostrando interfaz cliente");
+            setupClienteInterface();
+        } else {
+            Log.w("MainActivity", "Tipo de usuario no determinado, usando interfaz por defecto");
+            setupNavigation();
+        }
     }
     
     @Override

@@ -10,13 +10,12 @@ import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 import com.example.cafefidelidaqrdemo.repository.interfaces.IUserRepository;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
@@ -28,8 +27,8 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     
     private final UsuarioDao usuarioDao;
     private final ApiService apiService;
-    private final FirebaseAuth firebaseAuth;
-    private final DatabaseReference databaseReference;
+    // private final FirebaseAuth firebaseAuth;
+    // private final DatabaseReference databaseReference;
     private final Context context;
     
     // LiveData específicos del usuario
@@ -45,8 +44,8 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(context);
         this.usuarioDao = database.usuarioDao();
         this.apiService = ApiService.getInstance();
-        this.firebaseAuth = FirebaseAuth.getInstance();
-        this.databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+        // this.firebaseAuth = FirebaseAuth.getInstance();
+        // this.databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         
         // Verificar estado de autenticación inicial
         checkAuthenticationState();
@@ -97,13 +96,17 @@ public class UserRepository extends BaseRepository implements IUserRepository {
                 usuarioDao.updateUsuario(user);
                 
                 // Actualizar en Firebase si es el usuario actual
-                FirebaseUser currentFirebaseUser = firebaseAuth.getCurrentUser();
-                if (currentFirebaseUser != null && currentFirebaseUser.getUid().equals(user.getUid())) {
+                /*
+                // FirebaseUser currentFirebaseUser = firebaseAuth.getCurrentUser();
+        // if (currentFirebaseUser != null && currentFirebaseUser.getUid().equals(user.getUid())) {
                     updateUserInFirebase(user, callback);
                 } else {
                     setSuccess("Usuario actualizado exitosamente");
                     if (callback != null) callback.onSuccess();
                 }
+                */
+                setSuccess("Usuario actualizado exitosamente");
+                if (callback != null) callback.onSuccess();
             } catch (Exception e) {
                 String error = "Error al actualizar usuario: " + e.getMessage();
                 setError(error);
@@ -134,12 +137,13 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     public void authenticateUser(String email, String password, RepositoryCallback<UsuarioEntity> callback) {
         setLoading(true);
         
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                    if (firebaseUser != null) {
-                        loadUserFromFirebase(firebaseUser.getUid(), callback);
+        /*
+        // firebaseAuth.signInWithEmailAndPassword(email, password)
+        //         .addOnCompleteListener(task -> {
+        //             if (task.isSuccessful()) {
+        //                 FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+        //                 if (firebaseUser != null) {
+        //                     loadUserFromFirebase(firebaseUser.getUid(), callback);
                     }
                 } else {
                     String error = "Error de autenticación: " + 
@@ -148,20 +152,25 @@ public class UserRepository extends BaseRepository implements IUserRepository {
                     if (callback != null) callback.onError(error);
                 }
             });
+        */
+        // Autenticación deshabilitada - Firebase removido
+        setError("Autenticación no disponible");
+        if (callback != null) callback.onError("Autenticación no disponible");
     }
     
     @Override
     public void registerUser(String email, String password, String nombre, RepositoryCallback<UsuarioEntity> callback) {
         setLoading(true);
         
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                    if (firebaseUser != null) {
-                        // Crear usuario en la base de datos
-                        UsuarioEntity newUser = new UsuarioEntity();
-                        newUser.setUid(firebaseUser.getUid());
+        /*
+        // firebaseAuth.createUserWithEmailAndPassword(email, password)
+        //         .addOnCompleteListener(task -> {
+        //             if (task.isSuccessful()) {
+        //                 FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+        //                 if (firebaseUser != null) {
+        //                     // Crear nuevo usuario
+        //                     UsuarioEntity newUser = new UsuarioEntity();
+        //                     newUser.setUid(firebaseUser.getUid());
                         newUser.setEmail(email);
                         newUser.setNames(nombre);
                         newUser.setDate(System.currentTimeMillis());
@@ -176,6 +185,10 @@ public class UserRepository extends BaseRepository implements IUserRepository {
                     if (callback != null) callback.onError(error);
                 }
             });
+        */
+        // Registro deshabilitado - Firebase removido
+        setError("Registro no disponible");
+        if (callback != null) callback.onError("Registro no disponible");
     }
     
     @Override
@@ -183,7 +196,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         setLoading(true);
         
         try {
-            firebaseAuth.signOut();
+            // firebaseAuth.signOut();
             _currentUser.postValue(null);
             _isAuthenticated.postValue(false);
             clearUserCache();
@@ -255,25 +268,30 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     public void changePassword(String userId, String currentPassword, String newPassword, SimpleCallback callback) {
         setLoading(true);
         
-        FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-        if (firebaseUser != null && firebaseUser.getUid().equals(userId)) {
-            firebaseUser.updatePassword(newPassword)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        setSuccess("Contraseña actualizada exitosamente");
-                        if (callback != null) callback.onSuccess();
-                    } else {
-                        String error = "Error al cambiar contraseña: " + 
-                            (task.getException() != null ? task.getException().getMessage() : "Error desconocido");
-                        setError(error);
-                        if (callback != null) callback.onError(error);
-                    }
-                });
-        } else {
-            String error = "Usuario no autenticado";
-            setError(error);
-            if (callback != null) callback.onError(error);
-        }
+        /*
+        // FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+        // if (firebaseUser != null && firebaseUser.getUid().equals(userId)) {
+        //     firebaseUser.updatePassword(newPassword)
+        //         .addOnCompleteListener(task -> {
+        //             if (task.isSuccessful()) {
+        //                 setSuccess("Contraseña actualizada exitosamente");
+        //                 if (callback != null) callback.onSuccess();
+        //             } else {
+        //                 String error = "Error al cambiar contraseña: " + 
+        //                     (task.getException() != null ? task.getException().getMessage() : "Error desconocido");
+        //                 setError(error);
+        //                 if (callback != null) callback.onError(error);
+        //             }
+        //         });
+        // } else {
+        //     String error = "Usuario no autenticado";
+        //     setError(error);
+        //     if (callback != null) callback.onError(error);
+        // }
+        */
+        // Cambio de contraseña deshabilitado - Firebase removido
+        setError("Cambio de contraseña no disponible");
+        if (callback != null) callback.onError("Cambio de contraseña no disponible");
     }
     
     // ==================== IMPLEMENTACIÓN DE SINCRONIZACIÓN ====================
@@ -283,6 +301,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         setLoading(true);
         _syncStatus.postValue(false);
         
+        /*
         loadUserFromFirebase(userId, new RepositoryCallback<UsuarioEntity>() {
             @Override
             public void onSuccess(UsuarioEntity result) {
@@ -298,6 +317,11 @@ public class UserRepository extends BaseRepository implements IUserRepository {
                 if (callback != null) callback.onError(error);
             }
         });
+        */
+        // Sincronización deshabilitada - Firebase removido
+        _syncStatus.postValue(false);
+        setError("Sincronización no disponible");
+        if (callback != null) callback.onError("Sincronización no disponible");
     }
     
     @Override
@@ -319,6 +343,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     // ==================== MÉTODOS PRIVADOS ====================
     
     private void checkAuthenticationState() {
+        /*
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
         if (firebaseUser != null) {
             _isAuthenticated.postValue(true);
@@ -327,8 +352,13 @@ public class UserRepository extends BaseRepository implements IUserRepository {
             _isAuthenticated.postValue(false);
             _currentUser.postValue(null);
         }
+        */
+        // Estado de autenticación deshabilitado - Firebase removido
+        _isAuthenticated.postValue(false);
+        _currentUser.postValue(null);
     }
     
+    /*
     private void loadUserFromFirebase(String userId, RepositoryCallback<UsuarioEntity> callback) {
         databaseReference.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -374,7 +404,9 @@ public class UserRepository extends BaseRepository implements IUserRepository {
             }
         });
     }
+    */
     
+    /*
     private void createUserInFirebase(UsuarioEntity user, RepositoryCallback<UsuarioEntity> callback) {
         databaseReference.child(user.getUid()).setValue(user)
             .addOnCompleteListener(task -> {
@@ -401,20 +433,5 @@ public class UserRepository extends BaseRepository implements IUserRepository {
                 }
             });
     }
-    
-    private void updateUserInFirebase(UsuarioEntity user, SimpleCallback callback) {
-        databaseReference.child(user.getUid()).setValue(user)
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    _currentUser.postValue(user);
-                    setSuccess("Usuario actualizado exitosamente");
-                    if (callback != null) callback.onSuccess();
-                } else {
-                    String error = "Error al actualizar usuario en Firebase: " + 
-                        (task.getException() != null ? task.getException().getMessage() : "Error desconocido");
-                    setError(error);
-                    if (callback != null) callback.onError(error);
-                }
-            });
-    }
+    */
 }

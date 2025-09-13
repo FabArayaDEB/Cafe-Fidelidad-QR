@@ -15,21 +15,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.databinding.ActivityEditarDatosBinding;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+// import com.google.android.gms.tasks.OnFailureListener;
+// import com.google.android.gms.tasks.OnSuccessListener;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 
 public class EditarPerfilActivity extends AppCompatActivity {
 
     private ActivityEditarDatosBinding binding;
-    private FirebaseAuth firebaseAuth;
+    // private FirebaseAuth firebaseAuth;
     private ProgressDialog progressDialog;
 
     @Override
@@ -39,12 +39,13 @@ public class EditarPerfilActivity extends AppCompatActivity {
         binding = ActivityEditarDatosBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        // firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Actualizando perfil de fidelidad");
         progressDialog.setCanceledOnTouchOutside(false);
 
-        loadUserInfo();
+        // loadUserInfo(); // Deshabilitado - sin Firebase
+        Toast.makeText(this, "Funcionalidad de edición de perfil temporalmente deshabilitada", Toast.LENGTH_LONG).show();
 
         binding.ImgBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,7 +57,8 @@ public class EditarPerfilActivity extends AppCompatActivity {
         binding.btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateUserInfo();
+                // updateUserInfo(); // Deshabilitado - sin Firebase
+                Toast.makeText(EditarPerfilActivity.this, "Funcionalidad de actualización temporalmente deshabilitada", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -69,12 +71,13 @@ public class EditarPerfilActivity extends AppCompatActivity {
         });
     }
 
+    /*
     private void loadUserInfo() {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
-        ref.child(firebaseAuth.getUid())
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        // DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
+        // ref.child(firebaseAuth.getUid())
+        //         .addValueEventListener(new ValueEventListener() {
+        //             @Override
+        //             public void onDataChange(@NonNull DataSnapshot snapshot) {
                         String nombres = "" + snapshot.child("names").getValue();
                         String imagen = "" + snapshot.child("imagen").getValue();
                         String email = "" + snapshot.child("email").getValue();
@@ -94,15 +97,17 @@ public class EditarPerfilActivity extends AppCompatActivity {
                                 .into(binding.ivPerfil);
                     }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
+        //             @Override
+        //             public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(EditarPerfilActivity.this, 
                             "Error al cargar información: " + error.getMessage(), 
                             Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+    */
 
+    /*
     private void updateUserInfo() {
         String nombres = binding.tvNombres.getText().toString().trim();
         String telefono = binding.etTelefono.getText().toString().trim();
@@ -124,8 +129,8 @@ public class EditarPerfilActivity extends AppCompatActivity {
         // Actualizar fecha de última modificación
         hashMap.put("ultimaModificacion", System.currentTimeMillis());
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
-        reference.child(firebaseAuth.getUid()).updateChildren(hashMap)
+        // DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
+        // reference.child(firebaseAuth.getUid()).updateChildren(hashMap)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
@@ -145,6 +150,7 @@ public class EditarPerfilActivity extends AppCompatActivity {
                     }
                 });
     }
+    */
 
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();

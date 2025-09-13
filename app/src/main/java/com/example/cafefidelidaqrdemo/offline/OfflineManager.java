@@ -10,12 +10,12 @@ import com.example.cafefidelidaqrdemo.database.dao.TransaccionDao;
 import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,8 @@ public class OfflineManager {
     private UsuarioDao usuarioDao;
     private TransaccionDao transaccionDao;
     private ExecutorService executorService;
-    private FirebaseAuth firebaseAuth;
-    private DatabaseReference firebaseRef;
+    // private FirebaseAuth firebaseAuth;
+    // private DatabaseReference firebaseRef;
     
     // Cache en memoria para usuarios frecuentemente accedidos
     private final Map<String, UsuarioEntity> memoryCache = new ConcurrentHashMap<>();
@@ -55,8 +55,8 @@ public class OfflineManager {
         this.usuarioDao = database.usuarioDao();
         this.transaccionDao = database.transaccionDao();
         this.executorService = Executors.newFixedThreadPool(3);
-        this.firebaseAuth = FirebaseAuth.getInstance();
-        this.firebaseRef = FirebaseDatabase.getInstance().getReference();
+        // this.firebaseAuth = FirebaseAuth.getInstance();
+        // this.firebaseRef = FirebaseDatabase.getInstance().getReference();
     }
     
     public static OfflineManager getInstance(Context context) {
@@ -124,7 +124,17 @@ public class OfflineManager {
             
             // Si no hay cache válido y hay internet, obtener de Firebase
             if (isNetworkAvailable()) {
-                fetchUsuarioFromFirebase(uid, callback, startTime);
+                // fetchUsuarioFromFirebase(uid, callback, startTime);
+                // Firebase deshabilitado - usar cache local
+                UsuarioEntity lastCached = usuarioDao.getUsuarioById(uid);
+                if (lastCached != null) {
+                    putInMemoryCache(uid, lastCached);
+                    PerformanceMonitor.endMeasurement("getUsuario_total", startTime);
+                    callback.onExito(lastCached);
+                } else {
+                    PerformanceMonitor.endMeasurement("getUsuario_total", startTime);
+                    callback.onError("Usuario no encontrado");
+                }
             } else {
                 // Sin internet, usar último cache disponible
                 UsuarioEntity lastCached = usuarioDao.getUsuarioById(uid);
@@ -161,7 +171,7 @@ public class OfflineManager {
                 
                 // Si hay internet, sincronizar en background sin bloquear la respuesta
                 if (isNetworkAvailable()) {
-                    syncTransaccionToFirebaseAsync(transaccion);
+                    // syncTransaccionToFirebaseAsync(transaccion);
                 } else {
                     // Marcar para sincronización posterior
                     transaccion.setNeedsSync(true);
@@ -195,7 +205,7 @@ public class OfflineManager {
                 
                 // Si hay internet, sincronizar inmediatamente
                 if (isNetworkAvailable()) {
-                    syncUsuarioToFirebase(usuario);
+                    // syncUsuarioToFirebase(usuario);
                 }
                 
                 PerformanceMonitor.endMeasurement("actualizarUsuario_total", startTime);
@@ -282,13 +292,13 @@ public class OfflineManager {
             // Sincronizar usuarios pendientes
             List<UsuarioEntity> usuariosPendientes = usuarioDao.getUsuariosNeedingSync();
             for (UsuarioEntity usuario : usuariosPendientes) {
-                syncUsuarioToFirebase(usuario);
+                // syncUsuarioToFirebase(usuario);
             }
             
             // Sincronizar transacciones pendientes
             List<TransaccionEntity> transaccionesPendientes = transaccionDao.getTransaccionesNeedingSync();
             for (TransaccionEntity transaccion : transaccionesPendientes) {
-                syncTransaccionToFirebase(transaccion, null);
+                // syncTransaccionToFirebase(transaccion, null);
             }
             
             Log.d(TAG, "Sincronización completada: " + usuariosPendientes.size() + 
@@ -302,13 +312,14 @@ public class OfflineManager {
     /**
      * Obtiene usuario desde Firebase y actualiza cache con optimizaciones
      */
+    /*
     private void fetchUsuarioFromFirebase(String uid, UsuarioCallback callback, long startTime) {
         long firebaseStart = PerformanceMonitor.startMeasurement("firebase_fetch_usuario");
         
         firebaseRef.child("Users").child(uid)
-            .addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
+            // .addListenerForSingleValueEvent(new ValueEventListener() {
+                //     @Override
+                //     public void onDataChange(DataSnapshot snapshot) {
                     PerformanceMonitor.endMeasurement("firebase_fetch_usuario", firebaseStart);
                     
                     if (snapshot.exists()) {
@@ -332,18 +343,20 @@ public class OfflineManager {
                     }
                 }
                 
-                @Override
-                public void onCancelled(DatabaseError error) {
+                //     @Override
+                //     public void onCancelled(DatabaseError error) {
                     PerformanceMonitor.endMeasurement("firebase_fetch_usuario", firebaseStart);
                     PerformanceMonitor.endMeasurement("getUsuario_total", startTime);
                     callback.onError("Error de Firebase: " + error.getMessage());
                 }
             });
     }
+    */
     
     /**
      * Sincroniza transacción con Firebase
      */
+    /*
     private void syncTransaccionToFirebase(TransaccionEntity transaccion, TransaccionCallback callback) {
         long syncStart = PerformanceMonitor.startMeasurement("firebase_sync_transaccion");
         HashMap<String, Object> transaccionMap = convertToHashMap(transaccion);
@@ -372,10 +385,12 @@ public class OfflineManager {
                 Log.e(TAG, "Error al sincronizar transacción", e);
             });
     }
+    */
     
     /**
      * Sincroniza transacción con Firebase de forma asíncrona sin callback
      */
+    /*
     private void syncTransaccionToFirebaseAsync(TransaccionEntity transaccion) {
         syncTransaccionToFirebase(transaccion, new TransaccionCallback() {
             @Override
@@ -390,10 +405,12 @@ public class OfflineManager {
             }
         });
     }
+    */
     
     /**
      * Sincroniza usuario con Firebase
      */
+    /*
     private void syncUsuarioToFirebase(UsuarioEntity usuario) {
         HashMap<String, Object> usuarioMap = convertUsuarioToHashMap(usuario);
         
@@ -407,9 +424,11 @@ public class OfflineManager {
                 Log.e(TAG, "Error al sincronizar usuario", e);
             });
     }
+    */
     
     // Métodos de conversión
-    private UsuarioEntity convertToUsuarioEntity(DataSnapshot snapshot, String uid) {
+    /*
+    // private UsuarioEntity convertToUsuarioEntity(DataSnapshot snapshot, String uid) {
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setUid(uid);
         usuario.setNames(snapshot.child("names").getValue(String.class));
@@ -428,6 +447,7 @@ public class OfflineManager {
         usuario.setNeedsSync(false);
         return usuario;
     }
+    */
     
     private HashMap<String, Object> convertToHashMap(TransaccionEntity transaccion) {
         HashMap<String, Object> map = new HashMap<>();
@@ -470,13 +490,13 @@ public class OfflineManager {
                 // Sincronizar usuarios pendientes
                 List<UsuarioEntity> usuariosPendientes = usuarioDao.getUsuariosNeedingSync();
                 for (UsuarioEntity usuario : usuariosPendientes) {
-                    syncUsuarioToFirebase(usuario);
+                    // syncUsuarioToFirebase(usuario);
                 }
                 
                 // Sincronizar transacciones pendientes
                 List<TransaccionEntity> transaccionesPendientes = transaccionDao.getTransaccionesNeedingSync();
                 for (TransaccionEntity transaccion : transaccionesPendientes) {
-                    syncTransaccionToFirebase(transaccion, null);
+                    // syncTransaccionToFirebase(transaccion, null);
                 }
                 
                 Log.d(TAG, "Sincronización completada: " + usuariosPendientes.size() + 
