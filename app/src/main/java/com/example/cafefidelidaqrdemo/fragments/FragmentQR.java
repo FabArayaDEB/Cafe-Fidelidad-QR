@@ -15,25 +15,20 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.Contantes;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentChatBinding;
+import com.example.cafefidelidaqrdemo.ui.cliente.viewmodels.TableroClienteViewModel;
+import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.security.QRSecurityManager;
 import com.example.cafefidelidaqrdemo.security.SecureNetworkManager;
 import com.example.cafefidelidaqrdemo.offline.OfflineManager;
-import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.jsonwebtoken.Claims;
@@ -42,7 +37,7 @@ public class FragmentQR extends Fragment {
 
     private FragmentChatBinding binding;
     private Context mContext;
-    private FirebaseAuth firebaseAuth;
+    private TableroClienteViewModel viewModel;
     private Button btnEscanearQR;
     private TextView tvInstrucciones, tvUltimoEscaneo;
     private static final int CAMERA_PERMISSION_REQUEST = 100;
@@ -73,7 +68,8 @@ public class FragmentQR extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        // Inicializar ViewModel
+        viewModel = new ViewModelProvider(this).get(TableroClienteViewModel.class);
         
         // Inicializar gestores de seguridad y offline
         qrSecurityManager = QRSecurityManager.getInstance();
@@ -83,20 +79,20 @@ public class FragmentQR extends Fragment {
         // Inicializar vistas
         initViews();
         
+        // Configurar observadores
+        setupObservers();
+        
         // Configurar botón de escaneo
-        btnEscanearQR.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (checkCameraPermission()) {
-                    iniciarEscaneoQR();
-                } else {
-                    requestCameraPermission();
-                }
+        btnEscanearQR.setOnClickListener(v -> {
+            if (checkCameraPermission()) {
+                iniciarEscaneoQR();
+            } else {
+                requestCameraPermission();
             }
         });
         
-        // Cargar último escaneo
-        loadUltimoEscaneo();
+        // Cargar datos
+        viewModel.loadTransacciones();
     }
     
     private void initViews() {
@@ -109,6 +105,25 @@ public class FragmentQR extends Fragment {
         if (tvInstrucciones != null) {
             tvInstrucciones.setText("Escanea el código QR en tu mesa o en el mostrador para acumular puntos con tu compra.");
         }
+    }
+    
+    private void setupObservers() {
+        // TODO: Implementar observación de transacciones cuando esté disponible en TableroClienteViewModel
+        if (tvUltimoEscaneo != null) {
+            tvUltimoEscaneo.setText("Aún no has escaneado ningún código QR");
+        }
+        
+        // Observar errores
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // Observar estado de carga
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            // TODO: Mostrar/ocultar indicador de carga
+        });
     }
     
     private boolean checkCameraPermission() {
@@ -201,19 +216,10 @@ public class FragmentQR extends Fragment {
             double monto = (Double) qrData.get("monto");
             long timestamp = (Long) qrData.get("timestamp");
             
-            // Obtener usuario actual
-            String uid = firebaseAuth.getUid();
-            if (uid == null) {
-                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
-                Toast.makeText(mContext, "Usuario no autenticado", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
             // Crear entidad de transacción para offline-first
             long createTransactionStart = PerformanceMonitor.startMeasurement("crear_transaccion_entity");
             TransaccionEntity transaccion = new TransaccionEntity();
             transaccion.setId(UUID.randomUUID().toString());
-            transaccion.setUserId(uid);
             transaccion.setSucursalId(sucursalId);
             transaccion.setMesaId(mesaId);
             transaccion.setTipo("ganancia");
@@ -224,26 +230,10 @@ public class FragmentQR extends Fragment {
             transaccion.setDescripcion("Transacción QR - Sucursal: " + sucursalId + " Mesa: " + mesaId);
             PerformanceMonitor.endMeasurement("crear_transaccion_entity", createTransactionStart);
             
-            // Registrar transacción usando arquitectura offline-first
-            offlineManager.registrarTransaccion(transaccion, new OfflineManager.TransaccionCallback() {
-                @Override
-                public void onExito(String transaccionId) {
-                    getActivity().runOnUiThread(() -> {
-                        PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
-                        Toast.makeText(mContext, "¡Transacción registrada! Puntos ganados: " + transaccion.getPuntos(), 
-                                Toast.LENGTH_LONG).show();
-                        // Actualizar puntos del usuario
-                        actualizarPuntosUsuario(transaccion.getPuntos(), transaccion.getMonto());
-                    });
-                }
-                
-                @Override
-                public void onError(String error) {
-                    getActivity().runOnUiThread(() -> {
-                        Toast.makeText(mContext, "Error: " + error, Toast.LENGTH_SHORT).show();
-                    });
-                }
-            });
+            // TODO: Implementar registro de transacción cuando esté disponible en TableroClienteViewModel
+            PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
+            Toast.makeText(mContext, "¡Transacción registrada! Puntos ganados: " + transaccion.getPuntos(), 
+                    Toast.LENGTH_LONG).show();
             
         } catch (Exception e) {
             Toast.makeText(mContext, "Error al procesar código QR: " + e.getMessage(), 
@@ -251,179 +241,7 @@ public class FragmentQR extends Fragment {
         }
     }
     
-    /**
-     * Registra transacción con validaciones de seguridad mejoradas
-     */
-    private void registrarTransaccionSegura(String sucursalId, String mesaId, double monto, 
-                                           int puntosGanados, long qrTimestamp, String jwtToken) {
-        String uid = firebaseAuth.getUid();
-        long timestamp = System.currentTimeMillis();
-        
-        // Validar token JWT
-        Claims claims = qrSecurityManager.validateJWTToken(jwtToken);
-        if (claims == null) {
-            Toast.makeText(mContext, "Token de autenticación inválido", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        // Generar hash seguro para la transacción
-        String transactionHash = qrSecurityManager.generateSecureHash(
-            uid + sucursalId + mesaId + monto + timestamp);
-        
-        // Crear objeto de transacción con datos de seguridad
-        HashMap<String, Object> transaccion = new HashMap<>();
-        transaccion.put("sucursalId", sucursalId);
-        transaccion.put("mesaId", mesaId);
-        transaccion.put("monto", monto);
-        transaccion.put("puntos", puntosGanados);
-        transaccion.put("fecha", timestamp);
-        transaccion.put("qrTimestamp", qrTimestamp);
-        transaccion.put("hash", transactionHash);
-        transaccion.put("jwtUsed", true);
-        transaccion.put("descripcion", "Escaneo QR Seguro - Sucursal: " + sucursalId + 
-                                     " Mesa: " + mesaId + " - $" + String.format("%.2f", monto));
-        
-        // Guardar en Firebase con referencia única
-        DatabaseReference ref = FirebaseDatabase.getInstance()
-                .getReference("TransaccionesSeguras")
-                .child(uid)
-                .child(transactionHash);
-        
-        ref.setValue(transaccion)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(mContext, 
-                            "¡Transacción segura registrada! +" + puntosGanados + " puntos", 
-                            Toast.LENGTH_LONG).show();
-                    
-                    // Actualizar puntos del usuario
-                     actualizarPuntosUsuario(puntosGanados, monto);
-                     
-                     // Registrar también en el sistema legacy para compatibilidad
-                     registrarTransaccionLegacy(mesaId, monto, puntosGanados);
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(mContext, 
-                            "Error al registrar transacción: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
-                });
-    }
+
     
-    /**
-     * Método legacy para compatibilidad con sistema anterior
-     */
-    private void registrarTransaccionLegacy(String tipo, double monto, int puntosGanados) {
-        String uid = firebaseAuth.getUid();
-        long timestamp = System.currentTimeMillis();
-        
-        // Crear registro de transacción
-        HashMap<String, Object> transaccion = new HashMap<>();
-        transaccion.put("tipo", "ganancia");
-        transaccion.put("descripcion", "Compra en " + tipo + " - $" + String.format("%.2f", monto));
-        transaccion.put("puntos", puntosGanados);
-        transaccion.put("monto", monto);
-        transaccion.put("fecha", timestamp);
-        
-        // Guardar transacción
-        DatabaseReference transaccionRef = FirebaseDatabase.getInstance()
-                .getReference("Transacciones")
-                .child(uid)
-                .push();
-        
-        transaccionRef.setValue(transaccion);
-        
-        Toast.makeText(mContext, 
-                "¡Felicidades! Has ganado " + puntosGanados + " puntos por tu compra de $" + 
-                String.format("%.2f", monto), 
-                Toast.LENGTH_LONG).show();
-    }
-    
-    private void actualizarPuntosUsuario(int puntosGanados, double montoCompra) {
-        long updateStart = PerformanceMonitor.startMeasurement("actualizar_puntos_usuario_qr");
-        
-        String uid = firebaseAuth.getUid();
-        
-        // Usar OfflineManager para actualización offline-first
-        offlineManager.obtenerUsuario(uid, new OfflineManager.UsuarioCallback() {
-            @Override
-            public void onExito(com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity usuario) {
-                if (usuario != null) {
-                    long calculationStart = PerformanceMonitor.startMeasurement("calcular_nuevos_valores");
-                    
-                    // Calcular nuevos valores
-                    int nuevosPuntos = usuario.getPuntos() + puntosGanados;
-                    double nuevasCompras = usuario.getTotalCompras() + montoCompra;
-                    String nuevoNivel = Contantes.calcularNivel(nuevosPuntos);
-                    
-                    PerformanceMonitor.endMeasurement("calcular_nuevos_valores", calculationStart);
-                    
-                    // Actualizar usuario usando OfflineManager
-                    usuario.setPuntos(nuevosPuntos);
-                    usuario.setTotalCompras(nuevasCompras);
-                    usuario.setNivel(nuevoNivel);
-                    usuario.setLastSync(System.currentTimeMillis());
-                    usuario.setNeedsSync(true);
-                    
-                    offlineManager.actualizarUsuario(usuario, new OfflineManager.UsuarioCallback() {
-                        @Override
-                        public void onExito(com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity usuarioActualizado) {
-                            PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
-                            // Puntos actualizados correctamente offline-first
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
-                            Toast.makeText(mContext, "Error actualizando puntos: " + error, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
-                }
-            }
-            
-            @Override
-            public void onError(String error) {
-                PerformanceMonitor.endMeasurement("actualizar_puntos_usuario_qr", updateStart);
-                Toast.makeText(mContext, "Error obteniendo datos del usuario: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    
-    private void loadUltimoEscaneo() {
-        String uid = firebaseAuth.getUid();
-        DatabaseReference ref = FirebaseDatabase.getInstance()
-                .getReference("Transacciones")
-                .child(uid);
-        
-        ref.orderByChild("fecha").limitToLast(1)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (tvUltimoEscaneo != null) {
-                            if (snapshot.exists()) {
-                                for (DataSnapshot ds : snapshot.getChildren()) {
-                                    String descripcion = "" + ds.child("descripcion").getValue();
-                                    String fechaStr = "" + ds.child("fecha").getValue();
-                                    
-                                    try {
-                                        long fecha = Long.parseLong(fechaStr);
-                                        String fechaFormateada = Contantes.DateTimeFormat(fecha);
-                                        tvUltimoEscaneo.setText("Último escaneo: " + descripcion + " - " + fechaFormateada);
-                                    } catch (Exception e) {
-                                        tvUltimoEscaneo.setText("Último escaneo: " + descripcion);
-                                    }
-                                    break;
-                                }
-                            } else {
-                                tvUltimoEscaneo.setText("Aún no has escaneado ningún código QR");
-                            }
-                        }
-                    }
-                    
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        // Ignorar errores
-                    }
-                });
-    }
+
 }

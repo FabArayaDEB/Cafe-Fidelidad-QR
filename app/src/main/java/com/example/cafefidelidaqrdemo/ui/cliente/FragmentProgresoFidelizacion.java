@@ -21,6 +21,9 @@ import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.dialogs.ProximoBeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
+import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
+import com.example.cafefidelidaqrdemo.models.ProgresoGeneral;
+import com.example.cafefidelidaqrdemo.models.SyncStatus;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -89,7 +92,8 @@ public class FragmentProgresoFidelizacion extends Fragment {
         setupObservers();
         
         // Cargar datos iniciales
-        viewModel.loadProgresoData();
+        String clienteId = "cliente_demo"; // TODO: Obtener ID real del cliente autenticado
+        viewModel.loadProgresoData(clienteId);
     }
     
     private void initViews(View view) {
@@ -197,28 +201,28 @@ public class FragmentProgresoFidelizacion extends Fragment {
         });
     }
     
-    private void updateProgresoGeneral(ProgresoViewModel.ProgresoGeneral progreso) {
-        // Actualizar total de visitas
-        textTotalVisitas.setText(String.format("Total de visitas: %d", progreso.getTotalVisitas()));
+    private void updateProgresoGeneral(ProgresoGeneral progreso) {
+        // Actualizar total de visitas usando visitasActuales
+        textTotalVisitas.setText(String.format("Total de visitas: %d", progreso.getVisitasActuales()));
         
-        // Actualizar progreso circular
-        if (progreso.getProgresoHaciaProximo() >= 0) {
-            progressCircular.setProgress((int) (progreso.getProgresoHaciaProximo() * 100));
+        // Actualizar progreso circular usando progresoNivel
+        if (progreso.getProgresoNivel() >= 0) {
+            progressCircular.setProgress((int) (progreso.getProgresoNivel() * 100));
             progressCircular.setVisibility(View.VISIBLE);
             
-            // Texto de progreso
-            if (progreso.getVisitasParaProximo() > 0) {
+            // Texto de progreso usando métodos disponibles
+            if (progreso.getPuntosRestantesParaProximoNivel() > 0) {
                 // textProgresoGeneral.setText(String.format(
-                //     "%d/%d visitas para próximo beneficio",
-                //     progreso.getVisitasActuales(),
-                //     progreso.getVisitasParaProximo()
+                //     "%d/%d puntos para próximo nivel",
+                //     progreso.getPuntosActuales(),
+                //     progreso.getPuntosParaProximoNivel()
                 // ));
             } else {
-                // textProgresoGeneral.setText("¡Felicidades! Has alcanzado todos los beneficios disponibles");
+                // textProgresoGeneral.setText("¡Felicidades! Has alcanzado el máximo nivel");
             }
         } else {
             progressCircular.setVisibility(View.GONE);
-            // textProgresoGeneral.setText("Configura tus beneficios para ver tu progreso");
+            // textProgresoGeneral.setText("Configura tu progreso para ver los datos");
         }
     }
     
@@ -234,7 +238,7 @@ public class FragmentProgresoFidelizacion extends Fragment {
         }
     }
     
-    private void updateProximosBeneficios(List<ProgresoViewModel.ProximoBeneficio> proximosBeneficios) {
+    private void updateProximosBeneficios(List<ProximoBeneficio> proximosBeneficios) {
         if (proximosBeneficios.isEmpty()) {
             // layoutProximosBeneficios.setVisibility(View.GONE);
         } else {
@@ -246,7 +250,7 @@ public class FragmentProgresoFidelizacion extends Fragment {
         }
     }
     
-    private void updateSyncStatus(ProgresoViewModel.SyncStatus syncStatus) {
+    private void updateSyncStatus(SyncStatus syncStatus) {
         if (syncStatus == null) {
             // textEstadoSync.setVisibility(View.GONE);
             return;
@@ -309,7 +313,7 @@ public class FragmentProgresoFidelizacion extends Fragment {
         dialog.show(getParentFragmentManager(), "BeneficioDetailsDialog");
     }
     
-    private void onProximoBeneficioClick(ProgresoViewModel.ProximoBeneficio proximoBeneficio) {
+    private void onProximoBeneficioClick(ProximoBeneficio proximoBeneficio) {
         // Mostrar detalles del próximo beneficio
         ProximoBeneficioDialogFragment dialog = ProximoBeneficioDialogFragment.newInstance(proximoBeneficio);
         dialog.show(getParentFragmentManager(), "ProximoBeneficioDialog");

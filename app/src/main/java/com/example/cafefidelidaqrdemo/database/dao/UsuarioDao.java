@@ -57,6 +57,12 @@ public interface UsuarioDao {
     UsuarioEntity getUsuarioFromCache(String uid, long cacheValidTime);
     
     /**
+     * Obtiene todos los usuarios
+     */
+    @Query("SELECT * FROM usuarios")
+    List<UsuarioEntity> getAllUsuarios();
+    
+    /**
      * Actualiza solo los campos modificables del perfil
      */
     @Query("UPDATE usuarios SET names = :names, telefono = :telefono, " +

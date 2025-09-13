@@ -4,208 +4,293 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
+import com.example.cafefidelidaqrdemo.network.ApiClient;
+import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
 import com.example.cafefidelidaqrdemo.repository.CanjeRepository;
+import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Locale;
 
 /**
- * ViewModel para FragmentMisBeneficios
- * Maneja la lógica de negocio para mostrar beneficios y gestionar OTP
+ * ViewModel para gestión de beneficios del cliente siguiendo patrones MVVM estrictos
+ * Se enfoca únicamente en la preparación de datos para la UI
  */
 public class MisBeneficiosViewModel extends AndroidViewModel {
     
+    // Constants
     private static final String TAG = "MisBeneficiosViewModel";
     
-    // Repositories
-    private BeneficioRepository beneficioRepository;
-    private CanjeRepository canjeRepository;
-    private ExecutorService executor;
+    // Dependencies
+    private final BeneficioRepository beneficioRepository;
+    private final CanjeRepository canjeRepository;
     
-    // LiveData para beneficios
-    private MutableLiveData<List<BeneficioEntity>> beneficiosDisponibles = new MutableLiveData<>();
-    private MutableLiveData<List<CanjeEntity>> historialCanjes = new MutableLiveData<>();
+    // UI State
+    private final MutableLiveData<String> _clienteId = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
+    private final MutableLiveData<String> _filtroTipo = new MutableLiveData<>("");
+    private final MutableLiveData<Boolean> _showExpired = new MutableLiveData<>(false);
     
-    // LiveData para estado de carga
-    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
-    private MutableLiveData<String> mensajeEstado = new MutableLiveData<>();
+    // Observable Data
+    private final LiveData<List<BeneficioEntity>> beneficiosDisponibles;
+    private final LiveData<List<CanjeEntity>> historialCanjes;
+    private final LiveData<Boolean> isLoading;
+    private final LiveData<String> error;
+    private final LiveData<Boolean> isOffline;
+    
+    // OTP Data
+    private final LiveData<String> otpActual;
+    private final LiveData<Long> tiempoRestante;
+    private final LiveData<Boolean> otpValido;
+    private final LiveData<String> estadoCanje;
+    
+    // Derived Data
+    private final LiveData<Boolean> hasData;
+    private final LiveData<Boolean> showEmptyState;
+    private final LiveData<String> statusMessage;
+    private final LiveData<Integer> beneficiosCount;
+    private final LiveData<Integer> canjesCount;
+    private final LiveData<Boolean> hasActiveOtp;
     
     public MisBeneficiosViewModel(@NonNull Application application) {
         super(application);
-        beneficioRepository = new BeneficioRepository(application);
-        canjeRepository = new CanjeRepository(application);
-        executor = Executors.newFixedThreadPool(2);
-    }
-    
-    // ========== MÉTODOS PARA BENEFICIOS ==========
-    
-    /**
-     * Carga los beneficios disponibles para el cliente
-     */
-    public void cargarBeneficiosDisponibles(String clienteId) {
-        isLoading.setValue(true);
         
-        // Observar beneficios activos desde el repository
-        beneficioRepository.getBeneficiosActivos().observeForever(beneficiosActivos -> {
-            if (beneficiosActivos != null) {
-                executor.execute(() -> {
-                    try {
-                        // Filtrar beneficios ya canjeados por el cliente
-                        List<BeneficioEntity> beneficiosDisponiblesLista = filtrarBeneficiosDisponibles(beneficiosActivos, clienteId);
-                        
-                        beneficiosDisponibles.postValue(beneficiosDisponiblesLista);
-                        isLoading.postValue(false);
-                        
-                        if (beneficiosDisponiblesLista.isEmpty()) {
-                            mensajeEstado.postValue("No tienes beneficios disponibles en este momento.");
-                        } else {
-                            mensajeEstado.postValue("Tienes " + beneficiosDisponiblesLista.size() + " beneficios disponibles.");
-                        }
-                        
-                    } catch (Exception e) {
-                        isLoading.postValue(false);
-                        mensajeEstado.postValue("Error al cargar beneficios: " + e.getMessage());
-                    }
-                });
-            }
-        });
-    }
-    
-    /**
-     * Filtra beneficios que ya han sido canjeados por el cliente
-     */
-    private List<BeneficioEntity> filtrarBeneficiosDisponibles(List<BeneficioEntity> beneficios, String clienteId) {
-        // TODO: Implementar lógica de filtrado basada en:
-        // 1. Beneficios ya canjeados por el cliente
-        // 2. Límites de uso por beneficio
-        // 3. Vigencia de beneficios
-        // 4. Sucursales aplicables
+        // Initialize dependencies
+        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
+        ApiService apiService = ApiClient.getApiService();
         
-        // Por ahora retornamos todos los beneficios activos
-        return beneficios;
+        this.beneficioRepository = new BeneficioRepository(application);
+        this.canjeRepository = new CanjeRepository(application);
+        
+        // Configure repository observables
+        this.beneficiosDisponibles = createBeneficiosDisponiblesLiveData();
+        this.historialCanjes = createHistorialCanjesLiveData();
+        this.isLoading = createIsLoadingLiveData();
+        this.error = createErrorLiveData();
+        this.isOffline = beneficioRepository.getIsOffline();
+        
+        // Configure OTP observables
+        this.otpActual = canjeRepository.getOtpActual();
+        this.tiempoRestante = canjeRepository.getTiempoRestante();
+        this.otpValido = canjeRepository.getOtpValido();
+        this.estadoCanje = canjeRepository.getEstadoCanje();
+        
+        // Configure derived UI data
+        this.hasData = createHasDataLiveData();
+        this.showEmptyState = createShowEmptyStateLiveData();
+        this.statusMessage = createStatusMessageLiveData();
+        this.beneficiosCount = createBeneficiosCountLiveData();
+        this.canjesCount = createCanjesCountLiveData();
+        this.hasActiveOtp = createHasActiveOtpLiveData();
     }
     
-    /**
-     * Carga el historial de canjes del cliente
-     */
-    public void cargarHistorialCanjes(String clienteId) {
-        // El historial se observa directamente desde el repository
-        // ya que usa LiveData
-    }
-    
-    /**
-     * Verifica si el cliente tiene un OTP activo
-     */
-    public void verificarOtpActivo(String clienteId) {
-        executor.execute(() -> {
-            try {
-                long tiempoActual = System.currentTimeMillis();
-                // Esta verificación se hace automáticamente en el CanjeRepository
-                // a través de los observers
-            } catch (Exception e) {
-                // Log error
-            }
-        });
-    }
-    
-    // ========== MÉTODOS PARA OTP (DELEGADOS AL CANJE REPOSITORY) ==========
-    
-    /**
-     * Solicita un OTP para canjear un beneficio
-     */
-    public void solicitarOtp(String clienteId, String beneficioId, String sucursalId) {
-        canjeRepository.solicitarOtp(clienteId, beneficioId, sucursalId);
-    }
-    
-    /**
-     * Solicita un nuevo OTP cuando el anterior ha expirado
-     */
-    public void solicitarNuevoOtp(String clienteId, String beneficioId, String sucursalId) {
-        canjeRepository.solicitarNuevoOtp(clienteId, beneficioId, sucursalId);
-    }
-    
-    /**
-     * Confirma el canje usando el código OTP
-     */
-    public void confirmarCanje(String otpCodigo, String cajeroId) {
-        canjeRepository.confirmarCanje(otpCodigo, cajeroId);
-    }
-    
-    /**
-     * Limpia el estado del OTP
-     */
-    public void limpiarEstado() {
-        // Limpiar estados locales si es necesario
-        mensajeEstado.setValue("");
-    }
-    
-    // ========== GETTERS PARA LIVEDATA ==========
-    
+    // LiveData Getters
     public LiveData<List<BeneficioEntity>> getBeneficiosDisponibles() {
         return beneficiosDisponibles;
     }
     
-    public LiveData<List<CanjeEntity>> getHistorialCanjes(String clienteId) {
-        return canjeRepository.getHistorialCanjesCliente(clienteId);
+    public LiveData<List<CanjeEntity>> getHistorialCanjes() {
+        return historialCanjes;
     }
     
     public LiveData<Boolean> getIsLoading() {
         return isLoading;
     }
     
-    public LiveData<String> getMensajeEstado() {
-        return mensajeEstado;
+    public LiveData<String> getError() {
+        return error;
     }
     
-    // Delegados del CanjeRepository para OTP
+    public LiveData<Boolean> getIsRefreshing() {
+        return _isRefreshing;
+    }
+    
+    public LiveData<Boolean> getIsOffline() {
+        return isOffline;
+    }
+    
     public LiveData<String> getOtpActual() {
-        return canjeRepository.getOtpActual();
+        return otpActual;
     }
     
     public LiveData<Long> getTiempoRestante() {
-        return canjeRepository.getTiempoRestante();
+        return tiempoRestante;
     }
     
     public LiveData<Boolean> getOtpValido() {
-        return canjeRepository.getOtpValido();
+        return otpValido;
     }
     
     public LiveData<String> getEstadoCanje() {
-        return canjeRepository.getEstadoCanje();
+        return estadoCanje;
+    }
+    
+    public LiveData<Boolean> getHasData() {
+        return hasData;
+    }
+    
+    public LiveData<Boolean> getShowEmptyState() {
+        return showEmptyState;
+    }
+    
+    public LiveData<String> getStatusMessage() {
+        return statusMessage;
+    }
+    
+    public LiveData<Integer> getBeneficiosCount() {
+        return beneficiosCount;
+    }
+    
+    public LiveData<Integer> getCanjesCount() {
+        return canjesCount;
+    }
+    
+    public LiveData<Boolean> getHasActiveOtp() {
+        return hasActiveOtp;
+    }
+    
+    // UI Actions
+    public void setClienteId(String clienteId) {
+        if (!clienteId.equals(_clienteId.getValue())) {
+            _clienteId.setValue(clienteId);
+        }
+    }
+    
+    public void loadBeneficios() {
+        String clienteId = _clienteId.getValue();
+        if (clienteId == null || clienteId.isEmpty()) {
+            return;
+        }
+        
+        beneficioRepository.refreshBeneficios(new BaseRepository.SimpleCallback() {
+            @Override
+            public void onSuccess() {
+                // Success handled by LiveData observers
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                // Error handled by LiveData observers
+            }
+        });
+    }
+    
+    public void refreshBeneficios() {
+        if (Boolean.TRUE.equals(_isRefreshing.getValue())) {
+            return;
+        }
+        
+        _isRefreshing.setValue(true);
+        
+        beneficioRepository.forceSyncBeneficios(new BaseRepository.SimpleCallback() {
+            @Override
+            public void onSuccess() {
+                _isRefreshing.setValue(false);
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                _isRefreshing.setValue(false);
+            }
+        });
+    }
+    
+    public void setFiltroTipo(String tipo) {
+        _filtroTipo.setValue(tipo);
+    }
+    
+    public void setShowExpired(boolean showExpired) {
+        _showExpired.setValue(showExpired);
+    }
+    
+    public void clearFilters() {
+        _filtroTipo.setValue("");
+        _showExpired.setValue(false);
+    }
+    
+    // OTP Actions
+    public void solicitarOtp(String beneficioId, String sucursalId) {
+        String clienteId = _clienteId.getValue();
+        if (clienteId == null || clienteId.isEmpty()) {
+            return;
+        }
+        
+        canjeRepository.solicitarOtp(clienteId, beneficioId, sucursalId);
+    }
+    
+    public void solicitarNuevoOtp(String beneficioId, String sucursalId) {
+        String clienteId = _clienteId.getValue();
+        if (clienteId == null || clienteId.isEmpty()) {
+            return;
+        }
+        
+        canjeRepository.solicitarNuevoOtp(clienteId, beneficioId, sucursalId);
+    }
+    
+    public void confirmarCanje(String otpCodigo, String cajeroId) {
+        canjeRepository.confirmarCanje(otpCodigo, cajeroId);
+    }
+    
+    public void limpiarEstadoOtp() {
+        canjeRepository.limpiarEstado();
+    }
+    
+    public void clearError() {
+        // Error clearing is handled by repositories
+    }
+    
+    public boolean verificarOtpActivo() {
+        Boolean otpValidoValue = otpValido.getValue();
+        return Boolean.TRUE.equals(otpValidoValue);
+    }
+    
+    public void cargarBeneficiosDisponibles(String clienteId) {
+        setClienteId(clienteId);
+        loadBeneficios();
     }
     
     public LiveData<String> getMensajeError() {
-        return canjeRepository.getMensajeError();
+        return error;
     }
     
-    // ========== MÉTODOS DE UTILIDAD ==========
+    public void limpiarEstado() {
+        limpiarEstadoOtp();
+        clearError();
+    }
     
-    /**
-     * Verifica si un beneficio puede ser canjeado por el cliente
-     */
-    public boolean puedeCanjearse(BeneficioEntity beneficio, String clienteId) {
-        // TODO: Implementar validaciones:
-        // 1. Beneficio activo
-        // 2. Dentro de vigencia
-        // 3. No excede límites de uso
-        // 4. Cliente cumple requisitos
-        // 5. Sucursal aplicable
+    // Utility Methods
+    public boolean puedeCanjearse(BeneficioEntity beneficio) {
+        if (beneficio == null || !beneficio.isActivo()) {
+            return false;
+        }
         
-        return beneficio.isActivo();
+        // Check expiration
+        if (beneficio.getVigencia_fin() > 0) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime > beneficio.getVigencia_fin()) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
-    /**
-     * Obtiene información detallada de un beneficio
-     */
     public String getDescripcionBeneficio(BeneficioEntity beneficio) {
-        StringBuilder descripcion = new StringBuilder();
+        if (beneficio == null) {
+            return "";
+        }
         
+        StringBuilder descripcion = new StringBuilder();
         descripcion.append("Tipo: ").append(beneficio.getTipo()).append("\n");
         
         if (beneficio.getDescuento_pct() > 0) {
@@ -216,30 +301,126 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
             descripcion.append("Descuento: $").append(beneficio.getDescuento_monto()).append("\n");
         }
         
-        // TODO: BeneficioEntity no tiene método getDescripcion()
-        // if (beneficio.getDescripcion() != null && !beneficio.getDescripcion().isEmpty()) {
-        //     descripcion.append("\n").append(beneficio.getDescripcion());
-        // }
-        
         return descripcion.toString();
     }
     
-    /**
-     * Formatea la fecha de vigencia del beneficio
-     */
     public String getVigenciaFormateada(BeneficioEntity beneficio) {
-        if (beneficio.getVigencia_fin() > 0) {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
-            return "Válido hasta: " + sdf.format(new java.util.Date(beneficio.getVigencia_fin()));
+        if (beneficio == null || beneficio.getVigencia_fin() <= 0) {
+            return "Sin fecha de vencimiento";
         }
-        return "Sin fecha de vencimiento";
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return "Válido hasta: " + sdf.format(new Date(beneficio.getVigencia_fin()));
+    }
+    
+    // Private Helper Methods
+    private LiveData<List<BeneficioEntity>> createBeneficiosDisponiblesLiveData() {
+        return beneficioRepository.getBeneficiosDisponiblesParaCliente();
+    }
+    
+    private LiveData<List<CanjeEntity>> createHistorialCanjesLiveData() {
+        return Transformations.switchMap(_clienteId, clienteId -> {
+            if (clienteId == null || clienteId.isEmpty()) {
+                return new MutableLiveData<>();
+            }
+            return canjeRepository.getHistorialCanjesCliente(clienteId);
+        });
+    }
+    
+    private LiveData<Boolean> createIsLoadingLiveData() {
+        MediatorLiveData<Boolean> result = new MediatorLiveData<>();
+        
+        result.addSource(beneficioRepository.getIsLoading(), loading -> {
+            Boolean canjeLoading = canjeRepository.getIsLoading().getValue();
+            result.setValue(Boolean.TRUE.equals(loading) || Boolean.TRUE.equals(canjeLoading));
+        });
+        
+        result.addSource(canjeRepository.getIsLoading(), loading -> {
+            Boolean beneficioLoading = beneficioRepository.getIsLoading().getValue();
+            result.setValue(Boolean.TRUE.equals(beneficioLoading) || Boolean.TRUE.equals(loading));
+        });
+        
+        return result;
+    }
+    
+    private LiveData<String> createErrorLiveData() {
+        MediatorLiveData<String> result = new MediatorLiveData<>();
+        
+        result.addSource(beneficioRepository.getError(), error -> {
+            String canjeError = canjeRepository.getError().getValue();
+            if (error != null) {
+                result.setValue(error);
+            } else if (canjeError != null) {
+                result.setValue(canjeError);
+            } else {
+                result.setValue(null);
+            }
+        });
+        
+        result.addSource(canjeRepository.getError(), error -> {
+            String beneficioError = beneficioRepository.getError().getValue();
+            if (error != null) {
+                result.setValue(error);
+            } else if (beneficioError != null) {
+                result.setValue(beneficioError);
+            } else {
+                result.setValue(null);
+            }
+        });
+        
+        return result;
+    }
+    
+    private LiveData<Boolean> createHasDataLiveData() {
+        MediatorLiveData<Boolean> result = new MediatorLiveData<>();
+        
+        result.addSource(beneficiosDisponibles, beneficios -> {
+            List<CanjeEntity> canjes = historialCanjes.getValue();
+            result.setValue((beneficios != null && !beneficios.isEmpty()) ||
+                          (canjes != null && !canjes.isEmpty()));
+        });
+        
+        result.addSource(historialCanjes, canjes -> {
+            List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+            result.setValue((beneficios != null && !beneficios.isEmpty()) ||
+                          (canjes != null && !canjes.isEmpty()));
+        });
+        
+        return result;
+    }
+    
+    private LiveData<Boolean> createShowEmptyStateLiveData() {
+        return Transformations.map(hasData, hasData -> !Boolean.TRUE.equals(hasData));
+    }
+    
+    private LiveData<String> createStatusMessageLiveData() {
+        return Transformations.map(beneficiosDisponibles, beneficios -> {
+            if (beneficios == null || beneficios.isEmpty()) {
+                return "No tienes beneficios disponibles en este momento.";
+            }
+            return "Tienes " + beneficios.size() + " beneficios disponibles.";
+        });
+    }
+    
+    private LiveData<Integer> createBeneficiosCountLiveData() {
+        return Transformations.map(beneficiosDisponibles, beneficios -> {
+            return beneficios != null ? beneficios.size() : 0;
+        });
+    }
+    
+    private LiveData<Integer> createCanjesCountLiveData() {
+        return Transformations.map(historialCanjes, canjes -> {
+            return canjes != null ? canjes.size() : 0;
+        });
+    }
+    
+    private LiveData<Boolean> createHasActiveOtpLiveData() {
+        return Transformations.map(otpValido, valido -> Boolean.TRUE.equals(valido));
     }
     
     @Override
     protected void onCleared() {
         super.onCleared();
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-        }
+        // Repository cleanup is handled automatically
     }
 }

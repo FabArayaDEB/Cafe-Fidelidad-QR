@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
+import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public class ProgresoFidelizacionAdapter extends RecyclerView.Adapter<ProgresoFidelizacionAdapter.ProgresoViewHolder> {
     
-    private List<ProgresoViewModel.ProximoBeneficio> proximosBeneficios;
+    private List<ProximoBeneficio> proximosBeneficios;
     
     public ProgresoFidelizacionAdapter() {
         this.proximosBeneficios = new ArrayList<>();
@@ -34,7 +35,7 @@ public class ProgresoFidelizacionAdapter extends RecyclerView.Adapter<ProgresoFi
     
     @Override
     public void onBindViewHolder(@NonNull ProgresoViewHolder holder, int position) {
-        ProgresoViewModel.ProximoBeneficio proximoBeneficio = proximosBeneficios.get(position);
+        ProximoBeneficio proximoBeneficio = proximosBeneficios.get(position);
         holder.bind(proximoBeneficio);
     }
     
@@ -43,7 +44,7 @@ public class ProgresoFidelizacionAdapter extends RecyclerView.Adapter<ProgresoFi
         return proximosBeneficios.size();
     }
     
-    public void updateProximosBeneficios(List<ProgresoViewModel.ProximoBeneficio> nuevosProximosBeneficios) {
+    public void updateProximosBeneficios(List<ProximoBeneficio> nuevosProximosBeneficios) {
         this.proximosBeneficios.clear();
         if (nuevosProximosBeneficios != null) {
             this.proximosBeneficios.addAll(nuevosProximosBeneficios);
@@ -69,7 +70,7 @@ public class ProgresoFidelizacionAdapter extends RecyclerView.Adapter<ProgresoFi
             tvVisitasFaltantes = itemView.findViewById(R.id.tv_visitas_faltantes);
         }
         
-        public void bind(ProgresoViewModel.ProximoBeneficio proximoBeneficio) {
+        public void bind(ProximoBeneficio proximoBeneficio) {
             BeneficioEntity beneficio = proximoBeneficio.getBeneficio();
             
             // Información del beneficio

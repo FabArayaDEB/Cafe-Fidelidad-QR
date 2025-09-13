@@ -38,6 +38,7 @@ public class CanjeRepository {
     private MutableLiveData<Boolean> otpValido = new MutableLiveData<>();
     private MutableLiveData<String> estadoCanje = new MutableLiveData<>();
     private MutableLiveData<String> mensajeError = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
     
     public CanjeRepository(Application application) {
         this.application = application;
@@ -53,6 +54,7 @@ public class CanjeRepository {
      * Solicita un nuevo OTP para canjear un beneficio
      */
     public void solicitarOtp(String idCliente, String idBeneficio, String idSucursal) {
+        isLoading.postValue(true);
         executor.execute(() -> {
             try {
                 // Verificar si ya existe un OTP activo para este cliente
@@ -111,6 +113,8 @@ public class CanjeRepository {
             } catch (Exception e) {
                 mensajeError.postValue("Error al generar OTP: " + e.getMessage());
                 estadoCanje.postValue("ERROR");
+            } finally {
+                isLoading.postValue(false);
             }
         });
     }
@@ -139,6 +143,7 @@ public class CanjeRepository {
      * Confirma el canje usando el código OTP
      */
     public void confirmarCanje(String otpCodigo, String cajeroId) {
+        isLoading.postValue(true);
         executor.execute(() -> {
             try {
                 long tiempoActual = System.currentTimeMillis();
@@ -177,6 +182,8 @@ public class CanjeRepository {
             } catch (Exception e) {
                 mensajeError.postValue("Error al confirmar canje: " + e.getMessage());
                 estadoCanje.postValue("ERROR");
+            } finally {
+                isLoading.postValue(false);
             }
         });
     }
@@ -219,6 +226,25 @@ public class CanjeRepository {
     
     public LiveData<String> getMensajeError() {
         return mensajeError;
+    }
+    
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+    
+    public LiveData<String> getError() {
+        return mensajeError;
+    }
+    
+    /**
+     * Limpia el estado actual del canje y OTP
+     */
+    public void limpiarEstado() {
+        otpActual.postValue(null);
+        tiempoRestante.postValue(0L);
+        otpValido.postValue(false);
+        estadoCanje.postValue("INICIAL");
+        mensajeError.postValue(null);
     }
     
     // ========== MÉTODOS PRIVADOS ==========

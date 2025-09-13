@@ -108,4 +108,15 @@ public interface BeneficioDao {
            "estado = 'activo' AND " +
            "producto_premio = CAST(:productoId AS TEXT)")
     int countBeneficiosActivosConProducto(long productoId);
+    
+    /**
+     * Obtiene beneficios disponibles activos y vigentes
+     * Filtra por estado activo y vigencia actual
+     */
+    @Query("SELECT * FROM beneficios WHERE " +
+           "estado = 'activo' AND " +
+           "(vigencia_ini IS NULL OR vigencia_ini <= strftime('%s', 'now') * 1000) AND " +
+           "(vigencia_fin IS NULL OR vigencia_fin >= strftime('%s', 'now') * 1000) " +
+           "ORDER BY lastSync DESC")
+    LiveData<List<BeneficioEntity>> getBeneficiosDisponiblesParaCliente();
 }

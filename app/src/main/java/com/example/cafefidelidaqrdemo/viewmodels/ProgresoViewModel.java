@@ -1,374 +1,432 @@
 package com.example.cafefidelidaqrdemo.viewmodels;
 
 import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
-import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
-import com.example.cafefidelidaqrdemo.repository.VisitaRepository;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.example.cafefidelidaqrdemo.models.ProgresoGeneral;
+import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
+import com.example.cafefidelidaqrdemo.models.SyncStatus;
+import com.example.cafefidelidaqrdemo.network.ApiService;
+import com.example.cafefidelidaqrdemo.repository.ProgresoRepository;
+import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * ViewModel para calcular progreso local/remoto y manejar eventual consistency
- * Implementa la lógica para CU-04.2
+ * ViewModel para gestión del progreso siguiendo patrones MVVM estrictos
+ * Se enfoca únicamente en la preparación de datos para la UI
  */
 public class ProgresoViewModel extends AndroidViewModel {
     
-    private final BeneficioRepository beneficioRepository;
-    private final VisitaRepository visitaRepository;
-    private final ExecutorService executor;
-    private final Gson gson;
+    // ==================== DEPENDENCIAS ====================
+    private final ProgresoRepository repository;
     
-    // LiveData principales
-    private final MutableLiveData<ProgresoGeneral> progresoGeneralLiveData = new MutableLiveData<>();
-    private final MutableLiveData<List<BeneficioEntity>> beneficiosDisponiblesLiveData = new MutableLiveData<>();
-    private final MutableLiveData<List<ProximoBeneficio>> proximosBeneficiosLiveData = new MutableLiveData<>();
-    private final MutableLiveData<SyncStatus> syncStatusLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> hasDataLiveData = new MutableLiveData<>(false);
+    // ==================== ESTADO DE LA UI ====================
+    private final MutableLiveData<String> _clienteId = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> _showEstimated = new MutableLiveData<>(false);
+    private final MutableLiveData<Date> _lastSyncTime = new MutableLiveData<>();
     
-    // Datos en caché
-    private int totalVisitasLocal = 0;
-    private int totalVisitasRemoto = 0;
-    private Date ultimaSincronizacion;
+    // ==================== DATOS OBSERVABLES ====================
+    private final LiveData<ProgresoGeneral> progresoGeneral;
+    private final LiveData<List<BeneficioEntity>> beneficiosDisponibles;
+    private final LiveData<List<ProximoBeneficio>> proximosBeneficios;
+    private final LiveData<SyncStatus> syncStatus;
+    private final LiveData<Boolean> isLoading;
+    private final LiveData<String> error;
+    private final LiveData<Boolean> isOffline;
+    
+    // ==================== DATOS DERIVADOS ====================
+    private final LiveData<Boolean> hasData;
+    private final LiveData<Boolean> showEmptyState;
+    private final LiveData<String> statusMessage;
+    private final LiveData<Boolean> needsSync;
+    private final LiveData<String> progressSummary;
+    private final LiveData<Boolean> canRefresh;
     
     public ProgresoViewModel(@NonNull Application application) {
         super(application);
-        this.beneficioRepository = new BeneficioRepository(application);
-        this.visitaRepository = new VisitaRepository(application);
-        this.executor = Executors.newFixedThreadPool(4);
-        this.gson = new Gson();
         
-        // Configurar estado inicial
-        syncStatusLiveData.setValue(new SyncStatus(SyncEstado.SINCRONIZANDO, "Cargando datos..."));
-    }
-    
-    // Getters para LiveData
-    public LiveData<ProgresoGeneral> getProgresoGeneral() {
-        return progresoGeneralLiveData;
-    }
-    
-    public LiveData<List<BeneficioEntity>> getBeneficiosDisponibles() {
-        return beneficiosDisponiblesLiveData;
-    }
-    
-    public LiveData<List<ProximoBeneficio>> getProximosBeneficios() {
-        return proximosBeneficiosLiveData;
-    }
-    
-    public LiveData<SyncStatus> getSyncStatus() {
-        return syncStatusLiveData;
-    }
-    
-    public LiveData<Boolean> getIsLoading() {
-        return isLoadingLiveData;
-    }
-    
-    public LiveData<String> getError() {
-        return errorLiveData;
-    }
-    
-    public LiveData<Boolean> getHasData() {
-        return hasDataLiveData;
-    }
-    
-    // Métodos principales
-    public void loadProgresoData() {
-        isLoadingLiveData.setValue(true);
-        syncStatusLiveData.setValue(new SyncStatus(SyncEstado.SINCRONIZANDO, "Cargando datos..."));
+        // Inicializar repositorio
+        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
+        repository = new ProgresoRepository(
+            database.visitaDao(),
+            database.beneficioDao(),
+            database.canjeDao(),
+            ApiService.getInstance()
+        );
         
-        executor.execute(() -> {
-            try {
-                // Cargar datos locales primero
-                loadLocalData();
-                
-                // Intentar sincronizar con servidor
-                syncWithServer();
-                
-            } catch (Exception e) {
-                errorLiveData.postValue("Error al cargar datos: " + e.getMessage());
-                syncStatusLiveData.postValue(new SyncStatus(SyncEstado.ERROR, e.getMessage()));
-            } finally {
-                isLoadingLiveData.postValue(false);
+        // Configurar observables del repositorio
+        isLoading = repository.getIsLoading();
+        error = repository.getError();
+        isOffline = repository.getIsOffline();
+        
+        // Configurar LiveData reactivo para el progreso
+        progresoGeneral = Transformations.switchMap(_clienteId, clienteId -> {
+            if (clienteId != null && !clienteId.isEmpty()) {
+                return repository.getProgresoGeneral(clienteId);
             }
+            return new MutableLiveData<>(null);
+        });
+        
+        // Configurar LiveData para beneficios disponibles
+        beneficiosDisponibles = Transformations.switchMap(_clienteId, clienteId -> {
+            if (clienteId != null && !clienteId.isEmpty()) {
+                return repository.getBeneficiosDisponibles(clienteId);
+            }
+            return new MutableLiveData<>(null);
+        });
+        
+        // Configurar LiveData para próximos beneficios
+        proximosBeneficios = Transformations.switchMap(_clienteId, clienteId -> {
+            if (clienteId != null && !clienteId.isEmpty()) {
+                return repository.getProximosBeneficios(clienteId);
+            }
+            return new MutableLiveData<>(null);
+        });
+        
+        // Configurar estado de sincronización
+        syncStatus = repository.getSyncStatus();
+        
+        // Configurar datos derivados para la UI
+        hasData = Transformations.map(progresoGeneral, progreso -> progreso != null);
+        
+        showEmptyState = Transformations.map(progresoGeneral, progreso -> {
+            Boolean loading = isLoading.getValue();
+            Boolean refreshing = _isRefreshing.getValue();
+            return (loading == null || !loading) && 
+                   (refreshing == null || !refreshing) && 
+                   progreso == null;
+        });
+        
+        statusMessage = Transformations.map(isOffline, offline -> {
+            if (offline != null && offline) {
+                return "Modo sin conexión - Mostrando progreso local";
+            }
+            Boolean showEst = _showEstimated.getValue();
+            if (showEst != null && showEst) {
+                return "Datos estimados - Toca para sincronizar";
+            }
+            return null;
+        });
+        
+        needsSync = Transformations.map(_lastSyncTime, lastSync -> {
+            if (lastSync == null) return true;
+            long timeDiff = new Date().getTime() - lastSync.getTime();
+            return timeDiff > 300000; // 5 minutos
+        });
+        
+        progressSummary = Transformations.map(progresoGeneral, progreso -> {
+            if (progreso == null) return "Sin datos de progreso";
+            
+            int visitasActuales = progreso.getVisitasActuales();
+            int visitasObjetivo = progreso.getVisitasObjetivo();
+            int porcentaje = progreso.getPorcentajeProgreso();
+            
+            return String.format("%d de %d visitas (%d%%)", 
+                visitasActuales, visitasObjetivo, porcentaje);
+        });
+        
+        canRefresh = Transformations.map(_isRefreshing, refreshing -> {
+            Boolean loading = isLoading.getValue();
+            return (refreshing == null || !refreshing) && 
+                   (loading == null || !loading);
         });
     }
     
+    // ==================== OBSERVABLES PARA LA UI ====================
+    
+    /**
+     * Progreso general del cliente
+     */
+    public LiveData<ProgresoGeneral> getProgresoGeneral() {
+        return progresoGeneral;
+    }
+    
+    /**
+     * Beneficios disponibles para canjear
+     */
+    public LiveData<List<BeneficioEntity>> getBeneficiosDisponibles() {
+        return beneficiosDisponibles;
+    }
+    
+    /**
+     * Próximos beneficios a desbloquear
+     */
+    public LiveData<List<ProximoBeneficio>> getProximosBeneficios() {
+        return proximosBeneficios;
+    }
+    
+    /**
+     * Estado de sincronización
+     */
+    public LiveData<SyncStatus> getSyncStatus() {
+        return syncStatus;
+    }
+    
+    /**
+     * Estado de carga
+     */
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+    
+    /**
+     * Mensajes de error
+     */
+    public LiveData<String> getError() {
+        return error;
+    }
+    
+    /**
+     * Estado offline
+     */
+    public LiveData<Boolean> getIsOffline() {
+        return isOffline;
+    }
+    
+    /**
+     * Indica si hay datos disponibles
+     */
+    public LiveData<Boolean> getHasData() {
+        return hasData;
+    }
+    
+    /**
+     * Indica si mostrar estado vacío
+     */
+    public LiveData<Boolean> getShowEmptyState() {
+        return showEmptyState;
+    }
+    
+    /**
+     * Estado de refresco
+     */
+    public LiveData<Boolean> getIsRefreshing() {
+        return _isRefreshing;
+    }
+    
+    /**
+     * Mensaje de estado para la UI
+     */
+    public LiveData<String> getStatusMessage() {
+        return statusMessage;
+    }
+    
+    /**
+     * Indica si necesita sincronización
+     */
+    public LiveData<Boolean> getNeedsSync() {
+        return needsSync;
+    }
+    
+    /**
+     * Resumen del progreso
+     */
+    public LiveData<String> getProgressSummary() {
+        return progressSummary;
+    }
+    
+    /**
+     * Indica si se puede refrescar
+     */
+    public LiveData<Boolean> getCanRefresh() {
+        return canRefresh;
+    }
+    
+    /**
+     * Tiempo de última sincronización
+     */
+    public LiveData<Date> getLastSyncTime() {
+        return _lastSyncTime;
+    }
+    
+    /**
+     * Indica si se muestran datos estimados
+     */
+    public LiveData<Boolean> getShowEstimated() {
+        return _showEstimated;
+    }
+    
+    // ==================== ACCIONES DE LA UI ====================
+    
+    /**
+     * Carga los datos de progreso
+     */
+    public void loadProgresoData(String clienteId) {
+        if (clienteId != null && !clienteId.isEmpty()) {
+            _clienteId.setValue(clienteId);
+            _isRefreshing.setValue(false);
+            _showEstimated.setValue(false);
+            
+            // Verificar si necesita sincronización
+            Boolean needsSyncValue = needsSync.getValue();
+            if (needsSyncValue != null && needsSyncValue) {
+                _showEstimated.setValue(true);
+            }
+        }
+    }
+    
+    /**
+     * Refresca los datos desde el servidor
+     */
     public void refreshProgresoData() {
-        loadProgresoData();
-    }
-    
-    private void loadLocalData() {
-        try {
-            // Obtener total de visitas locales
-            // TODO: Implementar método para obtener conteo total de visitas
-            totalVisitasLocal = 0; // Placeholder hasta implementar método correcto
+        String currentClienteId = _clienteId.getValue();
+        if (currentClienteId != null && !currentClienteId.isEmpty()) {
+            _isRefreshing.setValue(true);
+            _showEstimated.setValue(false);
             
-            // Calcular progreso con datos locales
-            calculateProgreso(totalVisitasLocal, true);
-            
-            // Marcar como datos estimados si no hay sincronización reciente
-            if (ultimaSincronizacion == null || 
-                (new Date().getTime() - ultimaSincronizacion.getTime()) > 300000) { // 5 minutos
-                syncStatusLiveData.postValue(
-                    new SyncStatus(SyncEstado.ESTIMADO, "Datos locales (estimado)")
-                );
-            }
-            
-        } catch (Exception e) {
-            errorLiveData.postValue("Error al cargar datos locales: " + e.getMessage());
-        }
-    }
-    
-    private void syncWithServer() {
-        try {
-            // Simular sincronización con servidor
-            // En implementación real, aquí se haría la llamada a la API
-            
-            // Por ahora, usar datos locales como "remotos"
-            totalVisitasRemoto = totalVisitasLocal;
-            ultimaSincronizacion = new Date();
-            
-            // Recalcular con datos "sincronizados"
-            calculateProgreso(totalVisitasRemoto, false);
-            
-            syncStatusLiveData.postValue(
-                new SyncStatus(SyncEstado.SINCRONIZADO, "Datos actualizados")
-            );
-            
-        } catch (Exception e) {
-            // Si falla la sincronización, mantener datos locales
-            syncStatusLiveData.postValue(
-                new SyncStatus(SyncEstado.ESTIMADO, "Sin conexión - datos estimados")
-            );
-        }
-    }
-    
-    private void calculateProgreso(int totalVisitas, boolean isLocal) {
-        try {
-            // Obtener beneficios vigentes
-            // TODO: Convertir BeneficioEntity a Beneficio model
-            // List<BeneficioEntity> beneficiosVigentes = beneficioDao.getBeneficiosVigentesSync(System.currentTimeMillis());
-            // Por ahora usar lista vacía
-            List<BeneficioEntity> beneficiosVigentes = new ArrayList<>();
-            
-            if (beneficiosVigentes.isEmpty()) {
-                hasDataLiveData.postValue(false);
-                return;
-            }
-            
-            hasDataLiveData.postValue(true);
-            
-            // Calcular beneficios disponibles
-            List<BeneficioEntity> disponibles = calculateBeneficiosDisponibles(totalVisitas, beneficiosVigentes);
-            beneficiosDisponiblesLiveData.postValue(disponibles);
-            
-            // Calcular próximos beneficios
-            List<ProximoBeneficio> proximos = calculateProximosBeneficios(totalVisitas, beneficiosVigentes);
-            proximosBeneficiosLiveData.postValue(proximos);
-            
-            // Calcular progreso general
-            ProgresoGeneral progreso = calculateProgresoGeneral(totalVisitas, beneficiosVigentes, proximos);
-            progresoGeneralLiveData.postValue(progreso);
-            
-        } catch (Exception e) {
-            errorLiveData.postValue("Error al calcular progreso: " + e.getMessage());
-        }
-    }
-    
-    private List<BeneficioEntity> calculateBeneficiosDisponibles(int totalVisitas, List<BeneficioEntity> beneficios) {
-        List<BeneficioEntity> disponibles = new ArrayList<>();
-        
-        for (BeneficioEntity beneficio : beneficios) {
-            if (isBeneficioDisponible(totalVisitas, beneficio)) {
-                disponibles.add(beneficio);
-            }
-        }
-        
-        return disponibles;
-    }
-    
-    private List<ProximoBeneficio> calculateProximosBeneficios(int totalVisitas, List<BeneficioEntity> beneficios) {
-        List<ProximoBeneficio> proximos = new ArrayList<>();
-        
-        for (BeneficioEntity beneficio : beneficios) {
-            ProximoBeneficio proximo = calculateProximoBeneficio(totalVisitas, beneficio);
-            if (proximo != null) {
-                proximos.add(proximo);
-            }
-        }
-        
-        // Ordenar por proximidad (menor número de visitas faltantes primero)
-        proximos.sort((a, b) -> Integer.compare(a.getVisitasFaltantes(), b.getVisitasFaltantes()));
-        
-        return proximos;
-    }
-    
-    private ProgresoGeneral calculateProgresoGeneral(int totalVisitas, List<BeneficioEntity> beneficios, List<ProximoBeneficio> proximos) {
-        ProgresoGeneral progreso = new ProgresoGeneral();
-        progreso.setTotalVisitas(totalVisitas);
-        
-        if (proximos.isEmpty()) {
-            // No hay próximos beneficios
-            progreso.setProgresoHaciaProximo(-1);
-            progreso.setVisitasActuales(totalVisitas);
-            progreso.setVisitasParaProximo(0);
-        } else {
-            // Tomar el próximo beneficio más cercano
-            ProximoBeneficio proximoMasCercano = proximos.get(0);
-            
-            int visitasRequeridas = proximoMasCercano.getVisitasRequeridas();
-            int visitasFaltantes = proximoMasCercano.getVisitasFaltantes();
-            int visitasActuales = visitasRequeridas - visitasFaltantes;
-            
-            progreso.setVisitasActuales(visitasActuales);
-            progreso.setVisitasParaProximo(visitasRequeridas);
-            progreso.setProgresoHaciaProximo((double) visitasActuales / visitasRequeridas);
-        }
-        
-        return progreso;
-    }
-    
-    private boolean isBeneficioDisponible(int totalVisitas, BeneficioEntity beneficio) {
-        try {
-            JsonObject reglas = gson.fromJson(beneficio.getRegla(), JsonObject.class);
-            
-            if (reglas.has("cadaNVisitas")) {
-                int visitasRequeridas = reglas.get("cadaNVisitas").getAsInt();
-                return totalVisitas >= visitasRequeridas && (totalVisitas % visitasRequeridas == 0);
-            }
-            
-            if (reglas.has("montoMinimo")) {
-                // Para monto mínimo, necesitaríamos datos de montos de compra
-                // Por simplicidad, asumimos que está disponible si tiene suficientes visitas
-                return totalVisitas >= 1;
-            }
-            
-            if (reglas.has("fechaEspecial")) {
-                // Verificar si hoy es la fecha especial
-                // Por simplicidad, retornamos false
-                return false;
-            }
-            
-            return false;
-            
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    private ProximoBeneficio calculateProximoBeneficio(int totalVisitas, BeneficioEntity beneficio) {
-        try {
-            JsonObject reglas = gson.fromJson(beneficio.getRegla(), JsonObject.class);
-            
-            if (reglas.has("cadaNVisitas")) {
-                int visitasRequeridas = reglas.get("cadaNVisitas").getAsInt();
-                
-                // Si ya está disponible, no es un "próximo" beneficio
-                if (isBeneficioDisponible(totalVisitas, beneficio)) {
-                    return null;
+            repository.refreshProgreso(currentClienteId, new BaseRepository.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    _isRefreshing.postValue(false);
+                    _lastSyncTime.postValue(new Date());
                 }
                 
-                // Calcular cuántas visitas faltan para el próximo múltiplo
-                int proximoMultiplo = ((totalVisitas / visitasRequeridas) + 1) * visitasRequeridas;
-                int visitasFaltantes = proximoMultiplo - totalVisitas;
+                @Override
+                public void onError(String error) {
+                    _isRefreshing.postValue(false);
+                    _showEstimated.postValue(true);
+                    // El error se maneja automáticamente por el repositorio
+                }
+            });
+        }
+    }
+    
+    /**
+     * Fuerza la sincronización completa
+     */
+    public void forceSync() {
+        String currentClienteId = _clienteId.getValue();
+        if (currentClienteId != null && !currentClienteId.isEmpty()) {
+            _isRefreshing.setValue(true);
+            _showEstimated.setValue(false);
+            
+            repository.forceSyncProgreso(currentClienteId, new BaseRepository.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    _isRefreshing.postValue(false);
+                    _lastSyncTime.postValue(new Date());
+                }
                 
-                return new ProximoBeneficio(
-                    beneficio,
-                    visitasRequeridas,
-                    visitasFaltantes,
-                    (double) totalVisitas / visitasRequeridas
-                );
-            }
-            
-            if (reglas.has("montoMinimo")) {
-                // Para monto mínimo, asumir que falta 1 visita
-                return new ProximoBeneficio(
-                    beneficio,
-                    1,
-                    1,
-                    0.0
-                );
-            }
-            
-            return null;
-            
-        } catch (Exception e) {
-            return null;
+                @Override
+                public void onError(String error) {
+                    _isRefreshing.postValue(false);
+                    _showEstimated.postValue(true);
+                    // El error se maneja automáticamente por el repositorio
+                }
+            });
         }
     }
     
-    // Clases de datos
-    public static class ProgresoGeneral {
-        private int totalVisitas;
-        private int visitasActuales;
-        private int visitasParaProximo;
-        private double progresoHaciaProximo;
-        
-        // Getters y setters
-        public int getTotalVisitas() { return totalVisitas; }
-        public void setTotalVisitas(int totalVisitas) { this.totalVisitas = totalVisitas; }
-        
-        public int getVisitasActuales() { return visitasActuales; }
-        public void setVisitasActuales(int visitasActuales) { this.visitasActuales = visitasActuales; }
-        
-        public int getVisitasParaProximo() { return visitasParaProximo; }
-        public void setVisitasParaProximo(int visitasParaProximo) { this.visitasParaProximo = visitasParaProximo; }
-        
-        public double getProgresoHaciaProximo() { return progresoHaciaProximo; }
-        public void setProgresoHaciaProximo(double progresoHaciaProximo) { this.progresoHaciaProximo = progresoHaciaProximo; }
+    /**
+     * Limpia errores
+     */
+    public void clearError() {
+        repository.clearError();
     }
     
-    public static class ProximoBeneficio {
-        private final BeneficioEntity beneficio;
-        private final int visitasRequeridas;
-        private final int visitasFaltantes;
-        private final double progreso;
-        
-        public ProximoBeneficio(BeneficioEntity beneficio, int visitasRequeridas, int visitasFaltantes, double progreso) {
-            this.beneficio = beneficio;
-            this.visitasRequeridas = visitasRequeridas;
-            this.visitasFaltantes = visitasFaltantes;
-            this.progreso = progreso;
-        }
-        
-        // Getters
-        public BeneficioEntity getBeneficio() { return beneficio; }
-        public int getVisitasRequeridas() { return visitasRequeridas; }
-        public int getVisitasFaltantes() { return visitasFaltantes; }
-        public double getProgreso() { return progreso; }
+    /**
+     * Marca como datos estimados
+     */
+    public void markAsEstimated() {
+        _showEstimated.setValue(true);
     }
     
-    public static class SyncStatus {
-        private final SyncEstado estado;
-        private final String mensaje;
-        
-        public SyncStatus(SyncEstado estado, String mensaje) {
-            this.estado = estado;
-            this.mensaje = mensaje;
-        }
-        
-        public SyncEstado getEstado() { return estado; }
-        public String getMensaje() { return mensaje; }
+    /**
+     * Limpia el estado estimado
+     */
+    public void clearEstimatedState() {
+        _showEstimated.setValue(false);
     }
     
-    public enum SyncEstado {
-        SINCRONIZADO,
-        ESTIMADO,
-        SINCRONIZANDO,
-        ERROR
+    /**
+     * Actualiza el tiempo de sincronización
+     */
+    public void updateSyncTime() {
+        _lastSyncTime.setValue(new Date());
+    }
+    
+    // ==================== MÉTODOS DE UTILIDAD ====================
+    
+    /**
+     * Verifica si hay conexión de red
+     */
+    public boolean hasNetworkConnection() {
+        Boolean offline = isOffline.getValue();
+        return offline == null || !offline;
+    }
+    
+    /**
+     * Verifica si hay datos de progreso
+     */
+    public boolean hasProgresoData() {
+        ProgresoGeneral progreso = progresoGeneral.getValue();
+        return progreso != null;
+    }
+    
+    /**
+     * Verifica si los datos están desactualizados
+     */
+    public boolean isDataStale() {
+        Date lastSync = _lastSyncTime.getValue();
+        if (lastSync == null) return true;
+        
+        long timeDiff = new Date().getTime() - lastSync.getTime();
+        return timeDiff > 300000; // 5 minutos
+    }
+    
+    /**
+     * Obtiene el porcentaje de progreso actual
+     */
+    public int getCurrentProgressPercentage() {
+        ProgresoGeneral progreso = progresoGeneral.getValue();
+        return progreso != null ? progreso.getPorcentajeProgreso() : 0;
+    }
+    
+    /**
+     * Obtiene el número de visitas actuales
+     */
+    public int getCurrentVisitCount() {
+        ProgresoGeneral progreso = progresoGeneral.getValue();
+        return progreso != null ? progreso.getVisitasActuales() : 0;
+    }
+    
+    /**
+     * Obtiene el objetivo de visitas
+     */
+    public int getVisitGoal() {
+        ProgresoGeneral progreso = progresoGeneral.getValue();
+        return progreso != null ? progreso.getVisitasObjetivo() : 0;
+    }
+    
+    /**
+     * Verifica si hay beneficios disponibles
+     */
+    public boolean hasBeneficiosDisponibles() {
+        List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+        return beneficios != null && !beneficios.isEmpty();
+    }
+    
+    /**
+     * Obtiene el número de beneficios disponibles
+     */
+    public int getBeneficiosDisponiblesCount() {
+        List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+        return beneficios != null ? beneficios.size() : 0;
+    }
+    
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        // El repositorio maneja su propia limpieza
     }
 }

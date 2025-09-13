@@ -1,5 +1,6 @@
 package com.example.cafefidelidaqrdemo.ui.admin;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.pm.PackageManager;
@@ -439,6 +440,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         //        buscarDireccion(dialogBinding));
     }
     
+    @SuppressLint("MissingPermission")
     private void obtenerUbicacionActual(DialogSucursalBinding dialogBinding) {
         if (ActivityCompat.checkSelfPermission(getContext(), 
                 android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
