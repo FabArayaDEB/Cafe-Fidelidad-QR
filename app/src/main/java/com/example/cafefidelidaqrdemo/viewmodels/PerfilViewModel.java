@@ -13,6 +13,9 @@ import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+import com.example.cafefidelidaqrdemo.utils.SessionManager;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 /**
  * ViewModel para gestión del perfil del cliente siguiendo patrones MVVM estrictos
@@ -22,6 +25,8 @@ public class PerfilViewModel extends AndroidViewModel {
     
     // ==================== DEPENDENCIAS ====================
     private final ClienteRepository repository;
+    private final SessionManager sessionManager;
+    private final FirebaseAuth firebaseAuth;
     
     // ==================== ESTADO DE LA UI ====================
     private final MutableLiveData<String> _clienteId = new MutableLiveData<>();
@@ -45,8 +50,10 @@ public class PerfilViewModel extends AndroidViewModel {
     public PerfilViewModel(@NonNull Application application) {
         super(application);
         
-        // Inicializar repositorio
+        // Inicializar dependencias
         repository = new ClienteRepository(application);
+        sessionManager = new SessionManager(application);
+        firebaseAuth = FirebaseAuth.getInstance();
         
         // Configurar observables del repositorio
         isLoading = repository.getIsLoading();
@@ -228,13 +235,33 @@ public class PerfilViewModel extends AndroidViewModel {
     }
     
     /**
-     * Carga los datos del perfil (alias para compatibilidad)
+     * Carga los datos del perfil del usuario autenticado
      */
     public void loadPerfilData() {
-        // TODO: Implementar carga de datos del perfil
-        // Por ahora, simplemente resetea el estado
-        _isEditing.setValue(false);
-        _saveSuccess.setValue(false);
+        // Obtener el ID del usuario autenticado
+        String userId = getCurrentUserId();
+        if (userId != null && !userId.isEmpty()) {
+            loadCliente(userId);
+        } else {
+            // No hay usuario autenticado, resetear estado
+            _clienteId.setValue(null);
+            _isEditing.setValue(false);
+            _saveSuccess.setValue(false);
+        }
+    }
+    
+    /**
+     * Obtiene el ID del usuario actualmente autenticado
+     */
+    private String getCurrentUserId() {
+        // Primero intentar obtener desde Firebase Auth
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null) {
+            return currentUser.getUid();
+        }
+        
+        // Si no está disponible, usar SessionManager como respaldo
+        return sessionManager.getUserId();
     }
     
     /**
@@ -331,10 +358,14 @@ public class PerfilViewModel extends AndroidViewModel {
      * Cierra sesión del usuario
      */
     public void logout() {
-        // TODO: Implementar lógica de logout
+        // Limpiar datos del ViewModel
         _clienteId.setValue(null);
         _isEditing.setValue(false);
         _saveSuccess.setValue(false);
+        
+        // Cerrar sesión en Firebase y SessionManager
+        firebaseAuth.signOut();
+        sessionManager.logout();
     }
     
     /**
