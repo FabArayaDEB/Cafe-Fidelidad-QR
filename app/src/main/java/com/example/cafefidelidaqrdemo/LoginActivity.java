@@ -14,6 +14,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.cafefidelidaqrdemo.databinding.ActivityLoginEmailBinding;
 import com.example.cafefidelidaqrdemo.viewmodels.LoginViewModel;
+import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -33,6 +34,9 @@ public class LoginActivity extends AppCompatActivity {
         binding.setViewModel(viewModel);
         binding.setLifecycleOwner(this);
         
+        // Establecer contexto en AuthRepository
+        com.example.cafefidelidaqrdemo.data.repositories.AuthRepository.getInstance().setContext(this);
+        
         // Configurar ProgressDialog
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Iniciando Sesión en Café Fidelidad");
@@ -40,6 +44,15 @@ public class LoginActivity extends AppCompatActivity {
         
         // Configurar observadores
         setupObservers();
+        
+        // DEBUG: Mostrar credenciales disponibles
+        Toast.makeText(this, "CREDENCIALES CORRECTAS:\n" +
+                "📧 Cliente: cliente@cafe.com\n" +
+                "🔑 Contraseña: cliente123\n\n" +
+                "📧 Admin: admin@cafe.com\n" +
+                "🔑 Contraseña: admin123\n\n" +
+                "⚠️ IMPORTANTE: Escribir exactamente como se muestra", 
+                Toast.LENGTH_LONG).show();
 
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,6 +60,11 @@ public class LoginActivity extends AppCompatActivity {
                 // Obtener datos de los campos
                 String email = binding.lbEmail.getText().toString().trim();
                 String password = binding.lbPass.getText().toString().trim();
+                
+                // DEBUG: Probar credenciales directamente
+                AuthRepository authRepo = AuthRepository.getInstance();
+                boolean testResult = authRepo.testCredentials(email, password);
+                android.util.Log.d("LoginActivity", "Direct test result: " + testResult);
                 
                 // Actualizar ViewModel
                 viewModel.setEmail(email);
@@ -71,7 +89,7 @@ public class LoginActivity extends AppCompatActivity {
      */
     private void setupObservers() {
         // Observar estado de carga
-        viewModel.getIsLoadingLiveData().observe(this, isLoading -> {
+        viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
                 progressDialog.show();
             } else {
@@ -80,7 +98,7 @@ public class LoginActivity extends AppCompatActivity {
         });
         
         // Observar errores
-        viewModel.getErrorLiveData().observe(this, error -> {
+        viewModel.getError().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 // Mostrar error al usuario
                 android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_LONG).show();
@@ -89,8 +107,10 @@ public class LoginActivity extends AppCompatActivity {
         });
         
         // Observar éxito en login
-        viewModel.getLoginSuccessLiveData().observe(this, success -> {
+        viewModel.getLoginSuccess().observe(this, success -> {
+            android.util.Log.d("LoginActivity", "LoginSuccess observed: " + success);
             if (success != null && success) {
+                android.util.Log.d("LoginActivity", "Login successful, redirecting to MainActivity");
                 // Redirigir a MainActivity
                 Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
@@ -100,7 +120,7 @@ public class LoginActivity extends AppCompatActivity {
         });
         
         // Observar errores de validación de email
-        viewModel.getEmailErrorLiveData().observe(this, error -> {
+        viewModel.getEmailError().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 binding.lbEmail.setError(error);
             } else {
@@ -109,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
         });
         
         // Observar errores de validación de contraseña
-        viewModel.getPasswordErrorLiveData().observe(this, error -> {
+        viewModel.getPasswordError().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 binding.lbPass.setError(error);
             } else {

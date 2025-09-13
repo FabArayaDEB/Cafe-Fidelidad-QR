@@ -117,62 +117,17 @@ public class FragmentTableroCliente extends Fragment {
     }
     
     private void initializeViews(View view) {
-        // Vistas principales
+        // Solo inicializar vistas que existen en el layout actual
+        // El layout actual es básico, por lo que comentamos las inicializaciones
+        // hasta que se implemente un layout completo
+        
+        // Vistas principales - comentadas porque no existen en el layout actual
         // swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_tablero);
         // scrollViewContent = view.findViewById(R.id.scroll_view_content);
         // layoutOffline = view.findViewById(R.id.layout_offline);
         // layoutNoData = view.findViewById(R.id.layout_no_data);
         // progressBarLoading = view.findViewById(R.id.progress_bar_loading);
         // textDataSource = view.findViewById(R.id.text_data_source);
-        
-        // Tarjeta de bienvenida
-        // cardBienvenida = view.findViewById(R.id.card_bienvenida);
-        // textNombreCliente = view.findViewById(R.id.text_nombre_cliente);
-        // textMensajeMotivacional = view.findViewById(R.id.text_mensaje_motivacional);
-        // textUltimaVisita = view.findViewById(R.id.text_ultima_visita);
-        // textRachaVisitas = view.findViewById(R.id.text_racha_visitas);
-        
-        // Tarjeta de visitas
-        // cardVisitas = view.findViewById(R.id.card_visitas);
-        // textTotalVisitas = view.findViewById(R.id.text_total_visitas);
-        // textVisitasMes = view.findViewById(R.id.text_visitas_mes);
-        // textVisitasSemana = view.findViewById(R.id.text_visitas_semana);
-        // textSucursalFavorita = view.findViewById(R.id.text_sucursal_favorita);
-        // progressMetaVisitas = view.findViewById(R.id.progress_meta_visitas);
-        // textProgresoMeta = view.findViewById(R.id.text_progreso_meta);
-        
-        // Tarjeta de puntos
-        // cardPuntos = view.findViewById(R.id.card_puntos);
-        // textPuntosDisponibles = view.findViewById(R.id.text_puntos_disponibles);
-        // textPuntosTotales = view.findViewById(R.id.text_puntos_totales);
-        // textPuntosCanjeados = view.findViewById(R.id.text_puntos_canjeados);
-        // textNivelFidelidad = view.findViewById(R.id.text_nivel_fidelidad);
-        // progressNivel = view.findViewById(R.id.progress_nivel);
-        // textProgresoNivel = view.findViewById(R.id.text_progreso_nivel);
-        // textPuntosSiguienteNivel = view.findViewById(R.id.text_puntos_siguiente_nivel);
-        
-        // Tarjeta de beneficios
-        // cardBeneficios = view.findViewById(R.id.card_beneficios);
-        // textBeneficiosDisponibles = view.findViewById(R.id.text_beneficios_disponibles);
-        // textBeneficiosCanjeables = view.findViewById(R.id.text_beneficios_canjeables);
-        // textBeneficioRecomendado = view.findViewById(R.id.text_beneficio_recomendado);
-        // textPuntosRecomendado = view.findViewById(R.id.text_puntos_recomendado);
-        // btnVerBeneficios = view.findViewById(R.id.btn_ver_beneficios);
-        // btnCanjearRecomendado = view.findViewById(R.id.btn_canjear_recomendado);
-        
-        // Tarjeta de canjes
-        // cardCanjes = view.findViewById(R.id.card_canjes);
-        // textTotalCanjes = view.findViewById(R.id.text_total_canjes);
-        // textCanjesMes = view.findViewById(R.id.text_canjes_mes);
-        // textValorTotalCanjes = view.findViewById(R.id.text_valor_total_canjes);
-        // textUltimoCanje = view.findViewById(R.id.text_ultimo_canje);
-        // recyclerViewCanjesRecientes = view.findViewById(R.id.recycler_view_canjes_recientes);
-        
-        // Tarjeta de recomendaciones
-        // cardRecomendaciones = view.findViewById(R.id.card_recomendaciones);
-        // textSucursalRecomendada = view.findViewById(R.id.text_sucursal_recomendada);
-        // btnVerSucursales = view.findViewById(R.id.btn_ver_sucursales);
-        // btnVerHistorial = view.findViewById(R.id.btn_ver_historial);
         
         // Acciones rápidas
         // layoutAccionesRapidas = view.findViewById(R.id.layout_acciones_rapidas);
@@ -192,34 +147,39 @@ public class FragmentTableroCliente extends Fragment {
     }
     
     private void setupListeners() {
+        // Listeners comentados porque las vistas no están inicializadas
+        // debido a que el layout actual es básico
+        
         // Swipe to refresh
-        swipeRefreshLayout.setOnRefreshListener(this::refreshTablero);
+        // if (swipeRefreshLayout != null) {
+        //     swipeRefreshLayout.setOnRefreshListener(this::refreshTablero);
+        // }
         
         // Clicks en tarjetas para navegar a detalles
-        cardVisitas.setOnClickListener(v -> navigateToVisitas());
-        cardPuntos.setOnClickListener(v -> navigateToPuntos());
-        cardBeneficios.setOnClickListener(v -> navigateToBeneficios());
-        cardCanjes.setOnClickListener(v -> navigateToCanjes());
+        // if (cardVisitas != null) cardVisitas.setOnClickListener(v -> navigateToVisitas());
+        // if (cardPuntos != null) cardPuntos.setOnClickListener(v -> navigateToPuntos());
+        // if (cardBeneficios != null) cardBeneficios.setOnClickListener(v -> navigateToBeneficios());
+        // if (cardCanjes != null) cardCanjes.setOnClickListener(v -> navigateToCanjes());
         
         // Botones de beneficios
-        btnVerBeneficios.setOnClickListener(v -> navigateToBeneficios());
-        btnCanjearRecomendado.setOnClickListener(v -> canjearBeneficioRecomendado());
+        // if (btnVerBeneficios != null) btnVerBeneficios.setOnClickListener(v -> navigateToBeneficios());
+        // if (btnCanjearRecomendado != null) btnCanjearRecomendado.setOnClickListener(v -> canjearBeneficioRecomendado());
         
         // Botones de recomendaciones
-        btnVerSucursales.setOnClickListener(v -> navigateToSucursales());
-        btnVerHistorial.setOnClickListener(v -> navigateToHistorial());
+        // if (btnVerSucursales != null) btnVerSucursales.setOnClickListener(v -> navigateToSucursales());
+        // if (btnVerHistorial != null) btnVerHistorial.setOnClickListener(v -> navigateToHistorial());
         
-        // Acciones rápidas
-        btnEscanearQR.setOnClickListener(v -> abrirEscanerQR());
-        btnVerMapa.setOnClickListener(v -> abrirMapa());
-        btnContacto.setOnClickListener(v -> abrirContacto());
+        // Acciones rápidas - comentadas porque no están inicializadas
+        // if (btnEscanearQR != null) btnEscanearQR.setOnClickListener(v -> abrirEscanerQR());
+        // if (btnVerMapa != null) btnVerMapa.setOnClickListener(v -> abrirMapa());
+        // if (btnContacto != null) btnContacto.setOnClickListener(v -> abrirContacto());
     }
     
     private void setupObservers() {
         // Estados de carga
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            swipeRefreshLayout.setRefreshing(isLoading);
+            if (progressBarLoading != null) progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(isLoading);
         });
         
         // Mensajes de error
@@ -238,12 +198,12 @@ public class FragmentTableroCliente extends Fragment {
         
         // Estado offline
         viewModel.getIsOfflineMode().observe(getViewLifecycleOwner(), isOffline -> {
-            layoutOffline.setVisibility(isOffline ? View.VISIBLE : View.GONE);
+            if (layoutOffline != null) layoutOffline.setVisibility(isOffline ? View.VISIBLE : View.GONE);
         });
         
         // Fuente de datos
         viewModel.getDataSource().observe(getViewLifecycleOwner(), dataSource -> {
-            if (dataSource != null) {
+            if (dataSource != null && textDataSource != null) {
                 switch (dataSource) {
                     case "cache":
                         textDataSource.setText("Datos locales");
@@ -268,11 +228,11 @@ public class FragmentTableroCliente extends Fragment {
         viewModel.getTableroCliente().observe(getViewLifecycleOwner(), tablero -> {
             if (tablero != null) {
                 actualizarTablero(tablero);
-                layoutNoData.setVisibility(View.GONE);
-                scrollViewContent.setVisibility(View.VISIBLE);
+                if (layoutNoData != null) layoutNoData.setVisibility(View.GONE);
+                if (scrollViewContent != null) scrollViewContent.setVisibility(View.VISIBLE);
             } else {
-                layoutNoData.setVisibility(View.VISIBLE);
-                scrollViewContent.setVisibility(View.GONE);
+                if (layoutNoData != null) layoutNoData.setVisibility(View.VISIBLE);
+                if (scrollViewContent != null) scrollViewContent.setVisibility(View.GONE);
             }
         });
         
@@ -297,26 +257,30 @@ public class FragmentTableroCliente extends Fragment {
     
     private void actualizarTablero(TableroEntity tablero) {
         // Tarjeta de bienvenida
-        textNombreCliente.setText(tablero.getNombreCliente() != null ? tablero.getNombreCliente() : "Cliente");
-        textMensajeMotivacional.setText(tablero.getMensajeMotivacional());
+        if (textNombreCliente != null) textNombreCliente.setText(tablero.getNombreCliente() != null ? tablero.getNombreCliente() : "Cliente");
+        if (textMensajeMotivacional != null) textMensajeMotivacional.setText(tablero.getMensajeMotivacional());
         
-        if (tablero.getUltimaVisita() != null) {
-            textUltimaVisita.setText("Última visita: " + dateFormat.format(tablero.getUltimaVisita()));
-        } else {
-            textUltimaVisita.setText("Sin visitas registradas");
+        if (textUltimaVisita != null) {
+            if (tablero.getUltimaVisita() != null) {
+                textUltimaVisita.setText("Última visita: " + dateFormat.format(tablero.getUltimaVisita()));
+            } else {
+                textUltimaVisita.setText("Sin visitas registradas");
+            }
         }
         
-        if (tablero.getRachaVisitas() > 0) {
-            textRachaVisitas.setText("Racha: " + tablero.getRachaVisitas() + " días");
-            textRachaVisitas.setVisibility(View.VISIBLE);
-        } else {
-            textRachaVisitas.setVisibility(View.GONE);
+        if (textRachaVisitas != null) {
+            if (tablero.getRachaVisitas() > 0) {
+                textRachaVisitas.setText("Racha: " + tablero.getRachaVisitas() + " días");
+                textRachaVisitas.setVisibility(View.VISIBLE);
+            } else {
+                textRachaVisitas.setVisibility(View.GONE);
+            }
         }
         
         // Tarjeta de visitas
-        textTotalVisitas.setText(String.valueOf(tablero.getTotalVisitas()));
-        textVisitasMes.setText(String.valueOf(tablero.getVisitasMesActual()));
-        textVisitasSemana.setText(String.valueOf(tablero.getVisitasSemanaActual()));
+        if (textTotalVisitas != null) textTotalVisitas.setText(String.valueOf(tablero.getTotalVisitas()));
+        if (textVisitasMes != null) textVisitasMes.setText(String.valueOf(tablero.getVisitasMesActual()));
+        if (textVisitasSemana != null) textVisitasSemana.setText(String.valueOf(tablero.getVisitasSemanaActual()));
         
         if (tablero.getSucursalFavoritaNombre() != null) {
             textSucursalFavorita.setText("Favorita: " + tablero.getSucursalFavoritaNombre());

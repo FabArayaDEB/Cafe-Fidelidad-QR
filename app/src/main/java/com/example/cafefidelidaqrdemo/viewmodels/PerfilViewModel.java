@@ -10,12 +10,13 @@ import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.network.ApiService;
-import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
+import com.example.cafefidelidaqrdemo.repository.UserRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.auth.FirebaseUser;
 
 /**
  * ViewModel para gestión del perfil del cliente siguiendo patrones MVVM estrictos
@@ -24,17 +25,18 @@ import com.google.firebase.auth.FirebaseUser;
 public class PerfilViewModel extends AndroidViewModel {
     
     // ==================== DEPENDENCIAS ====================
-    private final ClienteRepository repository;
+    private final UserRepository userRepository;
     private final SessionManager sessionManager;
-    private final FirebaseAuth firebaseAuth;
+    // private final FirebaseAuth firebaseAuth;
     
     // ==================== ESTADO DE LA UI ====================
-    private final MutableLiveData<String> _clienteId = new MutableLiveData<>();
+    private final MutableLiveData<String> _userId = new MutableLiveData<>();
     private final MutableLiveData<Boolean> _isEditing = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> _isSaving = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> _saveSuccess = new MutableLiveData<>(false);
     
     // ==================== DATOS OBSERVABLES ====================
+    private final LiveData<UsuarioEntity> usuario;
     private final LiveData<ClienteEntity> cliente;
     private final LiveData<Boolean> isLoading;
     private final LiveData<String> error;
@@ -51,29 +53,32 @@ public class PerfilViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar dependencias
-        repository = new ClienteRepository(application);
+        userRepository = new UserRepository(application);
         sessionManager = new SessionManager(application);
-        firebaseAuth = FirebaseAuth.getInstance();
+        // firebaseAuth = FirebaseAuth.getInstance();
         
         // Configurar observables del repositorio
-        isLoading = repository.getIsLoading();
-        error = repository.getError();
-        isOffline = repository.getIsOffline();
+        isLoading = userRepository.getIsLoading();
+        error = userRepository.getErrorMessage();
+        isOffline = new MutableLiveData<>(false);
         
-        // Configurar LiveData reactivo para el cliente
-        cliente = Transformations.switchMap(_clienteId, clienteId -> {
-            if (clienteId != null && !clienteId.isEmpty()) {
-                return repository.getCurrentCliente(clienteId);
+        // Configurar LiveData reactivo para el usuario
+        usuario = Transformations.switchMap(_userId, userId -> {
+            if (userId != null && !userId.isEmpty()) {
+                return userRepository.getCurrentUser();
             }
             return new MutableLiveData<>(null);
         });
         
-        // Configurar datos derivados para la UI
-        hasData = Transformations.map(cliente, clienteEntity -> clienteEntity != null);
+        // Configurar LiveData para compatibilidad con ClienteEntity
+        cliente = Transformations.map(usuario, this::convertUsuarioToCliente);
         
-        showEmptyState = Transformations.map(cliente, clienteEntity -> {
+        // Configurar datos derivados para la UI
+        hasData = Transformations.map(usuario, usuarioEntity -> usuarioEntity != null);
+        
+        showEmptyState = Transformations.map(usuario, usuarioEntity -> {
             Boolean loading = isLoading.getValue();
-            return (loading == null || !loading) && clienteEntity == null;
+            return (loading == null || !loading) && usuarioEntity == null;
         });
         
         canEdit = Transformations.map(_isEditing, editing -> {
@@ -215,20 +220,27 @@ public class PerfilViewModel extends AndroidViewModel {
     }
     
     /**
-     * ID del cliente actual
+     * ID del usuario actual
+     */
+    public LiveData<String> getUserId() {
+        return _userId;
+    }
+    
+    /**
+     * ID del cliente actual (alias para compatibilidad)
      */
     public LiveData<String> getClienteId() {
-        return _clienteId;
+        return _userId;
     }
     
     // ==================== ACCIONES DE LA UI ====================
     
     /**
-     * Carga los datos del cliente
+     * Carga los datos del usuario
      */
-    public void loadCliente(String clienteId) {
-        if (clienteId != null && !clienteId.isEmpty()) {
-            _clienteId.setValue(clienteId);
+    public void loadUsuario(String userId) {
+        if (userId != null && !userId.isEmpty()) {
+            _userId.setValue(userId);
             _isEditing.setValue(false);
             _saveSuccess.setValue(false);
         }
@@ -241,10 +253,10 @@ public class PerfilViewModel extends AndroidViewModel {
         // Obtener el ID del usuario autenticado
         String userId = getCurrentUserId();
         if (userId != null && !userId.isEmpty()) {
-            loadCliente(userId);
+            loadUsuario(userId);
         } else {
             // No hay usuario autenticado, resetear estado
-            _clienteId.setValue(null);
+            _userId.setValue(null);
             _isEditing.setValue(false);
             _saveSuccess.setValue(false);
         }
@@ -255,13 +267,37 @@ public class PerfilViewModel extends AndroidViewModel {
      */
     private String getCurrentUserId() {
         // Primero intentar obtener desde Firebase Auth
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        /*
+        // FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if (currentUser != null) {
             return currentUser.getUid();
         }
+        */
         
         // Si no está disponible, usar SessionManager como respaldo
         return sessionManager.getUserId();
+    }
+    
+    /**
+     * Convierte UsuarioEntity a ClienteEntity para compatibilidad con la UI
+     */
+    private ClienteEntity convertUsuarioToCliente(UsuarioEntity usuario) {
+        if (usuario == null) {
+            return null;
+        }
+        
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId_cliente(usuario.getUid());
+        cliente.setNombre(usuario.getNames());
+        cliente.setEmail(usuario.getEmail());
+        cliente.setTelefono(usuario.getTelefono());
+        cliente.setFecha_nac(usuario.getFechaNacimiento());
+        cliente.setEstado(usuario.getEstado());
+        cliente.setCreado_en(usuario.getDate());
+        
+        // Los campos específicos de fidelidad se manejan por separado
+        
+        return cliente;
     }
     
     /**
@@ -281,15 +317,15 @@ public class PerfilViewModel extends AndroidViewModel {
     }
     
     /**
-     * Actualiza los datos del cliente
+     * Actualiza los datos del usuario
      */
-    public void updateCliente(ClienteEntity clienteEntity) {
-        if (clienteEntity == null) return;
+    public void updateUsuario(UsuarioEntity usuarioEntity) {
+        if (usuarioEntity == null) return;
         
         _isSaving.setValue(true);
-        repository.updateCliente(clienteEntity, new ClienteRepository.ClienteCallback() {
+        userRepository.updateUser(usuarioEntity, new BaseRepository.SimpleCallback() {
             @Override
-            public void onSuccess(ClienteEntity cliente) {
+            public void onSuccess() {
                 _isSaving.postValue(false);
                 _isEditing.postValue(false);
                 _saveSuccess.postValue(true);
@@ -306,30 +342,25 @@ public class PerfilViewModel extends AndroidViewModel {
     /**
      * Verifica conflictos de versión
      */
-    public void checkForConflicts(String clienteId, ConflictCallback callback) {
-        if (clienteId == null || clienteId.isEmpty()) return;
+    public void checkForConflicts(String userId, ConflictCallback callback) {
+        if (userId == null || userId.isEmpty()) {
+            if (callback != null) callback.onError("ID de usuario inválido");
+            return;
+        }
         
-        repository.checkForConflicts(clienteId, new BaseRepository.RepositoryCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean hasConflicts) {
-                if (callback != null) callback.onResult(hasConflicts);
-            }
-            
-            @Override
-            public void onError(String error) {
-                if (callback != null) callback.onError(error);
-            }
-        });
+        // Para UserRepository, no hay conflictos de versión
+        // Los datos se sincronizan automáticamente
+        if (callback != null) callback.onResult(false);
     }
     
     /**
      * Fuerza la sincronización
      */
     public void forceSync() {
-        // Recargar datos del cliente actual
-        String currentClienteId = _clienteId.getValue();
-        if (currentClienteId != null) {
-            loadCliente(currentClienteId);
+        // Recargar datos del usuario actual
+        String currentUserId = _userId.getValue();
+        if (currentUserId != null) {
+            loadUsuario(currentUserId);
         }
     }
     
@@ -337,7 +368,8 @@ public class PerfilViewModel extends AndroidViewModel {
      * Limpia errores
      */
     public void clearError() {
-        repository.clearError();
+        // UserRepository hereda clearError() de BaseRepository
+        userRepository.clearError();
     }
     
     /**
@@ -359,32 +391,24 @@ public class PerfilViewModel extends AndroidViewModel {
      */
     public void logout() {
         // Limpiar datos del ViewModel
-        _clienteId.setValue(null);
+        _userId.setValue(null);
         _isEditing.setValue(false);
         _saveSuccess.setValue(false);
         
         // Cerrar sesión en Firebase y SessionManager
-        firebaseAuth.signOut();
+        // firebaseAuth.signOut();
         sessionManager.logout();
     }
     
     /**
-     * Refresca los datos del cliente
+     * Refresca los datos del usuario
      */
-    public void refreshCliente() {
-        String currentClienteId = _clienteId.getValue();
-        if (currentClienteId != null && !currentClienteId.isEmpty()) {
-            repository.getClienteById(currentClienteId, new ClienteRepository.ClienteCallback() {
-                @Override
-                public void onSuccess(ClienteEntity cliente) {
-                    // Los datos se actualizan automáticamente a través de LiveData
-                }
-                
-                @Override
-                public void onError(String error) {
-                    // El error se maneja automáticamente por el repositorio
-                }
-            });
+    public void refreshUsuario() {
+        String currentUserId = _userId.getValue();
+        if (currentUserId != null && !currentUserId.isEmpty()) {
+            // Los datos se actualizan automáticamente a través de LiveData
+            // cuando se llama a userRepository.getCurrentUser()
+            loadUsuario(currentUserId);
         }
     }
     

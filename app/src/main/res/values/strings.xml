@@ -13,15 +13,15 @@
     <string name="typeEmail">Continuar con Email</string>
     <string name="typeGoogle">Continuar con Google</string>
 
-    <string name="txt_login">Iniciar Sesión en Café Fidelidad</string>
+    <string name="txt_login">Iniciar Sesión</string>
     <string name="lb_Email">Correo Electrónico</string>
     <string name="lb_pass">Contraseña</string>
     <string name="btn_Login">Ingresar</string>
-    <string name="btn_newA">¿No tienes una cuenta de fidelidad?</string>
+    <string name="btn_newA">¿No tienes una cuenta?</string>
     <string name="btn_Register">Crear cuenta</string>
     <string name="txt_ForgotPass">¿Olvidaste tu contraseña? <b> Recuperar</b></string>
 
-    <string name="txt_Register">Crear Cuenta de Fidelidad</string>
+    <string name="txt_Register">Crear Cuenta</string>
     <string name="lb_Name">Nombre Completo</string>
     <string name="lb_NewPass">Repetir Contraseña</string>
     <string name="btn_Registro">Crear Cuenta</string>
@@ -76,7 +76,7 @@
     <string name="txt_fecha">Fecha:</string>
     <string name="btn_iniciar_escaner">Iniciar Escáner</string>
     <string name="txt_instrucciones_qr">Apunta la cámara hacia el código QR para escanearlo</string>
-    <string name="txt_bienvenida_cafe">¡Bienvenido a nuestro programa de fidelidad!</string>
+    <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
     
     <!-- Historial -->
     <string name="historial">Historial</string>
@@ -130,11 +130,11 @@
     <string name="stock_disponible">Stock disponible: %d unidades</string>
     <string name="calorias">Calorías: %d</string>
     <string name="ingredientes">Ingredientes: %s</string>
-    <string name="puntos_requeridos">⭐ %d puntos requeridos</string>
-    <string name="vegano">🌱 Vegano</string>
-    <string name="vegetariano">🥬 Vegetariano</string>
-    <string name="sin_lactosa">🥛 Sin Lactosa</string>
-    <string name="sin_gluten">🌾 Sin Gluten</string>
+    <string name="puntos_requeridos">%d puntos requeridos</string>
+    <string name="vegano">Vegano</string>
+    <string name="vegetariano">Vegetariano</string>
+    <string name="sin_lactosa">Sin Lactosa</string>
+    <string name="sin_gluten">Sin Gluten</string>
     <string name="descripcion">Descripción</string>
     <string name="informacion_nutricional">Información Nutricional</string>
     <string name="caracteristicas">Características:</string>

@@ -14,8 +14,8 @@ import com.example.cafefidelidaqrdemo.database.dao.UsuarioDao;
 import com.example.cafefidelidaqrdemo.database.dao.TransaccionDao;
 import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,14 +31,14 @@ public class SyncWorker extends Worker {
     private CafeFidelidadDatabase database;
     private UsuarioDao usuarioDao;
     private TransaccionDao transaccionDao;
-    private DatabaseReference firebaseRef;
+    // private DatabaseReference firebaseRef;
     
     public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         this.database = CafeFidelidadDatabase.getInstance(context);
         this.usuarioDao = database.usuarioDao();
         this.transaccionDao = database.transaccionDao();
-        this.firebaseRef = FirebaseDatabase.getInstance().getReference();
+        // this.firebaseRef = FirebaseDatabase.getInstance().getReference();
     }
     
     @NonNull
@@ -79,6 +79,7 @@ public class SyncWorker extends Worker {
                 HashMap<String, Object> usuarioMap = convertUsuarioToHashMap(usuario);
                 
                 // Sincronización síncrona para WorkManager
+                /*
                 firebaseRef.child("Users").child(usuario.getUid())
                     .updateChildren(usuarioMap)
                     .addOnSuccessListener(aVoid -> {
@@ -87,6 +88,10 @@ public class SyncWorker extends Worker {
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Error al sincronizar usuario: " + usuario.getUid(), e);
                     });
+                */
+                
+                // Sincronización deshabilitada sin Firebase
+                usuarioDao.markAsSynced(usuario.getUid(), System.currentTimeMillis());
                 
                 sincronizados++;
                 
@@ -109,6 +114,7 @@ public class SyncWorker extends Worker {
             try {
                 HashMap<String, Object> transaccionMap = convertTransaccionToHashMap(transaccion);
                 
+                /*
                 firebaseRef.child("TransaccionesSeguras")
                     .child(transaccion.getUserId())
                     .child(transaccion.getHash())
@@ -118,7 +124,13 @@ public class SyncWorker extends Worker {
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Error al sincronizar transacción: " + transaccion.getId(), e);
+                */
+                
+                // Sincronización deshabilitada sin Firebase
+                transaccionDao.markAsSynced(transaccion.getId(), System.currentTimeMillis());
+                /*
                     });
+                */
                 
                 sincronizadas++;
                 

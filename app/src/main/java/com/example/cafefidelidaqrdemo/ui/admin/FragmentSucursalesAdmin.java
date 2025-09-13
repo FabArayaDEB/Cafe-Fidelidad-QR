@@ -33,14 +33,14 @@ import com.example.cafefidelidaqrdemo.databinding.DialogSucursalBinding;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.SucursalesAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.SucursalesAdminViewModel;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+// import com.google.android.gms.location.FusedLocationProviderClient;
+// import com.google.android.gms.location.LocationServices;
+// import com.google.android.gms.maps.CameraUpdateFactory;
+// import com.google.android.gms.maps.GoogleMap;
+// import com.google.android.gms.maps.OnMapReadyCallback;
+// import com.google.android.gms.maps.SupportMapFragment;
+// import com.google.android.gms.maps.model.LatLng;
+// import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,16 +53,16 @@ import java.util.Locale;
  * Fragment para administración CRUD de sucursales
  * Permite crear, editar, activar/desactivar sucursales con mapas y horarios
  */
-public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallback {
+public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCallback */ {
     
     private FragmentSucursalesAdminBinding binding;
     private SucursalesAdminViewModel viewModel;
     private SucursalesAdminAdapter adapter;
     private List<SucursalEntity> sucursalesList = new ArrayList<>();
     private boolean mostrarSoloActivas = true;
-    private GoogleMap mMap;
-    private FusedLocationProviderClient fusedLocationClient;
-    private Geocoder geocoder;
+    // private GoogleMap mMap;
+    // private FusedLocationProviderClient fusedLocationClient;
+    // private Geocoder geocoder;
     
     // Variables para el diálogo de sucursal
     private double latitudSeleccionada = 0.0;
@@ -76,8 +76,8 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
-        geocoder = new Geocoder(getContext(), Locale.getDefault());
+        // fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        // geocoder = new Geocoder(getContext(), Locale.getDefault());
     }
     
     @Override
@@ -256,7 +256,8 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         // Mapa no está disponible en este layout
     }
     
-    @Override
+    // @Override
+    /*
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
         
@@ -276,6 +277,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             // Este listener se usará en los diálogos de creación/edición
         });
     }
+    */
     
     private void actualizarListaSucursales(List<SucursalEntity> sucursales) {
         if (sucursales != null) {
@@ -284,7 +286,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             adapter.notifyDataSetChanged();
             
             // Actualizar marcadores en el mapa
-            actualizarMarcadoresMapa();
+            // actualizarMarcadoresMapa();
             
             // Mostrar/ocultar RecyclerView según contenido
             if (sucursales.isEmpty()) {
@@ -296,6 +298,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         }
     }
     
+    /*
     private void actualizarMarcadoresMapa() {
         if (mMap != null) {
             mMap.clear();
@@ -320,6 +323,7 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             }
         }
     }
+    */
     
     private void toggleFiltroActivas() {
         mostrarSoloActivas = !mostrarSoloActivas;
@@ -440,22 +444,24 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
         //        buscarDireccion(dialogBinding));
     }
     
-    @SuppressLint("MissingPermission")
+    // @SuppressLint("MissingPermission")
     private void obtenerUbicacionActual(DialogSucursalBinding dialogBinding) {
-        if (ActivityCompat.checkSelfPermission(getContext(), 
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(location -> {
-                        if (location != null) {
-                            latitudSeleccionada = location.getLatitude();
-                            longitudSeleccionada = location.getLongitude();
-                            
-                            // dialogBinding.textViewUbicacion.setText(
-                            //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
-                        }
-                    });
-        }
+        // if (ActivityCompat.checkSelfPermission(getContext(), 
+        //         android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        //     
+        //     fusedLocationClient.getLastLocation()
+        //             .addOnSuccessListener(location -> {
+        //                 if (location != null) {
+        //                     latitudSeleccionada = location.getLatitude();
+        //                     longitudSeleccionada = location.getLongitude();
+        //                     
+        //                     // dialogBinding.textViewUbicacion.setText(
+        //                     //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
+        //                 }
+        //             });
+        // }
+        
+        // Método deshabilitado - Google Location Services removido
     }
     
     private void mostrarSelectorHorario(boolean esApertura, DialogSucursalBinding dialogBinding) {
@@ -496,25 +502,28 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
             return;
         }
         
-        try {
-            List<Address> addresses = geocoder.getFromLocationName(
-                    direccion + ", Colombia", 1);
-            
-            if (!addresses.isEmpty()) {
-                Address address = addresses.get(0);
-                latitudSeleccionada = address.getLatitude();
-                longitudSeleccionada = address.getLongitude();
-                
-                // dialogBinding.textViewUbicacion.setText(
-                //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
-                
-                Toast.makeText(getContext(), "Ubicación encontrada", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), "No se encontró la dirección", Toast.LENGTH_SHORT).show();
-            }
-        } catch (IOException e) {
-            Toast.makeText(getContext(), "Error al buscar dirección", Toast.LENGTH_SHORT).show();
-        }
+        // try {
+        //     List<Address> addresses = geocoder.getFromLocationName(
+        //             direccion + ", Colombia", 1);
+        //     
+        //     if (!addresses.isEmpty()) {
+        //         Address address = addresses.get(0);
+        //         latitudSeleccionada = address.getLatitude();
+        //         longitudSeleccionada = address.getLongitude();
+        //         
+        //         // dialogBinding.textViewUbicacion.setText(
+        //         //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
+        //         
+        //         Toast.makeText(getContext(), "Ubicación encontrada", Toast.LENGTH_SHORT).show();
+        //     } else {
+        //         Toast.makeText(getContext(), "No se encontró la dirección", Toast.LENGTH_SHORT).show();
+        //     }
+        // } catch (IOException e) {
+        //     Toast.makeText(getContext(), "Error al buscar dirección", Toast.LENGTH_SHORT).show();
+        // }
+        
+        // Funcionalidad de geocoding deshabilitada
+        Toast.makeText(getContext(), "Búsqueda de direcciones temporalmente deshabilitada", Toast.LENGTH_SHORT).show();
     }
     
     private boolean validarFormularioSucursal(DialogSucursalBinding dialogBinding) {
@@ -601,13 +610,15 @@ public class FragmentSucursalesAdmin extends Fragment implements OnMapReadyCallb
     }
     
     private void mostrarSucursalEnMapa(SucursalEntity sucursal) {
-        if (mMap != null) {
-            LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(posicion, 15));
-            
-            // Cambiar a vista de mapa no implementado
-            // Los layouts no están disponibles
-        }
+        // if (mMap != null) {
+        //     LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
+        //     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(posicion, 15));
+        //     
+        //     // Cambiar a vista de mapa no implementado
+        //     // Los layouts no están disponibles
+        // }
+        
+        // Método deshabilitado - Google Maps removido
     }
     
     private void toggleEstadoSucursal(SucursalEntity sucursal) {

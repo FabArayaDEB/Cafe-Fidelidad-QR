@@ -3,80 +3,36 @@ package com.example.cafefidelidaqrdemo.viewmodels;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-
-
-import kotlinx.coroutines.flow.MutableStateFlow;
-import kotlinx.coroutines.flow.StateFlow;
-import kotlinx.coroutines.flow.StateFlowKt;
-// Removiendo importación incorrecta de asLiveData
-
 import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
 
 /**
- * ViewModel para LoginActivity
- * Maneja la lógica de autenticación de usuarios
+ * ViewModel SIMPLIFICADO para LoginActivity
  */
 public class LoginViewModel extends ViewModel {
     
     private final AuthRepository authRepository;
     
-    // StateFlow para el email
-    private final MutableStateFlow<String> _email = StateFlowKt.MutableStateFlow("");
-    public StateFlow<String> email = _email;
-    
-    // StateFlow para la contraseña
-    private final MutableStateFlow<String> _password = StateFlowKt.MutableStateFlow("");
-    public StateFlow<String> password = _password;
-    
-    // StateFlow para errores
-    private final MutableStateFlow<String> _error = StateFlowKt.MutableStateFlow(null);
-    public StateFlow<String> error = _error;
-    
-    // StateFlow para estado de carga
-    private final MutableStateFlow<Boolean> _isLoading = StateFlowKt.MutableStateFlow(false);
-    public StateFlow<Boolean> isLoading = _isLoading;
-    
-    // StateFlow para éxito en login
-    private final MutableStateFlow<Boolean> _loginSuccess = StateFlowKt.MutableStateFlow(false);
-    public StateFlow<Boolean> loginSuccess = _loginSuccess;
-    
-    // StateFlow para validación de email
-    private final MutableStateFlow<String> _emailError = StateFlowKt.MutableStateFlow(null);
-    public StateFlow<String> emailError = _emailError;
-    
-    // StateFlow para validación de contraseña
-    private final MutableStateFlow<String> _passwordError = StateFlowKt.MutableStateFlow(null);
-    public StateFlow<String> passwordError = _passwordError;
-    
-    // MutableLiveData para compatibilidad con Data Binding
-    private final MutableLiveData<String> emailLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> passwordLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> loginSuccessLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> emailErrorLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> passwordErrorLiveData = new MutableLiveData<>();
-    
-    // Los StateFlow se pueden usar directamente en Data Binding
+    // Solo LiveData - más simple
+    private final MutableLiveData<String> email = new MutableLiveData<>("");
+    private final MutableLiveData<String> password = new MutableLiveData<>("");
+    private final MutableLiveData<String> error = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> loginSuccess = new MutableLiveData<>(false);
+    private final MutableLiveData<String> emailError = new MutableLiveData<>();
+    private final MutableLiveData<String> passwordError = new MutableLiveData<>();
     
     public LoginViewModel() {
         this.authRepository = AuthRepository.getInstance();
-        // Los valores por defecto ya están inicializados en los StateFlow
+        android.util.Log.d("LoginViewModel", "LoginViewModel inicializado");
     }
     
-    /**
-     * Actualiza el email
-     */
     public void setEmail(String email) {
-        _email.setValue(email);
+        this.email.setValue(email);
         validateEmail(email);
     }
     
-    /**
-     * Actualiza la contraseña
-     */
     public void setPassword(String password) {
-        _password.setValue(password);
+        this.password.setValue(password);
         validatePassword(password);
     }
     
@@ -85,24 +41,19 @@ public class LoginViewModel extends ViewModel {
      */
     private void validateEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
-            _emailError.setValue("El email es requerido");
+            emailError.setValue("El email es requerido");
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailError.setValue("Formato de email inválido");
+            emailError.setValue("Formato de email inválido");
         } else {
-            _emailError.setValue(null);
+            emailError.setValue(null);
         }
     }
     
-    /**
-     * Valida la contraseña
-     */
     private void validatePassword(String password) {
         if (password == null || password.trim().isEmpty()) {
-            _passwordError.setValue("La contraseña es requerida");
-        } else if (password.length() < 6) {
-            _passwordError.setValue("La contraseña debe tener al menos 6 caracteres");
+            passwordError.setValue("La contraseña es requerida");
         } else {
-            _passwordError.setValue(null);
+            passwordError.setValue(null);
         }
     }
     
@@ -110,127 +61,88 @@ public class LoginViewModel extends ViewModel {
      * Realiza el login del usuario
      */
     public void login() {
-        String emailValue = _email.getValue();
-        String passwordValue = _password.getValue();
+        String emailValue = email.getValue();
+        String passwordValue = password.getValue();
         
-        // Validar campos
+        android.util.Log.d("LoginViewModel", "Login simple - Email: " + emailValue);
+        
+        // Validación básica
         if (emailValue == null || emailValue.trim().isEmpty()) {
-            _emailError.setValue("El email es requerido");
+            emailError.setValue("El email es requerido");
             return;
         }
         
         if (passwordValue == null || passwordValue.trim().isEmpty()) {
-            _passwordError.setValue("La contraseña es requerida");
+            passwordError.setValue("La contraseña es requerida");
             return;
         }
         
-        // Validar formato de email
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
-            _emailError.setValue("Formato de email inválido");
-            return;
-        }
+        // Limpiar errores
+        error.setValue(null);
+        emailError.setValue(null);
+        passwordError.setValue(null);
         
-        // Iniciar proceso de login
-        _isLoading.setValue(true);
-        _error.setValue(null);
+        // Iniciar login
+        isLoading.setValue(true);
         
         authRepository.login(emailValue, passwordValue, new AuthRepository.AuthCallback<String>() {
             @Override
             public void onSuccess(String userId) {
-                _isLoading.setValue(false);
-                _loginSuccess.setValue(true);
+                android.util.Log.d("LoginViewModel", "Login exitoso - userId: " + userId);
+                isLoading.setValue(false);
+                loginSuccess.setValue(true);
             }
             
             @Override
-            public void onError(String error) {
-                _isLoading.setValue(false);
-                _error.setValue(error);
+            public void onError(String errorMsg) {
+                android.util.Log.d("LoginViewModel", "Login error: " + errorMsg);
+                isLoading.setValue(false);
+                error.setValue(errorMsg);
             }
         });
     }
     
-    /**
-     * Limpia el mensaje de error
-     */
     public void clearError() {
-        _error.setValue(null);
+        error.setValue(null);
     }
     
-    /**
-     * Limpia el estado de éxito de login
-     */
     public void clearLoginSuccess() {
-        _loginSuccess.setValue(false);
+        loginSuccess.setValue(false);
     }
     
-    /**
-     * Verifica si los datos son válidos para login
-     */
     public boolean isValidForLogin() {
-        String emailValue = _email.getValue();
-        String passwordValue = _password.getValue();
+        String emailValue = email.getValue();
+        String passwordValue = password.getValue();
         
         return emailValue != null && !emailValue.trim().isEmpty() &&
-               android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() &&
-               passwordValue != null && !passwordValue.trim().isEmpty() &&
-               passwordValue.length() >= 6;
+               passwordValue != null && !passwordValue.trim().isEmpty();
     }
-    
-    // Getters para StateFlow
-    public StateFlow<String> getEmail() {
+    // Getters para LiveData
+    public LiveData<String> getEmail() {
         return email;
     }
     
-    public StateFlow<String> getPassword() {
+    public LiveData<String> getPassword() {
         return password;
     }
     
-    public StateFlow<String> getError() {
+    public LiveData<String> getError() {
         return error;
     }
     
-    public StateFlow<Boolean> getIsLoading() {
+    public LiveData<Boolean> getIsLoading() {
         return isLoading;
     }
     
-    public StateFlow<Boolean> getLoginSuccess() {
+    public LiveData<Boolean> getLoginSuccess() {
         return loginSuccess;
     }
     
-    public StateFlow<String> getEmailError() {
+    public LiveData<String> getEmailError() {
         return emailError;
     }
     
-    public StateFlow<String> getPasswordError() {
+    public LiveData<String> getPasswordError() {
         return passwordError;
-    }
-    
-    // Getters para Data Binding (LiveData)
-    public LiveData<String> getEmailLiveData() {
-        return emailLiveData;
-    }
-    
-    public LiveData<String> getPasswordLiveData() {
-        return passwordLiveData;
-    }
-    
-    public LiveData<String> getErrorLiveData() {
-        return errorLiveData;
-    }
-    
-    public LiveData<Boolean> getIsLoadingLiveData() {
-        return isLoadingLiveData;
-    }
-    
-    public LiveData<Boolean> getLoginSuccessLiveData() {
-        return loginSuccessLiveData;
-    }
-    
-    public LiveData<String> getEmailErrorLiveData() {
-        return emailErrorLiveData;
-    }
-    
-    public LiveData<String> getPasswordErrorLiveData() {
-        return passwordErrorLiveData;
     }
 }

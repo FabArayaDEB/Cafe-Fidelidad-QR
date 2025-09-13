@@ -42,7 +42,7 @@ public class AdminRepository {
         this.productoDao = database.productoDao();
         this.beneficioDao = database.beneficioDao();
         this.sucursalDao = database.sucursalDao();
-        this.apiService = RetrofitClient.getInstance().getApiService();
+        this.apiService = RetrofitClient.getInstance(context).getApiService();
         this.executor = Executors.newFixedThreadPool(4);
     }
     
@@ -795,7 +795,14 @@ public class AdminRepository {
     
     public LiveData<Integer> getCountProductosActivos() {
         MutableLiveData<Integer> result = new MutableLiveData<>();
-        result.setValue(productoDao.getCountDisponibles());
+        executor.execute(() -> {
+            try {
+                int count = productoDao.getCountProductosActivosSync();
+                result.postValue(count);
+            } catch (Exception e) {
+                result.postValue(0);
+            }
+        });
         return result;
     }
     
@@ -809,7 +816,14 @@ public class AdminRepository {
     
     public LiveData<Integer> getCountProductosInactivos() {
         MutableLiveData<Integer> result = new MutableLiveData<>();
-        result.setValue(productoDao.getCountDisponibles());
+        executor.execute(() -> {
+            try {
+                int count = productoDao.getCountProductosInactivosSync();
+                result.postValue(count);
+            } catch (Exception e) {
+                result.postValue(0);
+            }
+        });
         return result;
     }
     

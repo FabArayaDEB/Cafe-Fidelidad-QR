@@ -92,7 +92,7 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         if (beneficio == null) return;
         
         textNombre.setText(beneficio.getNombre());
-        // Note: BeneficioEntity doesn't have getDescripcion method
+
         textDescripcion.setText("Descripción no disponible");
         
         if (beneficio.getTipo() != null) {
@@ -127,8 +127,8 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         }
         
         textEstado.setText(beneficio.isActivo() ? "Activo" : "Inactivo");
-        // Note: BeneficioEntity doesn't have getVeces_canjeado method
-        textVecesCanjeado.setText("0"); // Default value since method doesn't exist
+
+        textVecesCanjeado.setText("0");
     }
     
     @Override

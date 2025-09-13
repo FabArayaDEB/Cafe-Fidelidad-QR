@@ -15,6 +15,7 @@ import com.example.cafefidelidaqrdemo.databinding.ActivityBeneficiosBinding;
 import com.example.cafefidelidaqrdemo.managers.BeneficioManager;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
+import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -37,12 +38,36 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Verificar autenticación antes de mostrar contenido
+        if (!isUserAuthenticated()) {
+            redirectToLogin();
+            return;
+        }
+        
         binding = ActivityBeneficiosBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         
         initializeComponents();
         setupUI();
         loadBeneficios();
+    }
+    
+    /**
+     * Verifica si el usuario está autenticado
+     */
+    private boolean isUserAuthenticated() {
+        AuthRepository authRepository = AuthRepository.getInstance();
+        return authRepository.isUserLoggedIn();
+    }
+    
+    /**
+     * Redirige al usuario a la pantalla de login
+     */
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, OpcionesLoginActivity.class);
+        startActivity(intent);
+        finish();
     }
     
     private void initializeComponents() {

@@ -25,8 +25,8 @@ import com.example.cafefidelidaqrdemo.adapters.SucursalesAdapter;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
 import com.example.cafefidelidaqrdemo.viewmodels.SucursalesViewModel;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
+// import com.google.android.gms.location.FusedLocationProviderClient;
+// import com.google.android.gms.location.LocationServices;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -43,7 +43,7 @@ public class FragmentSucursales extends Fragment {
     
     private SucursalesViewModel viewModel;
     private SucursalesAdapter adapter;
-    private FusedLocationProviderClient fusedLocationClient;
+    // private FusedLocationProviderClient fusedLocationClient;
     
     // UI Components
     private RecyclerView recyclerViewSucursales;
@@ -78,7 +78,7 @@ public class FragmentSucursales extends Fragment {
         
         initializeViews(view);
         setupViewModel();
-        setupLocationClient();
+        // setupLocationClient();
         setupRecyclerView();
         setupSwipeRefresh();
         setupSearchView();
@@ -110,9 +110,11 @@ public class FragmentSucursales extends Fragment {
         viewModel = new ViewModelProvider(this).get(SucursalesViewModel.class);
     }
     
+    /*
     private void setupLocationClient() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
+    */
     
     private void setupRecyclerView() {
         adapter = new SucursalesAdapter();
@@ -346,6 +348,7 @@ public class FragmentSucursales extends Fragment {
         }
     }
     
+    /*
     @SuppressLint("MissingPermission")
     private void getCurrentLocation() {
         if (!locationPermissionGranted) return;
@@ -368,6 +371,14 @@ public class FragmentSucursales extends Fragment {
                     "Error al obtener ubicación: " + e.getMessage(), 
                     Toast.LENGTH_SHORT).show();
             });
+    }
+    */
+    
+    private void getCurrentLocation() {
+        // Ubicación deshabilitada sin Google Play Services
+        Toast.makeText(getContext(), 
+            "Funcionalidad de ubicación no disponible", 
+            Toast.LENGTH_SHORT).show();
     }
     
     private void applyFiltersAndSort() {

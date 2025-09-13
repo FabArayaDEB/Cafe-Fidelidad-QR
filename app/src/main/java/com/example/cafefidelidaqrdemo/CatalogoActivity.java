@@ -18,11 +18,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.adapters.ProductoAdapter;
 import com.example.cafefidelidaqrdemo.models.Producto;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +39,7 @@ public class CatalogoActivity extends AppCompatActivity {
     private EditText etBuscar;
     private Spinner spinnerCategoria, spinnerOrden;
     private ProgressDialog progressDialog;
-    private DatabaseReference databaseReference;
+    // private DatabaseReference databaseReference;
 
     // Categorías disponibles
     private String[] categorias = {"Todas", "Café", "Bebidas Frías", "Postres", "Snacks", "Desayunos", "Almuerzos"};
@@ -47,6 +48,13 @@ public class CatalogoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Verificar autenticación antes de mostrar contenido
+        if (!isUserAuthenticated()) {
+            redirectToLogin();
+            return;
+        }
+        
         setContentView(R.layout.activity_catalogo);
 
         initViews();
@@ -54,6 +62,23 @@ public class CatalogoActivity extends AppCompatActivity {
         setupSpinners();
         setupSearchFilter();
         loadProductos();
+    }
+    
+    /**
+     * Verifica si el usuario está autenticado
+     */
+    private boolean isUserAuthenticated() {
+        AuthRepository authRepository = AuthRepository.getInstance();
+        return authRepository.isUserLoggedIn();
+    }
+    
+    /**
+     * Redirige al usuario a la pantalla de login
+     */
+    private void redirectToLogin() {
+        android.content.Intent intent = new android.content.Intent(this, OpcionesLoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void initViews() {
@@ -78,7 +103,7 @@ public class CatalogoActivity extends AppCompatActivity {
         progressDialog.setCancelable(false);
 
         // Referencia a Firebase
-        databaseReference = FirebaseDatabase.getInstance().getReference("Productos");
+        // databaseReference = FirebaseDatabase.getInstance().getReference("Productos");
     }
 
     private void setupRecyclerView() {
@@ -142,30 +167,33 @@ public class CatalogoActivity extends AppCompatActivity {
     private void loadProductos() {
         progressDialog.show();
         
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                listaProductos.clear();
-                
-                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    Producto producto = dataSnapshot.getValue(Producto.class);
-                    if (producto != null && producto.isActivo()) {
-                        listaProductos.add(producto);
-                    }
-                }
-                
-                filtrarProductos();
-                progressDialog.dismiss();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                progressDialog.dismiss();
-                Toast.makeText(CatalogoActivity.this, 
-                        "Error al cargar productos: " + error.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+        // databaseReference.addValueEventListener(new ValueEventListener() {
+        //     @Override
+        //     public void onDataChange(@NonNull DataSnapshot snapshot) {
+        //         productos.clear();
+        //         for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+        //             Producto producto = dataSnapshot.getValue(Producto.class);
+        //             if (producto != null && producto.isActivo()) {
+        //                 listaProductos.add(producto);
+        //             }
+        //         }
+        //         
+        //         filtrarProductos();
+        //         progressDialog.dismiss();
+        //     }
+        //
+        //     @Override
+        //     public void onCancelled(@NonNull DatabaseError error) {
+        //         progressDialog.dismiss();
+        //         Toast.makeText(CatalogoActivity.this, 
+        //                 "Error al cargar productos: " + error.getMessage(), 
+        //                 Toast.LENGTH_SHORT).show();
+        //     }
+        // });
+        
+        // Método deshabilitado - Firebase removido
+        progressDialog.dismiss();
+        Toast.makeText(this, "Carga de productos deshabilitada", Toast.LENGTH_SHORT).show();
     }
 
     private void filtrarProductos() {

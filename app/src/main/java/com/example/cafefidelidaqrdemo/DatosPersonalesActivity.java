@@ -14,20 +14,20 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.auth.FirebaseUser;
+// import com.google.firebase.database.DataSnapshot;
+// import com.google.firebase.database.DatabaseError;
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
+// import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DatosPersonalesActivity extends AppCompatActivity {
-    private FirebaseAuth firebaseAuth;
-    private DatabaseReference databaseReference;
+    // private FirebaseAuth firebaseAuth;
+    // private DatabaseReference databaseReference;
     private TextView tvNombre, tvTelefono, tvFechaNacimiento;
     private LinearLayout layoutNombre, layoutTelefono, layoutFechaNacimiento;
     private Toolbar toolbar;
@@ -42,8 +42,8 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         initViews();
 
         // Inicializar Firebase
-        firebaseAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+        // firebaseAuth = FirebaseAuth.getInstance();
+        // databaseReference = FirebaseDatabase.getInstance().getReference("Users");
 
         // Configurar toolbar
         setSupportActionBar(toolbar);
@@ -63,31 +63,36 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
-            
-            databaseReference.child(userId).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        String nombre = snapshot.child("nombre").getValue(String.class);
-                        String telefono = snapshot.child("telefono").getValue(String.class);
-                        String fechaNacimiento = snapshot.child("fechaNacimiento").getValue(String.class);
-                        
-                        // Mostrar datos en las vistas
-                        tvNombre.setText(nombre != null ? nombre : "Dato no proporcionado");
-                        tvTelefono.setText(telefono != null ? telefono : "Dato no proporcionado");
-                        tvFechaNacimiento.setText(fechaNacimiento != null ? fechaNacimiento : "13/11/2002");
-                    }
-                }
-                
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(DatosPersonalesActivity.this, "Error al cargar datos", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+        // FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        // if (currentUser != null) {
+        //     String userId = currentUser.getUid();
+        //     
+        //     databaseReference.child(userId).addValueEventListener(new ValueEventListener() {
+        //         @Override
+        //         public void onDataChange(@NonNull DataSnapshot snapshot) {
+        //             if (snapshot.exists()) {
+        //                 String nombre = snapshot.child("nombre").getValue(String.class);
+        //                 String telefono = snapshot.child("telefono").getValue(String.class);
+        //                 String fechaNacimiento = snapshot.child("fechaNacimiento").getValue(String.class);
+        //                 
+        //                 // Mostrar datos en las vistas
+        //                 tvNombre.setText(nombre != null ? nombre : "Dato no proporcionado");
+        //                 tvTelefono.setText(telefono != null ? telefono : "Dato no proporcionado");
+        //                 tvFechaNacimiento.setText(fechaNacimiento != null ? fechaNacimiento : "13/11/2002");
+        //             }
+        //         }
+        //         
+        //         @Override
+        //         public void onCancelled(@NonNull DatabaseError error) {
+        //             Toast.makeText(DatosPersonalesActivity.this, "Error al cargar datos", Toast.LENGTH_SHORT).show();
+        //         }
+        //     });
+        // }
+        
+        // Método deshabilitado - Firebase removido
+        tvNombre.setText("Usuario Local");
+        tvTelefono.setText("No disponible");
+        tvFechaNacimiento.setText("No disponible");
     }
 
     private void initViews() {
@@ -147,23 +152,27 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
     
     private void updateUserData(String field, String value) {
-         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-         if (currentUser != null) {
-             String userId = currentUser.getUid();
-             
-             Map<String, Object> updates = new HashMap<>();
-             updates.put(field, value);
-             
-             databaseReference.child(userId).updateChildren(updates)
-                     .addOnSuccessListener(aVoid -> {
-                         // Actualizar la UI inmediatamente
-                         updateUIField(field, value);
-                         Toast.makeText(this, "Datos actualizados correctamente", Toast.LENGTH_SHORT).show();
-                     })
-                     .addOnFailureListener(e -> {
-                         Toast.makeText(this, "Error al actualizar datos", Toast.LENGTH_SHORT).show();
-                     });
-         }
+         // FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+         // if (currentUser != null) {
+         //     String userId = currentUser.getUid();
+         //     
+         //     Map<String, Object> updates = new HashMap<>();
+         //     updates.put(field, value);
+         //     
+         //     databaseReference.child(userId).updateChildren(updates)
+         //             .addOnSuccessListener(aVoid -> {
+         //                 // Actualizar la UI inmediatamente
+         //                 updateUIField(field, value);
+         //                 Toast.makeText(this, "Datos actualizados correctamente", Toast.LENGTH_SHORT).show();
+         //             })
+         //             .addOnFailureListener(e -> {
+         //                 Toast.makeText(this, "Error al actualizar datos", Toast.LENGTH_SHORT).show();
+         //             });
+         // }
+         
+         // Método deshabilitado - Firebase removido
+         updateUIField(field, value);
+         Toast.makeText(this, "Actualización local realizada", Toast.LENGTH_SHORT).show();
      }
      
      private void updateUIField(String field, String value) {

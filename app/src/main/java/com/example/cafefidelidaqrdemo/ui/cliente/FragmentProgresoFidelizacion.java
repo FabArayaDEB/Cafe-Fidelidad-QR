@@ -264,15 +264,15 @@ public class FragmentProgresoFidelizacion extends Fragment {
         //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_success, null));
         //         break;
         //     case ESTIMADO:
-        //         textEstadoSync.setText("⚠ Datos estimados (sin conexión)");
+        //         textEstadoSync.setText("Datos estimados (sin conexión)");
         //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_warning, null));
         //         break;
         //     case SINCRONIZANDO:
-        //         textEstadoSync.setText("🔄 Sincronizando...");
+        //         textEstadoSync.setText("Sincronizando...");
         //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_info, null));
         //         break;
         //     case ERROR:
-        //         textEstadoSync.setText("❌ Error de sincronización");
+        //         textEstadoSync.setText("Error de sincronización");
         //         textEstadoSync.setTextColor(getResources().getColor(R.color.color_error, null));
         //         break;
         // }

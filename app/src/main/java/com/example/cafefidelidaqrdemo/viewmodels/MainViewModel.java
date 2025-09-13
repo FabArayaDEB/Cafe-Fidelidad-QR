@@ -27,7 +27,7 @@ public class MainViewModel extends AndroidViewModel {
     private final MutableStateFlow<String> _toolbarTitle = StateFlowKt.MutableStateFlow("Mi Perfil");
     public StateFlow<String> toolbarTitle = _toolbarTitle;
     
-    // StateFlow para el estado de autenticación
+    // StateFlow para el estado de autenticación - inicia como false para forzar verificación
     private final MutableStateFlow<Boolean> _isAuthenticated = StateFlowKt.MutableStateFlow(false);
     public StateFlow<Boolean> isAuthenticated = _isAuthenticated;
     
@@ -55,6 +55,12 @@ public class MainViewModel extends AndroidViewModel {
         this.authRepository = AuthRepository.getInstance();
         this.clienteRepository = new ClienteRepository(application);
         
+        // Establecer contexto en AuthRepository para SessionManager
+        authRepository.setContext(application);
+        
+        // Sincronizar StateFlow con LiveData
+        setupLiveDataSync();
+        
         // El título por defecto ya está inicializado en el StateFlow
         
         // Verificar estado de autenticación
@@ -62,45 +68,126 @@ public class MainViewModel extends AndroidViewModel {
     }
     
     /**
+     * Configura la sincronización entre StateFlow y LiveData
+     */
+    private void setupLiveDataSync() {
+        // Por simplicidad, vamos a actualizar ambos StateFlow y LiveData en los métodos
+        // Inicializar LiveData con valores por defecto
+        isAuthenticatedLiveData.setValue(false);
+        errorLiveData.setValue(null);
+        isLoadingLiveData.setValue(false);
+        toolbarTitleLiveData.setValue("Mi Perfil");
+        currentClienteLiveData.setValue(null);
+    }
+    
+    /**
      * Verifica el estado de autenticación del usuario
      */
     public void checkAuthenticationStatus() {
         _isLoading.setValue(true);
+        isLoadingLiveData.setValue(true);
         
-        authRepository.getCurrentUser(new AuthRepository.AuthCallback<String>() {
-            @Override
-            public void onSuccess(String userId) {
-                if (userId != null) {
-                    _isAuthenticated.setValue(true);
-                    loadCurrentCliente(userId);
-                } else {
-                    _isAuthenticated.setValue(false);
-                    _isLoading.setValue(false);
-                }
-            }
-            
-            @Override
-            public void onError(String error) {
-                _isAuthenticated.setValue(false);
-                _error.setValue(error);
+        // Verificar si hay usuario logueado (incluye sesión persistente)
+        boolean isLoggedIn = authRepository.isUserLoggedIn();
+        android.util.Log.d("MainViewModel", "checkAuthenticationStatus - isUserLoggedIn: " + isLoggedIn);
+        
+        if (isLoggedIn) {
+            // Usuario autenticado, verificar si es usuario local o Firebase
+            AuthRepository.LocalUser localUser = authRepository.getCurrentUser();
+            if (localUser != null) {
+                // Usuario local autenticado
+                android.util.Log.d("MainViewModel", "Usuario local autenticado: " + localUser.name + " (" + localUser.role + ")");
+                _isAuthenticated.setValue(true);
+                isAuthenticatedLiveData.setValue(true);
                 _isLoading.setValue(false);
+                isLoadingLiveData.setValue(false);
+                
+                // Para usuarios locales, no necesitamos cargar ClienteEntity
+                // El sistema funciona solo con la información del LocalUser
+            } else {
+                // Intentar obtener usuario con callback (para compatibilidad con Firebase)
+                authRepository.getCurrentUser(new AuthRepository.AuthCallback<String>() {
+                    @Override
+                    public void onSuccess(String userId) {
+                        if (userId != null) {
+                            android.util.Log.d("MainViewModel", "Usuario autenticado con ID: " + userId);
+                            _isAuthenticated.setValue(true);
+                            isAuthenticatedLiveData.setValue(true);
+                            
+                            // Solo cargar ClienteEntity si no es usuario local
+                            if (!userId.startsWith("user_") && !userId.startsWith("admin_")) {
+                                loadCurrentCliente(userId);
+                            } else {
+                                _isLoading.setValue(false);
+                                isLoadingLiveData.setValue(false);
+                            }
+                        } else {
+                            android.util.Log.d("MainViewModel", "Usuario ID es null");
+                            _isAuthenticated.setValue(false);
+                            isAuthenticatedLiveData.setValue(false);
+                            _isLoading.setValue(false);
+                            isLoadingLiveData.setValue(false);
+                        }
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        android.util.Log.d("MainViewModel", "Error al obtener usuario: " + error);
+                        _isAuthenticated.setValue(false);
+                        isAuthenticatedLiveData.setValue(false);
+                        _error.setValue(error);
+                        errorLiveData.setValue(error);
+                        _isLoading.setValue(false);
+                        isLoadingLiveData.setValue(false);
+                    }
+                });
             }
-        });
+        } else {
+            // No hay usuario autenticado
+            android.util.Log.d("MainViewModel", "No hay usuario autenticado");
+            _isAuthenticated.setValue(false);
+            isAuthenticatedLiveData.setValue(false);
+            _isLoading.setValue(false);
+            isLoadingLiveData.setValue(false);
+        }
     }
     
     /**
      * Carga los datos del cliente actual
      */
     private void loadCurrentCliente(String userId) {
-        clienteRepository.getClienteById(userId, new com.example.cafefidelidaqrdemo.repository.ClienteRepository.ClienteCallback() {
+        android.util.Log.d("MainViewModel", "Intentando cargar cliente con ID: " + userId);
+        clienteRepository.getClienteById(userId, new ClienteRepository.ClienteCallback() {
+            @Override
             public void onSuccess(ClienteEntity cliente) {
-                _currentCliente.setValue(cliente);
-                _isLoading.setValue(false);
+                // Ejecutar en el hilo principal
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    if (cliente != null) {
+                        android.util.Log.d("MainViewModel", "Cliente encontrado: " + cliente.getNombre());
+                        _currentCliente.setValue(cliente);
+                        currentClienteLiveData.setValue(cliente);
+                    } else {
+                        android.util.Log.d("MainViewModel", "Cliente no encontrado para ID: " + userId);
+                        _currentCliente.setValue(null);
+                        currentClienteLiveData.setValue(null);
+                    }
+                    _isLoading.setValue(false);
+                    isLoadingLiveData.setValue(false);
+                });
             }
             
+            @Override
             public void onError(String error) {
-                _error.setValue(error);
-                _isLoading.setValue(false);
+                // Ejecutar en el hilo principal
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    android.util.Log.e("MainViewModel", "Error al cargar cliente: " + error);
+                    // No establecer error si simplemente no se encuentra el cliente
+                    // Solo log del error, no crash de la aplicación
+                    _currentCliente.setValue(null);
+                    currentClienteLiveData.setValue(null);
+                    _isLoading.setValue(false);
+                    isLoadingLiveData.setValue(false);
+                });
             }
         });
     }

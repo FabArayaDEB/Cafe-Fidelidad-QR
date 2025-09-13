@@ -8,13 +8,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cafefidelidaqrdemo.databinding.ActivityRecuperarPassBinding;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+// import com.google.firebase.auth.FirebaseAuth;
+// import com.google.firebase.auth.FirebaseUser;
 
 public class RecuperarPassActivity extends AppCompatActivity {
 
     private ActivityRecuperarPassBinding binding;
-    private FirebaseAuth firebaseAuth;
+    // private FirebaseAuth firebaseAuth;
     private ProgressDialog progressDialog;
 
     @Override
@@ -22,7 +22,7 @@ public class RecuperarPassActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         binding = ActivityRecuperarPassBinding.inflate(getLayoutInflater());
-        firebaseAuth = FirebaseAuth.getInstance();
+        // firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Recuperando acceso a tu cuenta");
         progressDialog.setCanceledOnTouchOutside(false);
@@ -64,7 +64,8 @@ public class RecuperarPassActivity extends AppCompatActivity {
         progressDialog.setMessage("Enviando instrucciones de recuperación a " + Email);
         progressDialog.show();
 
-        firebaseAuth.sendPasswordResetEmail(Email)
+        /*
+        // firebaseAuth.sendPasswordResetEmail(Email)
                 .addOnSuccessListener(aVoid -> {
                     progressDialog.dismiss();
                     Toast.makeText(RecuperarPassActivity.this, 
@@ -77,9 +78,18 @@ public class RecuperarPassActivity extends AppCompatActivity {
                     if (e.getMessage().contains("no user record")) {
                         errorMessage = "No existe una cuenta registrada con este correo";
                     }
-                    Toast.makeText(RecuperarPassActivity.this, 
+                    Toast.makeText(RecuperarPassActivity.this,
+        */
+        
+        // Recuperación de contraseña deshabilitada sin Firebase
+        progressDialog.dismiss();
+        Toast.makeText(RecuperarPassActivity.this, 
+            "Funcionalidad de recuperación temporalmente deshabilitada", 
+            Toast.LENGTH_SHORT).show();
+        /*
                         errorMessage + ": " + e.getMessage(), 
                         Toast.LENGTH_LONG).show();
                 });
+        */
     }
 }
