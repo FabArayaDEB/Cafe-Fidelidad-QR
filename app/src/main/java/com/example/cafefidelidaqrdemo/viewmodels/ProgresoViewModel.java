@@ -7,15 +7,14 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.example.cafefidelidaqrdemo.models.ProgresoGeneral;
 import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
 import com.example.cafefidelidaqrdemo.models.SyncStatus;
-import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.ProgresoRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
+import com.example.cafefidelidaqrdemo.network.ApiService;
 
 import java.util.Date;
 import java.util.List;

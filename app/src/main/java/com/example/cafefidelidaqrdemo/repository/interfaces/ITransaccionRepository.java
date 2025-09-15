@@ -1,7 +1,7 @@
 package com.example.cafefidelidaqrdemo.repository.interfaces;
 
 import androidx.lifecycle.LiveData;
-import com.example.cafefidelidaqrdemo.data.model.Transaccion;
+import com.example.cafefidelidaqrdemo.Transaccion;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface ITransaccionRepository {
     
-    // ==================== OBSERVABLES ====================
+    // OBSERVABLES
     
     /**
      * LiveData con todas las transacciones del usuario
@@ -41,7 +41,7 @@ public interface ITransaccionRepository {
      */
     LiveData<Boolean> getIsOffline();
     
-    // ==================== OPERACIONES CRUD ====================
+    // OPERACIONES CRUD
     
     /**
      * Crea una nueva transacción
@@ -63,7 +63,7 @@ public interface ITransaccionRepository {
      */
     void deleteTransaccion(Long idTransaccion, BaseRepository.SimpleCallback callback);
     
-    // ==================== CONSULTAS ESPECÍFICAS ====================
+    // CONSULTAS ESPECÍFICAS
     
     /**
      * Obtiene transacciones por rango de fechas

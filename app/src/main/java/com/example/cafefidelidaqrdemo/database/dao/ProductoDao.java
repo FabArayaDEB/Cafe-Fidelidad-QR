@@ -55,19 +55,21 @@ public interface ProductoDao {
     @Query("SELECT * FROM productos WHERE estado = 'disponible'")
     LiveData<List<ProductoEntity>> getProductosDisponibles();
     
-    @Query("SELECT * FROM productos WHERE categoria = :categoria")
+    // Consultas por categoría optimizadas
+    @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC LIMIT 100")
     List<ProductoEntity> getByCategoria(String categoria);
-    
-    @Query("SELECT * FROM productos WHERE categoria = :categoria")
+
+    @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC")
     LiveData<List<ProductoEntity>> getProductosByCategoria(String categoria);
-    
-    @Query("SELECT * FROM productos WHERE categoria = :categoria AND estado = 'disponible'")
+
+    @Query("SELECT * FROM productos WHERE categoria = :categoria AND estado = 'disponible' ORDER BY nombre ASC LIMIT 100")
     List<ProductoEntity> getDisponiblesByCategoria(String categoria);
     
-    @Query("SELECT * FROM productos WHERE needsSync = 1")
+    // Consultas de sincronización optimizadas
+    @Query("SELECT * FROM productos WHERE needsSync = 1 ORDER BY nombre ASC LIMIT 100")
     List<ProductoEntity> getPendientesSync();
-    
-    @Query("SELECT * FROM productos WHERE synced = 0")
+
+    @Query("SELECT * FROM productos WHERE synced = 0 ORDER BY nombre ASC LIMIT 100")
     List<ProductoEntity> getNoSincronizados();
     
     @Query("SELECT COUNT(*) FROM productos")
@@ -91,10 +93,11 @@ public interface ProductoDao {
     @Query("UPDATE productos SET synced = 1, needsSync = 0, lastSync = :timestamp WHERE id_producto = :id")
     void markAsSynced(String id, long timestamp);
     
-    @Query("SELECT * FROM productos WHERE nombre LIKE '%' || :query || '%' OR categoria LIKE '%' || :query || '%'")
+    // Consultas de búsqueda optimizadas con LIMIT
+    @Query("SELECT * FROM productos WHERE (nombre LIKE '%' || :query || '%' OR categoria LIKE '%' || :query || '%') AND estado = 'disponible' ORDER BY nombre ASC LIMIT 50")
     List<ProductoEntity> search(String query);
-    
-    @Query("SELECT * FROM productos WHERE nombre LIKE :query OR categoria LIKE :query")
+
+    @Query("SELECT * FROM productos WHERE (nombre LIKE :query OR categoria LIKE :query) AND estado = 'disponible' ORDER BY nombre ASC LIMIT 50")
     List<ProductoEntity> searchProductos(String query);
     
     @Query("SELECT * FROM productos WHERE precio BETWEEN :precioMin AND :precioMax")

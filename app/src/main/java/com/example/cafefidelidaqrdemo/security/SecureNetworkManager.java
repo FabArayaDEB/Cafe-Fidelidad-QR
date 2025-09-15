@@ -142,7 +142,20 @@ public class SecureNetworkManager {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) 
                     throws CertificateException {
-                // Implementar validaciones adicionales si es necesario
+                // Validar cadena de certificados del cliente
+                if (chain == null || chain.length == 0) {
+                    throw new CertificateException("Cadena de certificados del cliente vacía");
+                }
+                
+                // Validar que los certificados del cliente no hayan expirado
+                for (X509Certificate cert : chain) {
+                    cert.checkValidity();
+                }
+                
+                // Validar el tipo de autenticación
+                if (authType == null || authType.trim().isEmpty()) {
+                    throw new CertificateException("Tipo de autenticación no válido");
+                }
             }
             
             @Override

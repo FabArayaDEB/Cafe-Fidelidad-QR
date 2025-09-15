@@ -48,7 +48,7 @@ public class CanjeRepository {
         executor = Executors.newFixedThreadPool(4);
     }
     
-    // ========== MÉTODOS PÚBLICOS PARA OTP ==========
+    //MÉTODOS PÚBLICOS PARA OTP
     
     /**
      * Solicita un nuevo OTP para canjear un beneficio
@@ -188,7 +188,7 @@ public class CanjeRepository {
         });
     }
     
-    // ========== MÉTODOS DE CONSULTA ==========
+    // MÉTODOS DE CONSULTA
     
     public LiveData<List<CanjeEntity>> getCanjesByCliente(String idCliente) {
         return canjeDao.getCanjesByCliente(idCliente);
@@ -206,7 +206,7 @@ public class CanjeRepository {
         return canjeDao.getById(idCanje);
     }
     
-    // ========== GETTERS PARA LIVEDATA ==========
+    //GETTERS PARA LIVEDATA
     
     public LiveData<String> getOtpActual() {
         return otpActual;
@@ -247,7 +247,7 @@ public class CanjeRepository {
         mensajeError.postValue(null);
     }
     
-    // ========== MÉTODOS PRIVADOS ==========
+    //MÉTODOS PRIVADOS
     
     /**
      * Genera un código OTP de 6 dígitos

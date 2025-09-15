@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface IUserRepository {
     
-    // ==================== OPERACIONES CRUD ====================
+    //OPERACIONES CRUD
     
     /**
      * Obtiene todos los usuarios
@@ -45,7 +45,7 @@ public interface IUserRepository {
      */
     void deleteUser(String userId, BaseRepository.SimpleCallback callback);
     
-    // ==================== OPERACIONES DE AUTENTICACIÓN ====================
+    // OPERACIONES DE AUTENTICACIÓN
     
     /**
      * Autentica un usuario con email y contraseña
@@ -67,7 +67,7 @@ public interface IUserRepository {
      */
     LiveData<Boolean> isUserAuthenticated();
     
-    // ==================== OPERACIONES DE PERFIL ====================
+    //OPERACIONES DE PERFIL
     
     /**
      * Actualiza el perfil del usuario
@@ -84,7 +84,7 @@ public interface IUserRepository {
      */
     void changePassword(String userId, String currentPassword, String newPassword, BaseRepository.SimpleCallback callback);
     
-    // ==================== SINCRONIZACIÓN ====================
+    // SINCRONIZACIÓN
     
     /**
      * Sincroniza datos del usuario con el servidor
@@ -96,7 +96,7 @@ public interface IUserRepository {
      */
     LiveData<Boolean> getSyncStatus();
     
-    // ==================== LIMPIEZA ====================
+    // LIMPIEZA
     
     /**
      * Limpia el cache local del usuario

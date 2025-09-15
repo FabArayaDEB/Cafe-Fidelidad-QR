@@ -1,14 +1,39 @@
 # Arquitectura MVVM con StateFlow y LiveData
 
-## Resumen
-
-Este proyecto implementa una arquitectura MVVM (Model-View-ViewModel) moderna utilizando StateFlow para manejo de estado reactivo y LiveData para compatibilidad con Data Binding.
-
 ## Componentes Principales
 
-### 1. ViewModels
+### 1. Database Layer (Room)
 
-Los ViewModels han sido refactorizados para seguir patrones MVVM estrictos:
+Arquitectura de base de datos consolidada utilizando Room:
+
+#### Entidades Principales
+- **Ubicación**: `database/entities/`
+- **Entidades**:
+  - `ClienteEntity.java` - Gestión de clientes y puntos de fidelidad
+  - `ProductoEntity.java` - Catálogo de productos
+  - `VisitaEntity.java` - Registro de visitas de clientes
+  - `TransaccionEntity.java` - Historial de transacciones
+  - `CanjeEntity.java` - Registro de canjes de beneficios
+  - `BeneficioEntity.java` - Catálogo de beneficios disponibles
+  - `SucursalEntity.java` - Información de sucursales
+  - `TableroEntity.java` - Dashboard de métricas
+  - `ReporteEntity.java` - Datos para reportes administrativos
+
+#### DAOs (Data Access Objects)
+- **Ubicación**: `database/dao/`
+- **Funcionalidades**:
+  - Operaciones CRUD optimizadas
+  - Consultas específicas por entidad
+  - Soporte para sincronización offline
+  - Métodos de agregación para reportes
+
+#### Modelos de Vista
+- **Ubicación**: `database/models/`
+- **Propósito**: Clases auxiliares para consultas complejas y métricas
+
+### 2. ViewModels
+
+Los ViewModels implementan patrones MVVM estrictos:
 
 #### MainViewModel
 - **Ubicación**: `viewmodels/MainViewModel.java`
@@ -32,19 +57,27 @@ Los ViewModels han sido refactorizados para seguir patrones MVVM estrictos:
   - LiveData para UI binding
   - Validación reactiva de campos
 
-### 2. Repository Layer
+### 3. Repository Layer
 
 Capa de repositorios implementada para abstracción de datos:
 
 #### AuthRepository
-- **Ubicación**: `data/repositories/AuthRepository.java`
+- **Ubicación**: `repository/AuthRepository.java`
 - **Funciones**: Login, logout, gestión de sesiones
 
 #### ClienteRepository
-- **Ubicación**: `data/repositories/ClienteRepository.java`
+- **Ubicación**: `repository/ClienteRepository.java`
 - **Funciones**: CRUD de clientes, sincronización
 
-### 3. Use Cases
+#### ProductoRepository
+- **Ubicación**: `repository/ProductoRepository.java`
+- **Funciones**: Gestión de productos, conversión entre entidades y modelos
+
+#### AdminRepository
+- **Ubicación**: `repository/AdminRepository.java`
+- **Funciones**: Operaciones administrativas, reportes, métricas
+
+### 4. Use Cases
 
 Lógica de negocio encapsulada en Use Cases:
 
@@ -98,26 +131,6 @@ Implementación de Data Binding para vinculación reactiva:
 - Observación lifecycle-aware
 - Integración con componentes de Android
 
-### Ejemplo de Implementación
-
-```java
-// StateFlow para estado interno
-private final MutableStateFlow<String> _toolbarTitle = new MutableStateFlow<>("Mi Perfil");
-public StateFlow<String> toolbarTitle = _toolbarTitle.asStateFlow();
-
-// LiveData para Data Binding
-public LiveData<String> toolbarTitleLiveData = toolbarTitle.asLiveData();
-
-// Getters para ambos tipos
-public StateFlow<String> getToolbarTitle() {
-    return toolbarTitle;
-}
-
-public LiveData<String> getToolbarTitleLiveData() {
-    return toolbarTitleLiveData;
-}
-```
-
 ## Beneficios de la Arquitectura
 
 ### 1. Separación de Responsabilidades
@@ -126,61 +139,52 @@ public LiveData<String> getToolbarTitleLiveData() {
 - **Repository**: Abstracción de fuentes de datos
 - **Use Cases**: Lógica de negocio específica
 
-### 2. Testabilidad
-- ViewModels independientes de Android Framework
-- Use Cases con lógica de negocio aislada
-- Repositorios con interfaces mockeable
+## Estado del Proyecto
 
-### 3. Mantenibilidad
-- Código organizado por responsabilidades
-- Fácil localización de bugs
-- Escalabilidad mejorada
+### ✅ Completado
+- Migración de ViewModels principales (MainViewModel, MisBeneficiosViewModel, PerfilViewModel)
+- Migración completa de ViewModels de administrador
+- Implementación de BaseRepository para funcionalidad común
+- Configuración de interfaces de repositorio (IUserRepository, IProductoRepository)
+- Estructura de directorios consolidada
+- Optimización completa de consultas de base de datos en DAOs
+- Consolidación de repositorios duplicados
+- Eliminación de DAOs duplicados
+- Implementación de índices de base de datos para optimización
 
-### 4. Reactividad
-- Estado reactivo con StateFlow
-- Actualizaciones automáticas de UI
-- Manejo eficiente de cambios de estado
+### 🔄 En Progreso
+- Actualización de documentación técnica
+- Implementación de casos de uso (UseCases)
+
+### 📋 Pendiente
+- Tests unitarios
+- Documentación completa de la API
+- Implementación de cache avanzado
+- Métricas de rendimiento
 
 ## Estructura de Directorios
 
 ```
-app/src/main/java/com/example/cafefidelidaqrdemo/
+app/src/main/java/com/example/cafefidelidaqr/
+├── database/
+│   ├── entities/         # Entidades Room consolidadas
+│   ├── dao/             # Data Access Objects
+│   ├── models/          # Modelos auxiliares para consultas
+│   └── AppDatabase.java # Configuración de base de datos
+├── repository/          # Capa de repositorios
 ├── data/
-│   ├── entities/          # Entidades de datos
-│   └── repositories/      # Capa de repositorios
+│   ├── dao/            # DAOs adicionales
+│   ├── converter/      # Convertidores de datos
+│   └── repositories/   # Repositorios específicos
 ├── domain/
-│   └── usecases/         # Casos de uso
-├── viewmodels/           # ViewModels
+│   └── usecases/       # Casos de uso
+├── viewmodels/         # ViewModels
 ├── ui/
-│   ├── admin/           # UI de administrador
-│   └── cliente/         # UI de cliente
-└── utils/               # Utilidades
+│   ├── admin/         # UI de administrador
+│   └── cliente/       # UI de cliente
+├── network/
+│   └── models/        # Modelos de red
+├── adapters/          # Adaptadores RecyclerView
+└── utils/             # Utilidades
 ```
 
-## Próximos Pasos
-
-1. **Migración Completa**: Migrar todos los ViewModels restantes a StateFlow
-2. **Testing**: Implementar tests unitarios para ViewModels y Use Cases
-3. **Optimización**: Optimizar rendimiento con StateFlow avanzado
-4. **Documentación**: Expandir documentación de componentes específicos
-
-## Convenciones de Código
-
-### Naming
-- StateFlow privados: `_nombreVariable`
-- StateFlow públicos: `nombreVariable`
-- LiveData para binding: `nombreVariableLiveData`
-- Getters StateFlow: `getNombreVariable()`
-- Getters LiveData: `getNombreVariableLiveData()`
-
-### Estructura de ViewModel
-1. Dependencias
-2. StateFlow privados
-3. StateFlow públicos
-4. LiveData para binding
-5. Constructor
-6. Métodos públicos
-7. Métodos privados
-8. Getters
-
-Esta arquitectura proporciona una base sólida para el desarrollo escalable y mantenible de la aplicación de fidelización con códigos QR.

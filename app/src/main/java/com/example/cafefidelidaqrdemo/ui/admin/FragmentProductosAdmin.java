@@ -139,7 +139,10 @@ public class FragmentProductosAdmin extends Fragment {
     }
     
     private void setupUI() {
-        // Configurar estado inicial del filtro
+        // Configurar toolbar
+        binding.toolbar.setNavigationOnClickListener(v -> volverAlMenuPrincipal());
+        
+        // Configurar estado inicial
         actualizarTextoFiltro();
     }
     
@@ -286,13 +289,13 @@ public class FragmentProductosAdmin extends Fragment {
             dialogBinding.editNombre.setText(producto.getNombre());
             dialogBinding.editDescripcion.setText(producto.getDescripcion());
             dialogBinding.editPrecio.setText(String.valueOf(producto.getPrecio()));
-            // Campo puntos no disponible en ProductoEntity, usar valor por defecto
-            dialogBinding.editPuntos.setText("0");
+            // dialogBinding.editPuntos.setText(String.valueOf(producto.getPuntosRequeridos())); // Campo no disponible en ProductoEntity
             dialogBinding.editCategoria.setText(producto.getCategoria());
             dialogBinding.switchDisponible.setChecked(producto.isActivo());
         } else {
             // Modo creación - valores por defecto
             dialogBinding.switchDisponible.setChecked(true);
+            dialogBinding.editPuntos.setText("0");
         }
         
         // Configurar formato de precio
@@ -376,12 +379,12 @@ public class FragmentProductosAdmin extends Fragment {
         producto.setNombre(dialogBinding.editNombre.getText().toString().trim());
         producto.setDescripcion(dialogBinding.editDescripcion.getText().toString().trim());
         producto.setPrecio(Double.parseDouble(dialogBinding.editPrecio.getText().toString().trim()));
-        // Usar solo campos disponibles en ProductoEntity
+        // producto.setPuntosRequeridos(Integer.parseInt(dialogBinding.editPuntos.getText().toString().trim())); // Campo no disponible en ProductoEntity
         producto.setCategoria(dialogBinding.editCategoria.getText().toString().trim());
-        producto.setActivo(dialogBinding.switchDisponible.isChecked());
+        producto.setEstado(dialogBinding.switchDisponible.isChecked() ? "activo" : "inactivo");
         // Valores por defecto para campos no incluidos en el formulario
         producto.setStockDisponible(0); // Stock inicial
-        // producto.setCreadoPor("admin"); // TODO: database.entities.ProductoEntity no tiene este método
+        // producto.setCreadoPor("admin"); // Campo no disponible en ProductoEntity
         
         return producto;
     }
@@ -470,6 +473,13 @@ public class FragmentProductosAdmin extends Fragment {
         
         String mensaje = nuevoEstado ? "Producto marcado como disponible" : "Producto marcado como no disponible";
         Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
+    }
+    
+    private void volverAlMenuPrincipal() {
+        // Navegar de vuelta al dashboard de administración
+        if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+            getParentFragmentManager().popBackStack();
+        }
     }
     
     @Override

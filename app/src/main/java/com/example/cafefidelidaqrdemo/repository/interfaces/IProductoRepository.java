@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface IProductoRepository {
     
-    // ==================== OBSERVABLES ====================
+    //OBSERVABLES
     
     /**
      * LiveData con todos los productos
@@ -40,7 +40,7 @@ public interface IProductoRepository {
      */
     LiveData<Boolean> getIsOffline();
     
-    // ==================== OPERACIONES CRUD ====================
+    //OPERACIONES CRUD
     
     /**
      * Obtiene un producto por ID
@@ -67,7 +67,7 @@ public interface IProductoRepository {
      */
     void forceSyncProductos(BaseRepository.SimpleCallback callback);
     
-    // ==================== BÚSQUEDA ====================
+    // BÚSQUEDA
     
     /**
      * Busca productos localmente
@@ -86,7 +86,7 @@ public interface IProductoRepository {
     void searchProductosRemote(String query, String categoria, 
                               BaseRepository.RepositoryCallback<List<ProductoEntity>> callback);
     
-    // ==================== UTILIDADES ====================
+    // UTILIDADES
     
     /**
      * Limpia los resultados de búsqueda

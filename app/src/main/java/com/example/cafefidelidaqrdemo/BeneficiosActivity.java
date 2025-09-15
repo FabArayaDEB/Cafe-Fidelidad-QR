@@ -15,7 +15,7 @@ import com.example.cafefidelidaqrdemo.databinding.ActivityBeneficiosBinding;
 import com.example.cafefidelidaqrdemo.managers.BeneficioManager;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;

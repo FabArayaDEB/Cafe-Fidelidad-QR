@@ -236,10 +236,10 @@ public class FragmentHistorial extends Fragment {
     private void updateSyncStatus(Boolean isSynced) {
         if (isSynced != null) {
             if (isSynced) {
-                tvSyncStatus.setText("✓ Datos sincronizados");
+                tvSyncStatus.setText("Datos sincronizados");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
             } else {
-                tvSyncStatus.setText("⚠ Datos pendientes de sincronización");
+                tvSyncStatus.setText("Datos pendientes de sincronización");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
             }
         }
@@ -333,7 +333,7 @@ public class FragmentHistorial extends Fragment {
         //     
         //     // Actualizar texto del botón
         //     if (inicio != null || fin != null) {
-        //         StringBuilder btnText = new StringBuilder("📅 ");
+        //         StringBuilder btnText = new StringBuilder(" ");
         //         if (inicio != null && fin != null) {
         //             btnText.append(dateFormat.format(inicio))
         //                    .append(" - ")
@@ -345,7 +345,7 @@ public class FragmentHistorial extends Fragment {
         //         }
         //         btnFiltroFecha.setText(btnText.toString());
         //     } else {
-        //         // btnFiltroFecha.setText("📅 Filtrar por fecha"); // No existe en el layout
+        //         // btnFiltroFecha.setText("Filtrar por fecha"); // No existe en el layout
         //     }
         //     
         //     applyFilters();
@@ -373,7 +373,7 @@ public class FragmentHistorial extends Fragment {
         chipTodos.setChecked(true);
         fechaInicio = null;
         fechaFin = null;
-        // btnFiltroFecha.setText("📅 Filtrar por fecha"); // No existe en el layout
+        // btnFiltroFecha.setText("Filtrar por fecha"); // No existe en el layout
         applyFilters();
     }
     

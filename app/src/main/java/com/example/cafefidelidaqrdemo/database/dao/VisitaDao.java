@@ -6,6 +6,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
+import androidx.lifecycle.LiveData;
 import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import java.util.List;
 
@@ -33,22 +34,24 @@ public interface VisitaDao {
     @Query("SELECT * FROM visitas")
     List<VisitaEntity> getAll();
     
-    @Query("SELECT * FROM visitas WHERE id_cliente = :idCliente")
+    // Consultas optimizadas con LIMIT para evitar resultados masivos
+    @Query("SELECT * FROM visitas WHERE id_cliente = :idCliente ORDER BY fecha_hora DESC LIMIT 100")
     List<VisitaEntity> getByCliente(String idCliente);
-    
-    @Query("SELECT * FROM visitas WHERE id_sucursal = :idSucursal")
+
+    @Query("SELECT * FROM visitas WHERE id_sucursal = :idSucursal ORDER BY fecha_hora DESC LIMIT 100")
     List<VisitaEntity> getBySucursal(String idSucursal);
-    
-    @Query("SELECT * FROM visitas WHERE id_cliente = :idCliente AND id_sucursal = :idSucursal")
+
+    @Query("SELECT * FROM visitas WHERE id_cliente = :idCliente AND id_sucursal = :idSucursal ORDER BY fecha_hora DESC LIMIT 50")
     List<VisitaEntity> getByClienteAndSucursal(String idCliente, String idSucursal);
     
-    @Query("SELECT * FROM visitas WHERE estado_sync = :estadoSync")
+    // Consultas de sincronización optimizadas con índices
+    @Query("SELECT * FROM visitas WHERE estado_sync = :estadoSync ORDER BY fecha_hora ASC LIMIT 500")
     List<VisitaEntity> getByEstadoSync(String estadoSync);
-    
-    @Query("SELECT * FROM visitas WHERE estado_sync = 'PENDIENTE'")
+
+    @Query("SELECT * FROM visitas WHERE estado_sync = 'PENDIENTE' ORDER BY fecha_hora ASC LIMIT 500")
     List<VisitaEntity> getPendientes();
-    
-    @Query("SELECT * FROM visitas WHERE estado_sync = 'ERROR'")
+
+    @Query("SELECT * FROM visitas WHERE estado_sync = 'ERROR' ORDER BY fecha_hora ASC LIMIT 100")
     List<VisitaEntity> getConError();
     
     @Query("SELECT * FROM visitas WHERE origen = :origen")
@@ -93,7 +96,8 @@ public interface VisitaDao {
     @Query("UPDATE visitas SET estado_sync = :nuevoEstado WHERE id_visita = :id")
     void updateEstadoSync(String id, String nuevoEstado);
     
-    @Query("SELECT * FROM visitas WHERE fecha_hora BETWEEN :fechaInicio AND :fechaFin")
+    // Consulta optimizada para rangos de fecha con índice
+    @Query("SELECT * FROM visitas WHERE fecha_hora BETWEEN :fechaInicio AND :fechaFin ORDER BY fecha_hora DESC LIMIT 1000")
     List<VisitaEntity> getByRangoFecha(long fechaInicio, long fechaFin);
     
     @Query("SELECT * FROM visitas WHERE id_cliente = :idCliente AND fecha_hora BETWEEN :fechaInicio AND :fechaFin")
@@ -110,4 +114,29 @@ public interface VisitaDao {
     
     @Query("SELECT COUNT(*) FROM visitas WHERE id_cliente = :idCliente AND fecha_hora >= :fechaDesde")
     int getCountVisitasClienteDesde(String idCliente, long fechaDesde);
+    
+    // Métodos para manejo de errores y limpieza
+    @Query("UPDATE visitas SET estado_sync = 'PENDIENTE' WHERE estado_sync = 'ERROR'")
+    void reintentarTodosLosErrores();
+    
+    @Query("DELETE FROM visitas WHERE estado_sync = 'ENVIADO' AND lastSync < :fechaLimite")
+    void eliminarAntiguasEnviadas(long fechaLimite);
+    
+    @Query("DELETE FROM visitas WHERE estado_sync = 'ERROR' AND fecha_hora < :fechaLimite")
+    void eliminarErroresAntiguos(long fechaLimite);
+    
+    @Query("SELECT COUNT(*) FROM visitas WHERE hash_qr = :hashQr")
+    int existeHashQr(String hashQr);
+    
+    @Query("SELECT COUNT(*) FROM visitas WHERE estado_sync = 'PENDIENTE'")
+    LiveData<Integer> contarPendientes();
+    
+    @Query("SELECT COUNT(*) FROM visitas WHERE estado_sync = 'ENVIADO' AND date(fecha_hora/1000, 'unixepoch') = date('now')")
+    LiveData<Integer> contarVisitasHoyEnviadas();
+    
+    @Query("SELECT * FROM visitas ORDER BY fecha_hora DESC")
+    LiveData<List<VisitaEntity>> obtenerTodas();
+    
+    @Query("SELECT * FROM visitas WHERE estado_sync = :estado ORDER BY fecha_hora DESC")
+    LiveData<List<VisitaEntity>> obtenerPorEstado(String estado);
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow;
 import kotlinx.coroutines.flow.StateFlow;
 import kotlinx.coroutines.flow.StateFlowKt;
 
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 

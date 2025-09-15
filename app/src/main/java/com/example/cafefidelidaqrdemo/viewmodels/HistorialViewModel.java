@@ -7,13 +7,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.models.HistorialItem;
-import com.example.cafefidelidaqrdemo.network.ApiService;
-import com.example.cafefidelidaqrdemo.network.ApiClient;
 import com.example.cafefidelidaqrdemo.repository.HistorialRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
+import com.example.cafefidelidaqrdemo.network.ApiClient;
 
 import java.util.Date;
 import java.util.List;

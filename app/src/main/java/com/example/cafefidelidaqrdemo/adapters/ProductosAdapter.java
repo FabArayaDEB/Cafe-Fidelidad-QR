@@ -196,7 +196,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
                 return oldItem.getNombre().equals(newItem.getNombre()) &&
                        oldItem.getCategoria().equals(newItem.getCategoria()) &&
                        Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0 &&
-                       oldItem.getEstado().equals(newItem.getEstado());
+                       oldItem.isActivo() == newItem.isActivo();
             }
         };
     

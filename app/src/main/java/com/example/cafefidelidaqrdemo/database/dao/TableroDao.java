@@ -1,4 +1,4 @@
-package com.example.cafefidelidaqrdemo.data.dao;
+package com.example.cafefidelidaqrdemo.database.dao;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -7,7 +7,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
-import com.example.cafefidelidaqrdemo.data.entities.TableroEntity;
+import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
 import java.util.Date;
 import java.util.List;
 
@@ -58,7 +58,7 @@ public interface TableroDao {
     @Query("SELECT COUNT(*) FROM tablero_cliente")
     LiveData<Integer> contarTablerosLiveData();
     
-    // ==================== CONSULTAS DE CACHE Y SINCRONIZACIÓN ====================
+    // ==================== SINCRONIZACIÓN Y CACHE ====================
     
     @Query("SELECT * FROM tablero_cliente WHERE sincronizado = 0")
     List<TableroEntity> obtenerNoSincronizados();
@@ -78,7 +78,7 @@ public interface TableroDao {
     @Query("UPDATE tablero_cliente SET cache_valido = 1, fecha_expiracion_cache = :fechaExpiracion WHERE cliente_id = :clienteId")
     void actualizarCache(String clienteId, Date fechaExpiracion);
     
-    // ==================== CONSULTAS DE MÉTRICAS DE VISITAS ====================
+    // ==================== MÉTRICAS DE VISITAS ====================
     
     @Query("SELECT SUM(total_visitas) FROM tablero_cliente")
     int obtenerTotalVisitasGlobal();
@@ -98,7 +98,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE ultima_visita >= :fechaDesde ORDER BY ultima_visita DESC")
     List<TableroEntity> obtenerClientesConVisitasRecientes(Date fechaDesde);
     
-    // ==================== CONSULTAS DE MÉTRICAS DE PUNTOS ====================
+    // ==================== MÉTRICAS DE PUNTOS ====================
     
     @Query("SELECT SUM(puntos_totales) FROM tablero_cliente")
     int obtenerTotalPuntosGlobal();
@@ -118,7 +118,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE puntos_disponibles >= :minimoPuntos ORDER BY puntos_disponibles DESC")
     List<TableroEntity> obtenerClientesConPuntosSuficientes(int minimoPuntos);
     
-    // ==================== CONSULTAS DE MÉTRICAS DE CANJES ====================
+    // ==================== MÉTRICAS DE CANJES ====================
     
     @Query("SELECT SUM(total_canjes) FROM tablero_cliente")
     int obtenerTotalCanjesGlobal();
@@ -138,7 +138,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE ultimo_canje_fecha >= :fechaDesde ORDER BY ultimo_canje_fecha DESC")
     List<TableroEntity> obtenerClientesConCanjesRecientes(Date fechaDesde);
     
-    // ==================== CONSULTAS DE NIVELES DE FIDELIDAD ====================
+    // ==================== GAMIFICACIÓN Y NIVELES ====================
     
     @Query("SELECT COUNT(*) FROM tablero_cliente WHERE nivel_fidelidad = :nivel")
     int contarClientesPorNivel(String nivel);
@@ -152,7 +152,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE progreso_nivel >= :progresoMinimo ORDER BY progreso_nivel DESC")
     List<TableroEntity> obtenerClientesCercaDelSiguienteNivel(double progresoMinimo);
     
-    // ==================== CONSULTAS DE SUCURSALES ====================
+    // ==================== SUCURSALES ====================
     
     @Query("SELECT sucursal_favorita_id, COUNT(*) as cantidad FROM tablero_cliente WHERE sucursal_favorita_id IS NOT NULL GROUP BY sucursal_favorita_id ORDER BY cantidad DESC")
     List<SucursalFavoritaCount> obtenerSucursalesFavoritas();
@@ -163,7 +163,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE sucursal_recomendada_id = :sucursalId")
     List<TableroEntity> obtenerClientesConSucursalRecomendada(Long sucursalId);
     
-    // ==================== CONSULTAS DE BENEFICIOS ====================
+    // ==================== BENEFICIOS Y RECOMENDACIONES ====================
     
     @Query("SELECT * FROM tablero_cliente WHERE beneficios_disponibles > 0 ORDER BY beneficios_disponibles DESC")
     List<TableroEntity> obtenerClientesConBeneficiosDisponibles();
@@ -180,7 +180,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE puntos_disponibles >= beneficio_recomendado_puntos AND beneficio_recomendado_puntos > 0")
     List<TableroEntity> obtenerClientesQuePuedenCanjearRecomendacion();
     
-    // ==================== CONSULTAS DE ACTIVIDAD Y RACHAS ====================
+    // ==================== ANÁLISIS DE COMPORTAMIENTO ====================
     
     @Query("SELECT * FROM tablero_cliente WHERE racha_visitas >= :rachaMinima ORDER BY racha_visitas DESC")
     List<TableroEntity> obtenerClientesConRachaVisitas(int rachaMinima);
@@ -197,7 +197,7 @@ public interface TableroDao {
     @Query("SELECT * FROM tablero_cliente WHERE (julianday('now') - julianday(ultima_visita)) > 30 ORDER BY ultima_visita ASC")
     List<TableroEntity> obtenerClientesInactivos();
     
-    // ==================== CONSULTAS DE ANÁLISIS TEMPORAL ====================
+    // ==================== AUDITORÍA Y CONTROL ====================
     
     @Query("SELECT * FROM tablero_cliente WHERE fecha_actualizacion >= :fechaDesde ORDER BY fecha_actualizacion DESC")
     List<TableroEntity> obtenerActualizacionesRecientes(Date fechaDesde);
@@ -208,7 +208,7 @@ public interface TableroDao {
     @Query("SELECT DATE(fecha_actualizacion) as fecha, COUNT(*) as cantidad FROM tablero_cliente WHERE fecha_actualizacion >= :fechaDesde GROUP BY DATE(fecha_actualizacion) ORDER BY fecha DESC")
     List<ActualizacionesPorDia> obtenerActualizacionesPorDia(Date fechaDesde);
     
-    // ==================== CONSULTAS DE LIMPIEZA Y MANTENIMIENTO ====================
+    // ==================== MANTENIMIENTO ====================
     
     @Query("DELETE FROM tablero_cliente WHERE fecha_actualizacion < :fechaLimite")
     void limpiarDatosAntiguos(Date fechaLimite);
@@ -222,7 +222,7 @@ public interface TableroDao {
     @Query("SELECT MAX(version) FROM tablero_cliente WHERE cliente_id = :clienteId")
     Long obtenerUltimaVersion(String clienteId);
     
-    // ==================== CLASES AUXILIARES PARA RESULTADOS ====================
+    // ==================== CLASES AUXILIARES ====================
     
     class NivelFidelidadCount {
         public String nivel_fidelidad;

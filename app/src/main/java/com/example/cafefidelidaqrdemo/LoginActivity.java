@@ -14,7 +14,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.cafefidelidaqrdemo.databinding.ActivityLoginEmailBinding;
 import com.example.cafefidelidaqrdemo.viewmodels.LoginViewModel;
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity {
         binding.setLifecycleOwner(this);
         
         // Establecer contexto en AuthRepository
-        com.example.cafefidelidaqrdemo.data.repositories.AuthRepository.getInstance().setContext(this);
+        com.example.cafefidelidaqrdemo.repository.AuthRepository.getInstance().setContext(this);
         
         // Configurar ProgressDialog
         progressDialog = new ProgressDialog(this);

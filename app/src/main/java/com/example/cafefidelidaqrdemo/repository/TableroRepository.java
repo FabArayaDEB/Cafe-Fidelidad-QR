@@ -3,8 +3,10 @@ package com.example.cafefidelidaqrdemo.repository;
 import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.data.dao.TableroDao;
-import com.example.cafefidelidaqrdemo.data.entities.TableroEntity;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
+import com.example.cafefidelidaqrdemo.database.dao.TableroDao;
+import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
 import com.example.cafefidelidaqrdemo.network.ApiClient;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import java.util.Date;
@@ -45,13 +47,13 @@ public class TableroRepository {
     public TableroRepository(Context context) {
         this.context = context;
         // Obtener TableroDao desde la base de datos
-        // this.tableroDao = CafeFidelidadDatabase.getInstance(context).tableroDao();
+        //this.tableroDao = CafeFidelidadDatabase.getInstance(context).tableroDao();
         this.tableroDao = null; // Temporal hasta que se implemente la base de datos
         this.apiService = ApiClient.getApiService();
         this.executor = Executors.newFixedThreadPool(2);
     }
     
-    // ==================== GETTERS PARA LIVEDATA ====================
+    //GETTERS PARA LIVEDATA
     
     public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
@@ -60,7 +62,7 @@ public class TableroRepository {
     public LiveData<Boolean> getIsOfflineMode() { return isOfflineMode; }
     public LiveData<String> getDataSource() { return dataSource; }
     
-    // ==================== OPERACIONES PRINCIPALES ====================
+    // OPERACIONES PRINCIPALES
     
     public LiveData<TableroEntity> obtenerTableroCliente(String clienteId) {
         return tableroDao.obtenerPorClienteLiveData(clienteId);
@@ -182,7 +184,7 @@ public class TableroRepository {
         });
     }
     
-    // ==================== MÉTRICAS Y ESTADÍSTICAS ====================
+    //MÉTRICAS Y ESTADÍSTICAS
     
     public void obtenerMetricasGlobales(RepositoryCallback<MetricasGlobales> callback) {
         executor.execute(() -> {
@@ -298,7 +300,7 @@ public class TableroRepository {
         });
     }
     
-    // ==================== SINCRONIZACIÓN EN SEGUNDO PLANO ====================
+    //SINCRONIZACIÓN EN SEGUNDO PLANO
     
     private void refrescarTableroEnSegundoPlano(String clienteId) {
         executor.execute(() -> {
@@ -339,7 +341,7 @@ public class TableroRepository {
         });
     }
     
-    // ==================== MÉTODOS PRIVADOS DE API ====================
+    //MÉTODOS PRIVADOS DE API
     
     private void obtenerTableroDesdeApi(String clienteId, RepositoryCallback<TableroEntity> callback) {
         // Simular llamada a API
@@ -378,7 +380,7 @@ public class TableroRepository {
         });
     }
     
-    // ==================== CLASES AUXILIARES ====================
+    // CLASES AUXILIARES
     
     public static class MetricasGlobales {
         public int totalVisitasGlobal;
@@ -400,14 +402,14 @@ public class TableroRepository {
         public long version;
     }
     
-    // ==================== INTERFACE CALLBACK ====================
+    //  INTERFACE CALLBACK
     
     public interface RepositoryCallback<T> {
         void onSuccess(T result);
         void onError(String error);
     }
     
-    // ==================== LIMPIEZA DE RECURSOS ====================
+    //LIMPIEZA DE RECURSOS
     
     public void cleanup() {
         if (executor != null && !executor.isShutdown()) {

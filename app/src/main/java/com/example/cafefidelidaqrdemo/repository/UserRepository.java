@@ -51,7 +51,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         checkAuthenticationState();
     }
     
-    // ==================== IMPLEMENTACIÓN DE OPERACIONES CRUD ====================
+    // IMPLEMENTACIÓN DE OPERACIONES CRUD
     
     @Override
     public LiveData<List<UsuarioEntity>> getAllUsers() {
@@ -131,7 +131,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         });
     }
     
-    // ==================== IMPLEMENTACIÓN DE AUTENTICACIÓN ====================
+    //IMPLEMENTACIÓN DE AUTENTICACIÓN
     
     @Override
     public void authenticateUser(String email, String password, RepositoryCallback<UsuarioEntity> callback) {
@@ -215,7 +215,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         return _isAuthenticated;
     }
     
-    // ==================== IMPLEMENTACIÓN DE PERFIL ====================
+    //IMPLEMENTACIÓN DE PERFIL
     
     @Override
     public void updateProfile(String userId, String nombre, String telefono, String fechaNacimiento, SimpleCallback callback) {
@@ -294,7 +294,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         if (callback != null) callback.onError("Cambio de contraseña no disponible");
     }
     
-    // ==================== IMPLEMENTACIÓN DE SINCRONIZACIÓN ====================
+    // IMPLEMENTACIÓN DE SINCRONIZACIÓN
     
     @Override
     public void syncUserData(String userId, SimpleCallback callback) {
@@ -340,7 +340,7 @@ public class UserRepository extends BaseRepository implements IUserRepository {
         });
     }
     
-    // ==================== MÉTODOS PRIVADOS ====================
+    // MÉTODOS PRIVADOS
     
     private void checkAuthenticationState() {
         /*

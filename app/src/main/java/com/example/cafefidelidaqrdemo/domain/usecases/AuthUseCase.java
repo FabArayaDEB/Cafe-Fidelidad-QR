@@ -1,6 +1,6 @@
 package com.example.cafefidelidaqrdemo.domain.usecases;
 
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import android.content.Context;

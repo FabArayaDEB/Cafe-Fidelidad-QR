@@ -4,8 +4,8 @@ import android.content.Context;
 import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.data.dao.VisitaDao;
-import com.example.cafefidelidaqrdemo.data.entity.VisitaEntity;
+import com.example.cafefidelidaqrdemo.database.dao.VisitaDao;
+import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.network.response.VisitaResponse;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 /**
  * Repository para gestionar visitas con QR
@@ -57,7 +58,7 @@ public class VisitaAdminRepository {
     
     // Obtener visitas pendientes de sincronización
     public LiveData<List<VisitaEntity>> obtenerPendientes() {
-        return visitaDao.obtenerPorEstado(VisitaEntity.EstadoSincronizacion.PENDIENTE);
+        return visitaDao.obtenerPorEstado("PENDIENTE");
     }
     
     // Obtener contadores
@@ -102,17 +103,20 @@ public class VisitaAdminRepository {
                 }
                 
                 // Crear entidad de visita
+                String visitaId = UUID.randomUUID().toString();
                 VisitaEntity visita = new VisitaEntity(
+                    visitaId,
+                    "cliente_default", // TODO: obtener clienteId del contexto
                     qrData.sucursalId,
-                    hashQr,
-                    qrData.timestamp,
-                    qrData.nonce,
-                    qrData.firma
+                    System.currentTimeMillis(),
+                    "QR",
+                    "PENDIENTE",
+                    hashQr
                 );
                 
                 // Guardar en base de datos local
-                long visitaId = visitaDao.insertar(visita);
-                visita.setId(visitaId);
+                visitaDao.insert(visita);
+                // visita.setId_visita ya está establecido en el constructor
                 
                 // Intentar enviar al servidor si hay conexión
                 if (NetworkUtils.isNetworkAvailable(context)) {
@@ -225,10 +229,10 @@ public class VisitaAdminRepository {
      */
     private void enviarVisitaAlServidor(VisitaEntity visita, QRProcessCallback callback) {
         ApiService.VisitaRequest request = new ApiService.VisitaRequest(
-            visita.getHashQr(),
+            visita.getHash_qr(),
             "cliente_default", // TODO: obtener clienteId del contexto
-            visita.getTimestampQr(),
-            visita.getSucursalId()
+            visita.getFecha_hora(),
+            visita.getId_sucursal()
         );
         Call<VisitaResponse> call = apiService.registrarVisita(request);
         
@@ -240,9 +244,9 @@ public class VisitaAdminRepository {
                     
                     // Actualizar estado en base de datos
                     executor.execute(() -> {
-                        visita.marcarComoEnviada(visitaResponse.getProgreso());
-                        visitaDao.actualizar(visita);
-                    });
+                         visita.marcarEnviado();
+                         visitaDao.update(visita);
+                     });
                     
                     _mensajeEstado.postValue("Visita registrada exitosamente");
                     callback.onSuccess("Visita registrada", visitaResponse.getProgreso());
@@ -250,8 +254,8 @@ public class VisitaAdminRepository {
                     // Error del servidor
                     String error = "Error del servidor: " + response.code();
                     executor.execute(() -> {
-                        visita.marcarComoError(error);
-                        visitaDao.actualizar(visita);
+                        visita.marcarError();
+                  visitaDao.update(visita);
                     });
                     
                     callback.onError(error);
@@ -263,8 +267,8 @@ public class VisitaAdminRepository {
                 // Error de red
                 String error = "Error de conexión: " + t.getMessage();
                 executor.execute(() -> {
-                    visita.marcarComoError(error);
-                    visitaDao.actualizar(visita);
+                    visita.marcarError();
+                      visitaDao.update(visita);
                 });
                 
                 callback.onError(error);
@@ -282,7 +286,7 @@ public class VisitaAdminRepository {
         }
         
         executor.execute(() -> {
-            List<VisitaEntity> pendientes = visitaDao.obtenerPendientesSincronizacion();
+            List<VisitaEntity> pendientes = visitaDao.getPendientes();
             
             if (pendientes.isEmpty()) {
                 _mensajeEstado.postValue("No hay visitas pendientes");
@@ -295,12 +299,12 @@ public class VisitaAdminRepository {
                 enviarVisitaAlServidor(visita, new QRProcessCallback() {
                     @Override
                     public void onSuccess(String mensaje, String progreso) {
-                        Log.d(TAG, "Visita sincronizada: " + visita.getId());
+                        Log.d(TAG, "Visita sincronizada: " + visita.getId_visita());
                     }
                     
                     @Override
                     public void onError(String error) {
-                        Log.e(TAG, "Error sincronizando visita: " + visita.getId() + " - " + error);
+                        Log.e(TAG, "Error sincronizando visita: " + visita.getId_visita() + " - " + error);
                     }
                 });
             }
@@ -312,7 +316,7 @@ public class VisitaAdminRepository {
      */
     public void reintentarErrores() {
         executor.execute(() -> {
-            visitaDao.reintentarTodosLosErrores(MAX_RETRY_ATTEMPTS);
+            visitaDao.reintentarTodosLosErrores();
             sincronizarPendientes();
         });
     }
@@ -324,7 +328,7 @@ public class VisitaAdminRepository {
         executor.execute(() -> {
             long unMesAtras = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
             visitaDao.eliminarAntiguasEnviadas(unMesAtras);
-            visitaDao.eliminarErroresAntiguos(MAX_RETRY_ATTEMPTS, unMesAtras);
+            visitaDao.eliminarErroresAntiguos(unMesAtras);
         });
     }
     

@@ -21,6 +21,7 @@ import retrofit2.Response;
  */
 public class ClienteRepository {
     
+    private static ClienteRepository instance;
     private final ClienteDao clienteDao;
     private final ApiService apiService;
     private final ExecutorService executor;
@@ -38,6 +39,20 @@ public class ClienteRepository {
         this.clienteDao = database.clienteDao();
         this.apiService = ApiService.getInstance();
         this.executor = Executors.newFixedThreadPool(4);
+    }
+    
+    public static synchronized ClienteRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new ClienteRepository(context.getApplicationContext());
+        }
+        return instance;
+    }
+    
+    public static ClienteRepository getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("ClienteRepository must be initialized with context first");
+        }
+        return instance;
     }
     
     /**
