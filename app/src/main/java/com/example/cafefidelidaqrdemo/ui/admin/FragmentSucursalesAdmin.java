@@ -33,8 +33,12 @@ import com.example.cafefidelidaqrdemo.databinding.DialogSucursalBinding;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.SucursalesAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.SucursalesAdminViewModel;
-// import com.google.android.gms.location.FusedLocationProviderClient;
-// import com.google.android.gms.location.LocationServices;
+
+// Google Location Services
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.OnFailureListener;
 // import com.google.android.gms.maps.CameraUpdateFactory;
 // import com.google.android.gms.maps.GoogleMap;
 // import com.google.android.gms.maps.OnMapReadyCallback;
@@ -61,7 +65,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     private List<SucursalEntity> sucursalesList = new ArrayList<>();
     private boolean mostrarSoloActivas = true;
     // private GoogleMap mMap;
-    // private FusedLocationProviderClient fusedLocationClient;
+    private FusedLocationProviderClient fusedLocationClient;
     // private Geocoder geocoder;
     
     // Variables para el diálogo de sucursal
@@ -76,7 +80,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         
-        // fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         // geocoder = new Geocoder(getContext(), Locale.getDefault());
     }
     
@@ -440,33 +444,69 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         dialogBinding.editTextHorario.setOnClickListener(v -> 
                 mostrarSelectorHorario(false, dialogBinding));
         
-        // Configurar botón de ubicación
-        // dialogBinding.buttonSeleccionarUbicacion.setOnClickListener(v -> 
-        //        seleccionarUbicacionEnMapa(dialogBinding));
+        // Configurar botones de ubicación
+        dialogBinding.btnUbicacionActual.setOnClickListener(v -> 
+                obtenerUbicacionActual(dialogBinding));
         
-        // Configurar geocodificación inversa
-        // dialogBinding.buttonBuscarDireccion.setOnClickListener(v -> 
-        //        buscarDireccion(dialogBinding));
+        dialogBinding.btnSeleccionarMapa.setOnClickListener(v -> 
+                seleccionarUbicacionEnMapa(dialogBinding));
     }
     
-    // @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission")
     private void obtenerUbicacionActual(DialogSucursalBinding dialogBinding) {
-        // if (ActivityCompat.checkSelfPermission(getContext(), 
-        //         android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-        //     
-        //     fusedLocationClient.getLastLocation()
-        //             .addOnSuccessListener(location -> {
-        //                 if (location != null) {
-        //                     latitudSeleccionada = location.getLatitude();
-        //                     longitudSeleccionada = location.getLongitude();
-        //                     
-        //                     // dialogBinding.textViewUbicacion.setText(
-        //                     //         String.format("Lat: %.6f, Lng: %.6f", latitudSeleccionada, longitudSeleccionada));
-        //                 }
-        //             });
-        // }
+        // Verificar permisos de ubicación
+        if (ActivityCompat.checkSelfPermission(getContext(), 
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && 
+            ActivityCompat.checkSelfPermission(getContext(), 
+                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            
+            // Solicitar permisos
+            requestPermissions(new String[]{
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            }, 1001);
+            return;
+        }
         
-        // Método deshabilitado - Google Location Services removido
+        // Obtener ubicación actual usando Google Location Services
+        fusedLocationClient.getLastLocation()
+            .addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        latitudSeleccionada = location.getLatitude();
+                        longitudSeleccionada = location.getLongitude();
+                        
+                        // Actualizar campos de coordenadas
+                        dialogBinding.editTextLatitud.setText(String.valueOf(latitudSeleccionada));
+                        dialogBinding.editTextLongitud.setText(String.valueOf(longitudSeleccionada));
+                        
+                        Toast.makeText(getContext(), "Ubicación actual obtenida", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Fallback a ubicación de ejemplo si no se puede obtener la ubicación
+                        latitudSeleccionada = 4.6097;
+                        longitudSeleccionada = -74.0817;
+                        
+                        dialogBinding.editTextLatitud.setText(String.valueOf(latitudSeleccionada));
+                        dialogBinding.editTextLongitud.setText(String.valueOf(longitudSeleccionada));
+                        
+                        Toast.makeText(getContext(), "No se pudo obtener ubicación. Usando ubicación de ejemplo (Bogotá)", Toast.LENGTH_LONG).show();
+                    }
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    // Fallback a ubicación de ejemplo en caso de error
+                    latitudSeleccionada = 4.6097;
+                    longitudSeleccionada = -74.0817;
+                    
+                    dialogBinding.editTextLatitud.setText(String.valueOf(latitudSeleccionada));
+                    dialogBinding.editTextLongitud.setText(String.valueOf(longitudSeleccionada));
+                    
+                    Toast.makeText(getContext(), "Error al obtener ubicación: " + e.getMessage() + ". Usando ubicación de ejemplo", Toast.LENGTH_LONG).show();
+                }
+            });
     }
     
     private void mostrarSelectorHorario(boolean esApertura, DialogSucursalBinding dialogBinding) {
@@ -494,8 +534,28 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     }
     
     private void seleccionarUbicacionEnMapa(DialogSucursalBinding dialogBinding) {
-        // Implementar selector de ubicación en mapa
-        Toast.makeText(getContext(), "Toque en el mapa para seleccionar ubicación", Toast.LENGTH_SHORT).show();
+        // Implementación simplificada - permitir entrada manual de coordenadas
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Seleccionar Ubicación");
+        builder.setMessage("Puede ingresar las coordenadas manualmente en los campos de Latitud y Longitud, o usar algunas ubicaciones predefinidas:");
+        
+        builder.setPositiveButton("Bogotá Centro", (dialog, which) -> {
+            latitudSeleccionada = 4.6097;
+            longitudSeleccionada = -74.0817;
+            dialogBinding.editTextLatitud.setText(String.valueOf(latitudSeleccionada));
+            dialogBinding.editTextLongitud.setText(String.valueOf(longitudSeleccionada));
+        });
+        
+        builder.setNeutralButton("Medellín Centro", (dialog, which) -> {
+            latitudSeleccionada = 6.2442;
+            longitudSeleccionada = -75.5812;
+            dialogBinding.editTextLatitud.setText(String.valueOf(latitudSeleccionada));
+            dialogBinding.editTextLongitud.setText(String.valueOf(longitudSeleccionada));
+        });
+        
+        builder.setNegativeButton("Cancelar", null);
+        
+        builder.show();
     }
     
     private void buscarDireccion(DialogSucursalBinding dialogBinding) {
@@ -563,6 +623,10 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     
     private SucursalEntity crearSucursalDesdeFormulario(DialogSucursalBinding dialogBinding) {
         SucursalEntity sucursal = new SucursalEntity();
+        
+        // Generar ID único para la sucursal
+        String sucursalId = "SUC_" + System.currentTimeMillis();
+        sucursal.setId_sucursal(sucursalId);
         
         sucursal.setNombre(dialogBinding.editTextNombre.getText().toString().trim());
         sucursal.setDireccion(dialogBinding.editTextDireccion.getText().toString().trim());

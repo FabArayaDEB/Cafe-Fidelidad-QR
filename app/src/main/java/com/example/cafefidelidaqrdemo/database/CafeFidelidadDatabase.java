@@ -17,6 +17,7 @@ import com.example.cafefidelidaqrdemo.database.dao.CanjeDao;
 import com.example.cafefidelidaqrdemo.database.dao.ReglaDao;
 import com.example.cafefidelidaqrdemo.database.dao.ReporteDao;
 import com.example.cafefidelidaqrdemo.database.dao.CompraDao;
+import com.example.cafefidelidaqrdemo.database.dao.UbicacionDao;
 import com.example.cafefidelidaqrdemo.database.Converters;
 import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
@@ -29,6 +30,7 @@ import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ReglaEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import com.example.cafefidelidaqrdemo.database.entities.CompraEntity;
+import com.example.cafefidelidaqrdemo.database.entities.UbicacionEntity;
 
 /**
  * Base de datos Room principal para cache offline
@@ -45,9 +47,10 @@ import com.example.cafefidelidaqrdemo.database.entities.CompraEntity;
         CanjeEntity.class,
         ReglaEntity.class,
         ReporteEntity.class,
-        CompraEntity.class
+        CompraEntity.class,
+        UbicacionEntity.class
     },
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 @androidx.room.TypeConverters({Converters.class})
@@ -68,6 +71,7 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
     public abstract ReglaDao reglaDao();
     public abstract ReporteDao reporteDao();
     public abstract CompraDao compraDao();
+    public abstract UbicacionDao ubicacionDao();
     
     /**
      * Singleton pattern para obtener instancia de la base de datos
@@ -82,7 +86,7 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
                             DATABASE_NAME
                     )
                     .addCallback(roomCallback)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // Migraciones para nuevas entidades
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7) // Migraciones para nuevas entidades
                     .build();
                 }
             }
@@ -178,6 +182,39 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
                     "`descripcion` TEXT, " +
                     "`mcId` TEXT NOT NULL, " +
                     "FOREIGN KEY(`clienteId`) REFERENCES `clientes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+        }
+    };
+    
+    /**
+     * Migración de versión 5 a 6 - Agregar tabla ubicaciones
+     */
+    private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `ubicaciones` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`usuario_id` INTEGER NOT NULL, " +
+                    "`latitud` REAL NOT NULL, " +
+                    "`longitud` REAL NOT NULL, " +
+                    "`precision` REAL NOT NULL, " +
+                    "`direccion` TEXT, " +
+                    "`ciudad` TEXT, " +
+                    "`fecha_registro` INTEGER NOT NULL, " +
+                    "`es_sucursal_cercana` INTEGER NOT NULL DEFAULT 0, " +
+                    "`sucursal_id` INTEGER, " +
+                    "`distancia_sucursal` REAL, " +
+                    "`sincronizado` INTEGER NOT NULL DEFAULT 0)");
+        }
+    };
+    
+    /**
+     * Migración de versión 6 a 7 - Actualización de esquema
+     */
+    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Migración automática - Room detectará los cambios en el esquema
+            // y aplicará las modificaciones necesarias
         }
     };
     

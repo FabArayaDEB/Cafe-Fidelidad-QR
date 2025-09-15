@@ -127,6 +127,8 @@ public class TransaccionQRUseCase {
     private void registrarTransaccion(String clienteId, double monto, String descripcion, TransaccionCallback callback) {
         // Crear la transacción
         TransaccionEntity transaccion = new TransaccionEntity();
+        // Generar ID único para la transacción
+        transaccion.setId(System.currentTimeMillis() + "_" + Math.random());
         transaccion.setUserId(clienteId);
         transaccion.setMonto(monto);
         transaccion.setDescripcion(descripcion);

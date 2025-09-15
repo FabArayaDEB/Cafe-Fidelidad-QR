@@ -99,10 +99,6 @@ public class ProgresoRepository extends BaseRepository {
          return result;
      }
      
-     public void clearError() {
-         _errorMessage.postValue(null);
-     }
-     
      public void forceSyncProgreso(String clienteId, BaseRepository.SimpleCallback callback) {
          setLoading(true);
          executor.execute(() -> {

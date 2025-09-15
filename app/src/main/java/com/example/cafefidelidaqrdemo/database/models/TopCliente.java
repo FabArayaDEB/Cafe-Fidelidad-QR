@@ -1,6 +1,7 @@
 package com.example.cafefidelidaqrdemo.database.models;
 
 import androidx.room.ColumnInfo;
+import androidx.room.Ignore;
 
 /**
  * Clase para representar los clientes top obtenidos de consultas de reportes
@@ -31,6 +32,7 @@ public class TopCliente {
         // Constructor vacío requerido por Room
     }
     
+    @Ignore
     public TopCliente(String clienteId, String nombre, int totalVisitas, int totalCanjes, int totalPuntos) {
         this.clienteId = clienteId;
         this.nombre = nombre;

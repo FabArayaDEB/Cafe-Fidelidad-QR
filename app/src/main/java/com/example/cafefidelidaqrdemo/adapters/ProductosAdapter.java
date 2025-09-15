@@ -1,12 +1,15 @@
 package com.example.cafefidelidaqrdemo.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
@@ -14,176 +17,201 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.chip.Chip;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapter.ProductoViewHolder> {
+/**
+ * Adapter unificado para productos que maneja tanto la vista de cliente como la de administrador
+ */
+public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.ViewHolder> {
     
+    private static final int VIEW_TYPE_CLIENT = 0;
+    private static final int VIEW_TYPE_ADMIN = 1;
+    
+    private Context context;
+    private boolean isAdminMode;
     private OnProductoClickListener onProductoClickListener;
-    private OnProductoLongClickListener onProductoLongClickListener;
+    private OnProductoAdminActionListener onProductoAdminActionListener;
+    private DecimalFormat decimalFormat;
     
-    public ProductosAdapter() {
+    public ProductosAdapter(Context context, boolean isAdminMode) {
         super(DIFF_CALLBACK);
+        this.context = context;
+        this.isAdminMode = isAdminMode;
+        this.decimalFormat = new DecimalFormat("#,##0.00");
+    }
+    
+    @Override
+    public int getItemViewType(int position) {
+        return isAdminMode ? VIEW_TYPE_ADMIN : VIEW_TYPE_CLIENT;
     }
     
     @NonNull
     @Override
-    public ProductoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.item_producto, parent, false);
-        return new ProductoViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        
+        if (viewType == VIEW_TYPE_ADMIN) {
+            View view = inflater.inflate(R.layout.item_producto_admin, parent, false);
+            return new AdminViewHolder(view);
+        } else {
+            View view = inflater.inflate(R.layout.item_producto, parent, false);
+            return new ClientViewHolder(view);
+        }
     }
     
     @Override
-    public void onBindViewHolder(@NonNull ProductoViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ProductoEntity producto = getItem(position);
-        holder.bind(producto);
-    }
-    
-    public void setOnProductoClickListener(OnProductoClickListener listener) {
-        this.onProductoClickListener = listener;
-    }
-    
-    public void setOnProductoLongClickListener(OnProductoLongClickListener listener) {
-        this.onProductoLongClickListener = listener;
-    }
-    
-    class ProductoViewHolder extends RecyclerView.ViewHolder {
-        private final MaterialCardView cardView;
-        private final ImageView imageViewProducto;
-        private final TextView textViewNombre;
-        // private final TextView textViewCategoria; // No existe en layout
-        private final TextView textViewPrecio;
-        // private final Chip chipEstado; // No existe en layout
-        // private final View viewDisponibilidad; // No existe en layout
         
-        public ProductoViewHolder(@NonNull View itemView) {
+        if (holder instanceof AdminViewHolder) {
+            ((AdminViewHolder) holder).bind(producto);
+        } else if (holder instanceof ClientViewHolder) {
+            ((ClientViewHolder) holder).bind(producto);
+        }
+    }
+    
+    // ViewHolder para vista de cliente
+    class ClientViewHolder extends RecyclerView.ViewHolder {
+        private CardView cardProducto;
+        private ImageView ivProducto, ivPopular;
+        private TextView tvNombre, tvDescripcion, tvPrecio, tvPrecioOriginal, tvDescuento, tvStock;
+        private TextView tvPuntosRequeridos;
+        
+        public ClientViewHolder(@NonNull View itemView) {
             super(itemView);
+            cardProducto = itemView.findViewById(R.id.card_producto);
+            ivProducto = itemView.findViewById(R.id.iv_producto);
+            ivPopular = itemView.findViewById(R.id.iv_popular);
+            tvNombre = itemView.findViewById(R.id.tv_nombre);
+            tvDescripcion = itemView.findViewById(R.id.tv_descripcion);
+            tvPrecio = itemView.findViewById(R.id.tv_precio);
+            tvPrecioOriginal = itemView.findViewById(R.id.tv_precio_original);
+            tvDescuento = itemView.findViewById(R.id.tv_descuento);
+            tvStock = itemView.findViewById(R.id.tv_stock);
+            tvPuntosRequeridos = itemView.findViewById(R.id.tv_puntos_requeridos);
             
-            cardView = itemView.findViewById(R.id.card_producto);
-            imageViewProducto = itemView.findViewById(R.id.iv_producto);
-            textViewNombre = itemView.findViewById(R.id.tv_nombre);
-            // textViewCategoria = itemView.findViewById(R.id.textViewCategoria); // No existe en layout
-            textViewPrecio = itemView.findViewById(R.id.tv_precio);
-            // chipEstado = itemView.findViewById(R.id.chipEstado); // No existe en layout
-            // viewDisponibilidad = itemView.findViewById(R.id.viewDisponibilidad); // No existe en layout
-            
-            // Configurar listeners
-            cardView.setOnClickListener(v -> {
-                if (onProductoClickListener != null) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        onProductoClickListener.onProductoClick(getItem(position));
-                    }
+            itemView.setOnClickListener(v -> {
+                if (onProductoClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoClickListener.onProductoClick(getItem(getAdapterPosition()));
                 }
-            });
-            
-            cardView.setOnLongClickListener(v -> {
-                if (onProductoLongClickListener != null) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        onProductoLongClickListener.onProductoLongClick(getItem(position));
-                        return true;
-                    }
-                }
-                return false;
             });
         }
         
         public void bind(ProductoEntity producto) {
-            // Configurar nombre
-            textViewNombre.setText(producto.getNombre());
+            // Configurar nombre y descripción
+            tvNombre.setText(producto.getNombre());
+            tvDescripcion.setText(producto.getDescripcion());
             
-            // Configurar categoría
-            // textViewCategoria.setText(producto.getCategoria()); // No existe en layout
+            // Configurar imagen del producto (placeholder por ahora)
+            ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
             
             // Configurar precio
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
-            textViewPrecio.setText(currencyFormat.format(producto.getPrecio()));
+            tvPrecio.setText(currencyFormat.format(producto.getPrecio()));
+            
+            // Configurar stock
+            tvStock.setText(String.format("Stock: %d", producto.getStockDisponible()));
+            
+            // Configurar puntos requeridos
+            if (producto.getPuntosRequeridos() > 0) {
+                tvPuntosRequeridos.setText(String.format("⭐ %d pts", producto.getPuntosRequeridos()));
+                tvPuntosRequeridos.setVisibility(View.VISIBLE);
+            } else {
+                tvPuntosRequeridos.setVisibility(View.GONE);
+            }
+            
+            // Ocultar elementos de descuento por ahora
+            tvPrecioOriginal.setVisibility(View.GONE);
+            tvDescuento.setVisibility(View.GONE);
+            ivPopular.setVisibility(View.GONE);
+        }
+    }
+    
+    // ViewHolder para vista de administrador
+    class AdminViewHolder extends RecyclerView.ViewHolder {
+        private TextView tvNombre, tvDescripcion, tvPrecio, tvPuntos, tvCategoria, tvEstado;
+        private ImageButton btnEditar, btnEliminar, btnToggleActivo, btnToggleDisponibilidad;
+        
+        public AdminViewHolder(@NonNull View itemView) {
+            super(itemView);
+            
+            tvNombre = itemView.findViewById(R.id.tv_nombre_producto);
+            tvDescripcion = itemView.findViewById(R.id.tv_descripcion_producto);
+            tvPrecio = itemView.findViewById(R.id.tv_precio_producto);
+            tvPuntos = itemView.findViewById(R.id.tv_puntos_producto);
+            tvCategoria = itemView.findViewById(R.id.tv_categoria_producto);
+            tvEstado = itemView.findViewById(R.id.tv_estado_producto);
+            btnEditar = itemView.findViewById(R.id.btn_editar_producto);
+            btnEliminar = itemView.findViewById(R.id.btn_eliminar_producto);
+            btnToggleActivo = itemView.findViewById(R.id.btn_toggle_activo);
+            btnToggleDisponibilidad = itemView.findViewById(R.id.btn_toggle_disponibilidad);
+            
+            setupClickListeners();
+        }
+        
+        private void setupClickListeners() {
+            itemView.setOnClickListener(v -> {
+                if (onProductoAdminActionListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoAdminActionListener.onProductoClick(getItem(getAdapterPosition()));
+                }
+            });
+            
+            btnEditar.setOnClickListener(v -> {
+                if (onProductoAdminActionListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoAdminActionListener.onEditarClick(getItem(getAdapterPosition()));
+                }
+            });
+            
+            btnEliminar.setOnClickListener(v -> {
+                if (onProductoAdminActionListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoAdminActionListener.onEliminarClick(getItem(getAdapterPosition()));
+                }
+            });
+            
+            btnToggleActivo.setOnClickListener(v -> {
+                if (onProductoAdminActionListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoAdminActionListener.onToggleActivoClick(getItem(getAdapterPosition()));
+                }
+            });
+            
+            btnToggleDisponibilidad.setOnClickListener(v -> {
+                if (onProductoAdminActionListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onProductoAdminActionListener.onToggleDisponibilidadClick(getItem(getAdapterPosition()));
+                }
+            });
+        }
+        
+        public void bind(ProductoEntity producto) {
+            // Configurar información básica
+            tvNombre.setText(producto.getNombre());
+            tvDescripcion.setText(producto.getDescripcion());
+            tvCategoria.setText(producto.getCategoria());
+            
+            // Configurar precio
+            tvPrecio.setText(String.format("$%s", decimalFormat.format(producto.getPrecio())));
+            
+            // Configurar puntos
+            tvPuntos.setText(String.format("%d pts", producto.getPuntosRequeridos()));
             
             // Configurar estado
-            // boolean isDisponible = "activo".equalsIgnoreCase(producto.getEstado());
+            String estado = producto.getEstado();
+            tvEstado.setText(estado);
             
-            // Elementos comentados porque no existen en el layout
-            /*
-            if (isDisponible) {
-                // chipEstado.setText("Disponible"); // No existe en layout
-            // chipEstado.setChipBackgroundColorResource(R.color.success_light);
-            // chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success_green));
-                // viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.success)); // No existe en layout
+            // Configurar color del estado
+            if ("activo".equalsIgnoreCase(estado) || "disponible".equalsIgnoreCase(estado)) {
+                tvEstado.setBackgroundColor(ContextCompat.getColor(context, R.color.color_success_container));
+                tvEstado.setTextColor(ContextCompat.getColor(context, R.color.color_success));
             } else {
-                // chipEstado.setText("No disponible"); // No existe en layout
-            // chipEstado.setChipBackgroundColorResource(R.color.error_light);
-            // chipEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error_red));
-                // viewDisponibilidad.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), R.color.error)); // No existe en layout
-            }
-            */
-            
-            // Configurar imagen del producto basada en la categoría
-            configureProductImage(producto.getCategoria());
-            
-            // Configurar apariencia de la tarjeta según disponibilidad
-            // configureCardAppearance(isDisponible); // Variable comentada
-        }
-        
-        private void configureProductImage(String categoria) {
-            int imageResource;
-            
-            switch (categoria.toLowerCase()) {
-                case "café":
-                case "cafe":
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-                case "bebidas":
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-                case "postres":
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-                case "snacks":
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-                case "desayunos":
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-                default:
-                    imageResource = R.drawable.ic_coffee_placeholder;
-                    break;
-            }
-            
-            imageViewProducto.setImageResource(imageResource);
-            
-            // Configurar tint del icono
-            imageViewProducto.setColorFilter(
-                ContextCompat.getColor(itemView.getContext(), R.color.primary)
-            );
-        }
-        
-        private void configureCardAppearance(boolean isDisponible) {
-            if (isDisponible) {
-                // Producto disponible - apariencia normal
-                cardView.setAlpha(1.0f);
-                cardView.setCardElevation(4f);
-                textViewNombre.setAlpha(1.0f);
-                // textViewCategoria.setAlpha(1.0f); // No existe en layout
-                textViewPrecio.setAlpha(1.0f);
-                imageViewProducto.setAlpha(1.0f);
-            } else {
-                // Producto no disponible - apariencia atenuada
-                cardView.setAlpha(0.7f);
-                cardView.setCardElevation(2f);
-                textViewNombre.setAlpha(0.6f);
-                // textViewCategoria.setAlpha(0.6f); // No existe en layout
-                textViewPrecio.setAlpha(0.6f);
-                imageViewProducto.setAlpha(0.5f);
+                tvEstado.setBackgroundColor(ContextCompat.getColor(context, R.color.color_error_container));
+                tvEstado.setTextColor(ContextCompat.getColor(context, R.color.color_error));
             }
         }
     }
     
-    // DiffUtil para optimizar actualizaciones de la lista
+    // DiffUtil para optimizar actualizaciones
     private static final DiffUtil.ItemCallback<ProductoEntity> DIFF_CALLBACK = 
         new DiffUtil.ItemCallback<ProductoEntity>() {
             @Override
@@ -196,7 +224,9 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
                 return oldItem.getNombre().equals(newItem.getNombre()) &&
                        oldItem.getCategoria().equals(newItem.getCategoria()) &&
                        Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0 &&
-                       oldItem.isActivo() == newItem.isActivo();
+                       oldItem.getEstado().equals(newItem.getEstado()) &&
+                       oldItem.getPuntosRequeridos() == newItem.getPuntosRequeridos() &&
+                       oldItem.getStockDisponible() == newItem.getStockDisponible();
             }
         };
     
@@ -205,7 +235,32 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, ProductosAdapt
         void onProductoClick(ProductoEntity producto);
     }
     
-    public interface OnProductoLongClickListener {
-        void onProductoLongClick(ProductoEntity producto);
+    public interface OnProductoAdminActionListener {
+        void onProductoClick(ProductoEntity producto);
+        void onEditarClick(ProductoEntity producto);
+        void onEliminarClick(ProductoEntity producto);
+        void onToggleActivoClick(ProductoEntity producto);
+        void onToggleDisponibilidadClick(ProductoEntity producto);
+    }
+    
+    // Setters para listeners
+    public void setOnProductoClickListener(OnProductoClickListener listener) {
+        this.onProductoClickListener = listener;
+    }
+    
+    public void setOnProductoAdminActionListener(OnProductoAdminActionListener listener) {
+        this.onProductoAdminActionListener = listener;
+    }
+    
+    // Método para cambiar entre modo cliente y administrador
+    public void setAdminMode(boolean isAdminMode) {
+        if (this.isAdminMode != isAdminMode) {
+            this.isAdminMode = isAdminMode;
+            notifyDataSetChanged();
+        }
+    }
+    
+    public boolean isAdminMode() {
+        return isAdminMode;
     }
 }

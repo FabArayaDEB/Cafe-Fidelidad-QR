@@ -32,13 +32,7 @@ public interface ProductoDao {
     void deleteProducto(ProductoEntity producto);
     
     @Query("SELECT * FROM productos WHERE id_producto = :id")
-    ProductoEntity getById(String id);
-    
-    @Query("SELECT * FROM productos WHERE id_producto = :id")
     ProductoEntity getProductoById(Long id);
-    
-    @Query("SELECT * FROM productos")
-    List<ProductoEntity> getAll();
     
     @Query("SELECT * FROM productos")
     LiveData<List<ProductoEntity>> getAllProductos();
@@ -50,17 +44,17 @@ public interface ProductoDao {
     List<ProductoEntity> getByEstado(String estado);
     
     @Query("SELECT * FROM productos WHERE estado = 'disponible'")
-    List<ProductoEntity> getDisponibles();
-    
-    @Query("SELECT * FROM productos WHERE estado = 'disponible'")
     LiveData<List<ProductoEntity>> getProductosDisponibles();
     
+    @Query("SELECT * FROM productos WHERE estado = 'disponible'")
+    List<ProductoEntity> getDisponiblesSync();
+    
     // Consultas por categoría optimizadas
-    @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC LIMIT 100")
-    List<ProductoEntity> getByCategoria(String categoria);
-
     @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC")
     LiveData<List<ProductoEntity>> getProductosByCategoria(String categoria);
+
+    @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC LIMIT 100")
+    List<ProductoEntity> getByCategoriaSync(String categoria);
 
     @Query("SELECT * FROM productos WHERE categoria = :categoria AND estado = 'disponible' ORDER BY nombre ASC LIMIT 100")
     List<ProductoEntity> getDisponiblesByCategoria(String categoria);
@@ -135,4 +129,18 @@ public interface ProductoDao {
     
     @Query("SELECT COUNT(*) FROM productos WHERE estado != 'disponible'")
     int getCountProductosInactivosSync();
+    
+    // Métodos para gestión de stock
+    @Query("SELECT * FROM productos WHERE stockDisponible <= :umbral AND estado = 'disponible' ORDER BY stockDisponible ASC")
+    LiveData<List<ProductoEntity>> getProductosConStockBajo(int umbral);
+    
+    @Query("UPDATE productos SET stockDisponible = :nuevoStock, fechaModificacion = :fechaModificacion WHERE id_producto = :productoId")
+    int actualizarStock(long productoId, int nuevoStock, long fechaModificacion);
+    
+    // Métodos para activar/desactivar productos
+    @Query("UPDATE productos SET estado = 'disponible', fechaModificacion = :fechaModificacion WHERE id_producto = :productoId")
+    int activarProducto(long productoId, long fechaModificacion);
+    
+    @Query("UPDATE productos SET estado = 'inactivo', fechaModificacion = :fechaModificacion WHERE id_producto = :productoId")
+    int desactivarProducto(long productoId, long fechaModificacion);
 }

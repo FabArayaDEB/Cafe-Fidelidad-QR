@@ -15,9 +15,6 @@ import com.example.cafefidelidaqrdemo.ui.admin.FragmentAdminDashboard;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
 import com.example.cafefidelidaqrdemo.offline.OfflineManager;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-import java.util.concurrent.TimeUnit;
 
 public class AdminMainActivity extends AppCompatActivity {
 
@@ -83,13 +80,8 @@ public class AdminMainActivity extends AppCompatActivity {
      * Configura la sincronización automática de datos
      */
     private void configurarSincronizacionAutomatica() {
-        // Configurar sincronización periódica cada 15 minutos
-        PeriodicWorkRequest syncWorkRequest = new PeriodicWorkRequest.Builder(
-                com.example.cafefidelidaqrdemo.offline.SyncWorker.class,
-                15, TimeUnit.MINUTES)
-                .build();
-        
-        WorkManager.getInstance(this).enqueue(syncWorkRequest);
+        // Usar el método estático de SyncWorker para programar sincronización periódica
+        com.example.cafefidelidaqrdemo.offline.SyncWorker.schedulePeriodicSync(this);
         
         // Iniciar sincronización inmediata si hay datos pendientes
         if (offlineManager != null) {

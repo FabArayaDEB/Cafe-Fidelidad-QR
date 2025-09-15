@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Indicador de sincronización -->
+        <View
+            android:id="@+id/indicador_sincronizado"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="12dp"
+            android:background="@android:color/holo_orange_light" />
+
+        <!-- Contenido principal -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Primera fila: Coordenadas y fecha -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:id="@+id/tv_coordenadas"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0.000000, 0.000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black" />
+
+                <TextView
+                    android:id="@+id/tv_fecha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="01/01/2024 12:00"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
+
+            <!-- Segunda fila: Precisión -->
+            <TextView
+                android:id="@+id/tv_precision"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="±10.0 m"
+                android:textSize="12sp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Tercera fila: Dirección (opcional) -->
+            <TextView
+                android:id="@+id/tv_direccion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Calle Ejemplo 123"
+                android:textSize="12sp"
+                android:textColor="@android:color/black"
+                android:layout_marginBottom="2dp"
+                android:visibility="gone" />
+
+            <!-- Cuarta fila: Ciudad (opcional) -->
+            <TextView
+                android:id="@+id/tv_ciudad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ciudad Ejemplo"
+                android:textSize="11sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone" />
+
+            <!-- Quinta fila: Información de sucursal (opcional) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_sucursal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cerca de sucursal"
+                    android:textSize="11sp"
+                    android:textColor="@android:color/holo_green_dark"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_distancia"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="50 m"
+                    android:textSize="11sp"
+                    android:textColor="@android:color/holo_green_dark"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Icono de ubicación -->
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:tint="@android:color/darker_gray" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

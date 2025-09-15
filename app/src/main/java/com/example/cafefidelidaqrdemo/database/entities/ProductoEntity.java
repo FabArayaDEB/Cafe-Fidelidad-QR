@@ -24,6 +24,11 @@ public class ProductoEntity {
     private int stockDisponible; // Stock disponible del producto
     private int version; // Control de versión para concurrencia
     
+    // Campos de auditoría
+    private long fechaCreacion; // Timestamp de creación del producto
+    private long fechaModificacion; // Timestamp de última modificación
+    private int puntosRequeridos; // Puntos necesarios para canjear el producto
+    
     // Campos adicionales para sincronización offline
     private long lastSync;
     private boolean needsSync;
@@ -41,7 +46,11 @@ public class ProductoEntity {
         this.descripcion = descripcion;
         this.precio = precio;
         this.estado = estado;
-        this.lastSync = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
+        this.fechaCreacion = currentTime;
+        this.fechaModificacion = currentTime;
+        this.puntosRequeridos = 0; // Por defecto no requiere puntos
+        this.lastSync = currentTime;
         this.needsSync = true;
         this.synced = false;
     }
@@ -84,6 +93,15 @@ public class ProductoEntity {
     public boolean isSynced() { return synced; }
     public void setSynced(boolean synced) { this.synced = synced; }
     
+    public long getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(long fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    
+    public long getFechaModificacion() { return fechaModificacion; }
+    public void setFechaModificacion(long fechaModificacion) { this.fechaModificacion = fechaModificacion; }
+    
+    public int getPuntosRequeridos() { return puntosRequeridos; }
+    public void setPuntosRequeridos(int puntosRequeridos) { this.puntosRequeridos = puntosRequeridos; }
+    
     // Métodos de utilidad
     public boolean isActivo() {
         return "activo".equalsIgnoreCase(estado);
@@ -99,16 +117,19 @@ public class ProductoEntity {
     
     public void marcarDisponible() {
         this.estado = "disponible";
+        this.fechaModificacion = System.currentTimeMillis();
         this.needsSync = true;
     }
     
     public void marcarNoDisponible() {
         this.estado = "no disponible";
+        this.fechaModificacion = System.currentTimeMillis();
         this.needsSync = true;
     }
     
     public void setActivo(boolean activo) {
         this.estado = activo ? "activo" : "inactivo";
+        this.fechaModificacion = System.currentTimeMillis();
         this.needsSync = true;
     }
     

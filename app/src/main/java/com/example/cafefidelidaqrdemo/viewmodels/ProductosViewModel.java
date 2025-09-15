@@ -197,7 +197,17 @@ public class ProductosViewModel extends AndroidViewModel {
     public void searchProductos(String query) {
         _searchQuery.setValue(query);
         if (query != null && !query.trim().isEmpty()) {
-            repository.searchProductos(query, null);
+            repository.searchProductos(query, new ProductoRepository.RepositoryCallback<List<ProductoEntity>>() {
+                @Override
+                public void onSuccess(List<ProductoEntity> result) {
+                    // Los resultados se manejan a través del repositorio
+                }
+                
+                @Override
+                public void onError(String error) {
+                    // Los errores se manejan a través del repositorio
+                }
+            });
         } else {
             repository.clearSearchResults();
         }

@@ -118,4 +118,16 @@ public interface SucursalDao {
     @Update
     int updateSucursal(SucursalEntity sucursal);
     
+    @Query("UPDATE sucursales SET estado = 'activa' WHERE id_sucursal = :sucursalId")
+    void activarSucursal(long sucursalId);
+    
+    @Query("UPDATE sucursales SET estado = 'inactiva' WHERE id_sucursal = :sucursalId")
+    void desactivarSucursal(long sucursalId);
+    
+    @Query("UPDATE sucursales SET estado = 'eliminada' WHERE id_sucursal = :sucursalId")
+    void eliminarSucursal(long sucursalId);
+    
+    @Query("SELECT COUNT(*) FROM sucursales WHERE nombre = :nombre AND id_sucursal != :idExcluir")
+    int existeSucursalPorNombreExcluyendoId(String nombre, String idExcluir);
+    
 }

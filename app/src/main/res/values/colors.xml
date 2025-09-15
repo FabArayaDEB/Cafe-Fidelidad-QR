@@ -46,6 +46,7 @@
     <color name="on_primary">#FFFFFF</color>
     <color name="surface">#FFFBFE</color>
     <color name="on_error_container">#FFFFFF</color>
+    <color name="color_error_container">#FFCDD2</color>
     <color name="color_pendiente">#FFC107</color>
     <color name="color_visita">#2196F3</color>
     <color name="color_texto_primario">#212121</color>

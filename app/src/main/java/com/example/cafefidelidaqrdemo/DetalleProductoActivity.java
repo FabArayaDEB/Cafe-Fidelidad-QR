@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
-import com.example.cafefidelidaqrdemo.models.Producto;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.google.android.material.button.MaterialButton;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -31,7 +31,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
     private Toolbar toolbar;
 
     private String productoId;
-    private Producto producto;
+    private ProductoEntity producto;
     // private DatabaseReference productosRef;
 
     @Override
@@ -99,7 +99,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
         //     @Override
         //     public void onDataChange(@NonNull DataSnapshot snapshot) {
         //         if (snapshot.exists()) {
-        //             producto = snapshot.getValue(Producto.class);
+        //             producto = snapshot.getValue(ProductoEntity.class);
         //             if (producto != null) {
         //                 displayProductoDetails();
         //             }
@@ -120,39 +120,22 @@ public class DetalleProductoActivity extends AppCompatActivity {
     }
 
     private void displayProductoDetails() {
-        // Configurar imagen del producto
-        if (producto.getImagenUrl() != null && !producto.getImagenUrl().isEmpty()) {
-            Glide.with(this)
-                    .load(producto.getImagenUrl())
-                    .placeholder(R.drawable.ic_coffee_placeholder)
-                    .error(R.drawable.ic_coffee_placeholder)
-                    .into(ivProducto);
-        } else {
-            ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
-        }
+        // Configurar imagen del producto - ProductoEntity no tiene imagen
+        ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
 
         // Configurar información básica
         tvNombre.setText(producto.getNombre());
         tvDescripcion.setText(producto.getDescripcion());
         tvCategoria.setText("Categoría: " + producto.getCategoria());
 
-        // Configurar precios y descuentos
-        if (producto.tieneDescuento()) {
-            tvPrecio.setText(String.format("$%.2f", producto.getPrecioConDescuento()));
-            tvPrecioOriginal.setText(String.format("$%.2f", producto.getPrecio()));
-            tvPrecioOriginal.setPaintFlags(tvPrecioOriginal.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-            tvPrecioOriginal.setVisibility(View.VISIBLE);
-            tvDescuento.setText(String.format("%.0f%% OFF", producto.getDescuento()));
-            tvDescuento.setVisibility(View.VISIBLE);
-        } else {
-            tvPrecio.setText(String.format("$%.2f", producto.getPrecio()));
-            tvPrecioOriginal.setVisibility(View.GONE);
-            tvDescuento.setVisibility(View.GONE);
-        }
+        // Configurar precios - ProductoEntity no tiene descuentos
+        tvPrecio.setText(producto.getPrecioFormateado());
+        tvPrecioOriginal.setVisibility(View.GONE);
+        tvDescuento.setVisibility(View.GONE);
 
         // Configurar stock
-        if (producto.estaEnStock()) {
-            tvStock.setText(String.format("Stock disponible: %d unidades", producto.getStock()));
+        if (producto.getStockDisponible() > 0) {
+            tvStock.setText(String.format("Stock disponible: %d unidades", producto.getStockDisponible()));
             tvStock.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
             btnAgregarCarrito.setEnabled(true);
         } else {
@@ -161,34 +144,28 @@ public class DetalleProductoActivity extends AppCompatActivity {
             btnAgregarCarrito.setEnabled(false);
         }
 
-        // Configurar información nutricional
-        if (producto.getCalorias() > 0) {
-            tvCalorias.setText(String.format("Calorías: %d", producto.getCalorias()));
-            tvCalorias.setVisibility(View.VISIBLE);
-        } else {
-            tvCalorias.setVisibility(View.GONE);
-        }
+        // Configurar información nutricional - No disponible en ProductoEntity
+        tvCalorias.setVisibility(View.GONE);
 
-        // Configurar ingredientes
-        if (producto.getIngredientes() != null && !producto.getIngredientes().isEmpty()) {
-            tvIngredientes.setText("Ingredientes: " + producto.getIngredientes());
-            tvIngredientes.setVisibility(View.VISIBLE);
-        } else {
-            tvIngredientes.setVisibility(View.GONE);
-        }
+        // Configurar ingredientes - No disponible en ProductoEntity
+        tvIngredientes.setVisibility(View.GONE);
 
-        // Configurar indicadores dietéticos
-        tvVegano.setVisibility(producto.isEsVegano() ? View.VISIBLE : View.GONE);
-        tvVegetariano.setVisibility(producto.isEsVegetariano() ? View.VISIBLE : View.GONE);
-        tvSinLactosa.setVisibility(!producto.isContieneLactosa() ? View.VISIBLE : View.GONE);
-        tvSinGluten.setVisibility(!producto.isContieneGluten() ? View.VISIBLE : View.GONE);
+        // Configurar indicadores dietéticos - No disponible en ProductoEntity
+        tvVegano.setVisibility(View.GONE);
+        tvVegetariano.setVisibility(View.GONE);
+        tvSinLactosa.setVisibility(View.GONE);
+        tvSinGluten.setVisibility(View.GONE);
 
-        // Configurar indicador de popularidad
-        ivPopular.setVisibility(producto.isEsPopular() ? View.VISIBLE : View.GONE);
+        // Configurar indicador de popularidad - No disponible en ProductoEntity
+        ivPopular.setVisibility(View.GONE);
 
         // Configurar puntos requeridos
-        // Puntos requeridos no disponibles en ProductoEntity
+        if (producto.getPuntosRequeridos() > 0) {
+            tvPuntosRequeridos.setText(String.format("Puntos requeridos: %d", producto.getPuntosRequeridos()));
+            tvPuntosRequeridos.setVisibility(View.VISIBLE);
+        } else {
             tvPuntosRequeridos.setVisibility(View.GONE);
+        }
 
         // Configurar botón de agregar al carrito
         btnAgregarCarrito.setOnClickListener(new View.OnClickListener() {
@@ -200,7 +177,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
     }
 
     private void agregarAlCarrito() {
-        if (producto != null && producto.estaEnStock()) {
+        if (producto != null && producto.getStockDisponible() > 0) {
             // TODO: Implementar lógica de carrito de compras
             Toast.makeText(this, "Producto agregado al carrito", Toast.LENGTH_SHORT).show();
         } else {

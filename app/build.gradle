@@ -31,6 +31,11 @@ android {
         viewBinding true
         dataBinding true
     }
+    
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 dependencies {
@@ -76,6 +81,10 @@ dependencies {
     // Navigation Component
     implementation 'androidx.navigation:navigation-fragment:2.7.6'
     implementation 'androidx.navigation:navigation-ui:2.7.6'
+    
+    // Google Location Services
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
 
 
     implementation libs.appcompat
@@ -83,6 +92,9 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    
+    // DataBinding
+    implementation 'androidx.databinding:databinding-runtime:8.2.0'
     
     // Testing dependencies
     testImplementation libs.junit

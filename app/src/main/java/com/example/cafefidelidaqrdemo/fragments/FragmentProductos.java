@@ -17,6 +17,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
+import android.content.Intent;
+import com.example.cafefidelidaqrdemo.DetalleProductoActivity;
+// import com.example.cafefidelidaqrdemo.activities.DetalleProductoActivity; // TODO: Crear esta actividad
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.viewmodels.ProductosViewModel;
 import com.google.android.material.chip.Chip;
@@ -91,7 +94,7 @@ public class FragmentProductos extends Fragment {
     }
     
     private void setupRecyclerView() {
-        adapter = new ProductosAdapter();
+        adapter = new ProductosAdapter(getContext(), false); // false para modo cliente
         
         // Configurar GridLayoutManager con 2 columnas
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
@@ -99,9 +102,14 @@ public class FragmentProductos extends Fragment {
         recyclerViewProductos.setAdapter(adapter);
         
         // Listener para clicks en productos
-        adapter.setOnProductoClickListener(producto -> {
-            // Mostrar detalles del producto
-            showProductoDetails(producto);
+        adapter.setOnProductoClickListener(new ProductosAdapter.OnProductoClickListener() {
+            @Override
+            public void onProductoClick(ProductoEntity producto) {
+                // Abrir detalle del producto
+                Intent intent = new Intent(getActivity(), DetalleProductoActivity.class);
+                intent.putExtra("producto_id", producto.getId_producto());
+                startActivity(intent);
+            }
         });
         
         // Listener para scroll
