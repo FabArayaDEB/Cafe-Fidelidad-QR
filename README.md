@@ -1,18 +1,18 @@
-# Café Fidelidad QR Demo
+# Café Fidelidad QR 
 
 Aplicación Android de sistema de fidelidad para cafeterías que utiliza códigos QR para el registro de compras y acumulación de puntos.
 
-## 📱 Características Principales
+## Características Principales
 
 - **Sistema de Autenticación**: Registro e inicio de sesión con Firebase Authentication
 - **Perfil de Usuario**: Gestión de datos personales y visualización de información
 - **Sistema de Puntos**: Acumulación y seguimiento de puntos de fidelidad
 - **Escaneo QR**: Lectura de códigos QR para registrar compras
 - **Historial de Transacciones**: Registro completo de compras y puntos ganados
-- **Panel de Administración**: Gestión de productos, beneficios y sucursales
+- **Panel de Administración**: Gestión de productos, beneficios, sucursales y clientes
 - **Beneficios**: Sistema de recompensas basado en puntos acumulados
 
-## 🏗️ Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 cafeFidelidaQRdemo/
@@ -20,43 +20,58 @@ cafeFidelidaQRdemo/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/example/cafefidelidaqrdemo/
-│   │   │   │   ├── activities/           # Actividades específicas
-│   │   │   │   │   └── QRScannerActivity.java
-│   │   │   │   ├── adapters/            # Adaptadores para RecyclerView
-│   │   │   │   │   ├── BeneficioAdapter.java
-│   │   │   │   │   ├── HistorialAdapter.java
-│   │   │   │   │   ├── ProductoAdapter.java
-│   │   │   │   │   └── SucursalAdapter.java
-│   │   │   │   ├── database/            # Modelos de base de datos
-│   │   │   │   │   └── models/
-│   │   │   │   │       ├── Beneficio.java
-│   │   │   │   │       ├── Cliente.java
-│   │   │   │   │       ├── Producto.java
-│   │   │   │   │       ├── Sucursal.java
-│   │   │   │   │       ├── TopCliente.java
-│   │   │   │   │       └── Transaccion.java
-│   │   │   │   ├── fragments/           # Fragmentos principales
+│   │   │   │   ├── activities/          # Actividades principales
+│   │   │   │   │   ├── QRScannerActivity.java
+│   │   │   │   │   ├── BeneficiosActivity.java
+│   │   │   │   │   ├── DatosPersonalesActivity.java
+│   │   │   │   │   ├── EditarPerfilActivity.java
+│   │   │   │   │   ├── HistorialActivity.java
+│   │   │   │   │   ├── LoginActivity.java
+│   │   │   │   │   ├── MainActivity.java
+│   │   │   │   │   ├── OpcionesLoginActivity.java
+│   │   │   │   │   ├── RecuperarPassActivity.java
+│   │   │   │   │   └── RegistroActivity.java
+│   │   │   │   ├── fragments/           # Fragmentos de UI
 │   │   │   │   │   ├── FragmentHistorial.java
 │   │   │   │   │   ├── FragmentPerfil.java
 │   │   │   │   │   ├── FragmentPuntos.java
 │   │   │   │   │   └── FragmentQR.java
-│   │   │   │   ├── ui/                  # UI específica
+│   │   │   │   ├── adapters/            # Adaptadores RecyclerView
+│   │   │   │   │   ├── BeneficioAdapter.java
+│   │   │   │   │   ├── HistorialAdapter.java
+│   │   │   │   │   ├── ProductoAdapter.java
+│   │   │   │   │   └── SucursalAdapter.java
+│   │   │   │   ├── viewmodels/          # ViewModels MVVM
+│   │   │   │   ├── database/            # Capa de base de datos
+│   │   │   │   │   ├── entities/        # Entidades Room
+│   │   │   │   │   ├── dao/             # Data Access Objects
+│   │   │   │   │   ├── models/          # Modelos auxiliares
+│   │   │   │   │   │   ├── Beneficio.java
+│   │   │   │   │   │   ├── Cliente.java
+│   │   │   │   │   │   ├── Producto.java
+│   │   │   │   │   │   ├── Sucursal.java
+│   │   │   │   │   │   ├── TopCliente.java
+│   │   │   │   │   │   └── Transaccion.java
+│   │   │   │   │   └── CafeFidelidadDatabase.java
+│   │   │   │   ├── repository/          # Capa de repositorios
+│   │   │   │   │   ├── base/            # Repositorio base
+│   │   │   │   │   └── interfaces/      # Contratos
+│   │   │   │   ├── domain/              # Lógica de negocio
+│   │   │   │   │   └── usecases/        # Casos de uso
+│   │   │   │   ├── network/             # Capa de red
+│   │   │   │   ├── sync/                # Sincronización
+│   │   │   │   ├── security/            # Seguridad y validación
+│   │   │   │   ├── offline/             # Gestión offline
+│   │   │   │   ├── managers/            # Gestores especializados
+│   │   │   │   ├── workers/             # WorkManager tasks
+│   │   │   │   ├── ui/                  # Componentes UI
 │   │   │   │   │   └── admin/           # Panel de administración
 │   │   │   │   │       ├── FragmentAdminDashboard.java
 │   │   │   │   │       ├── FragmentProductosAdmin.java
 │   │   │   │   │       └── FragmentSucursalesAdmin.java
-│   │   │   │   ├── utils/               # Utilidades
-│   │   │   │   │   ├── QRCodeGenerator.java
-│   │   │   │   │   └── QRScanResult.java
-│   │   │   │   ├── BeneficiosActivity.java
-│   │   │   │   ├── DatosPersonalesActivity.java
-│   │   │   │   ├── EditarPerfilActivity.java
-│   │   │   │   ├── HistorialActivity.java
-│   │   │   │   ├── LoginActivity.java
-│   │   │   │   ├── MainActivity.java
-│   │   │   │   ├── OpcionesLoginActivity.java
-│   │   │   │   ├── RecuperarPassActivity.java
-│   │   │   │   └── RegistroActivity.java
+│   │   │   │   └── utils/               # Utilidades
+│   │   │   │       ├── QRCodeGenerator.java
+│   │   │   │       └── QRScanResult.java
 │   │   │   ├── res/
 │   │   │   │   ├── drawable/            # Recursos gráficos
 │   │   │   │   ├── layout/              # Layouts XML
@@ -65,34 +80,108 @@ cafeFidelidaQRdemo/
 │   │   │   └── AndroidManifest.xml
 │   │   └── androidTest/                 # Tests de instrumentación
 │   ├── build.gradle                     # Configuración de build del módulo
-│   └── google-services.json            # Configuración de Firebase
-├── gradle/                              # Wrapper de Gradle
-├── build.gradle                         # Configuración de build del proyecto
-├── gradle.properties                    # Propiedades de Gradle
-└── settings.gradle                      # Configuración de settings
-```
+│   ├── google-services.json            # Configuración de Firebase
+│   └── proguard-rules.pro              # Reglas ProGuard
 
-## 🔧 Arquitectura
+```
+## Arquitectura
 
 ### Patrón de Arquitectura
-La aplicación sigue una arquitectura **MVP (Model-View-Presenter)** simplificada con los siguientes componentes:
+La aplicación sigue una arquitectura **MVVM (Model-View-ViewModel)** con **Clean Architecture**, organizando el código en capas bien definidas:
 
-- **Activities**: Controlan el ciclo de vida y la navegación
-- **Fragments**: Manejan la UI específica de cada sección
-- **Adapters**: Gestionan la presentación de datos en listas
-- **Models**: Representan las entidades de datos
-- **Utils**: Funciones auxiliares y utilidades
+#### **Capas Principales**
+
+**1. Database Layer (Room)**
+- **`database/entities/`**: Entidades de base de datos (ClienteEntity, ProductoEntity, etc.)
+- **`database/dao/`**: Data Access Objects para operaciones CRUD (Data Access Objects)
+- **`database/models/`**: Modelos auxiliares para consultas complejas
+- **`CafeFidelidadDatabase.java`**: Configuración principal de Room
+
+**2. Repository Layer**
+- **`repository/`**: Abstrae las fuentes de datos (local/remota)
+- **`repository/base/`**: Repositorio base con funcionalidades comunes
+- **`repository/interfaces/`**: Contratos de repositorios
+
+**3. Domain Layer**
+- **`domain/usecases/`**: Lógica de negocio encapsulada
+- **Use Cases**: AuthUseCase, PuntosUseCase, TransaccionQRUseCase
+
+**4. Presentation Layer**
+- **`viewmodels/`**: Maneja el estado de la UI y lógica de presentación
+- **`ui/`**: Componentes de UI organizados por funcionalidad
+- **`fragments/`**: Fragmentos principales de la aplicación
+
+#### **Organización de Directorios**
+
+**Funcionalidades Especializadas:**
+- **`network/`**: Capa de red (Retrofit, API services)
+- **`sync/`**: Sincronización offline con WorkManager
+- **`security/`**: Validación de QR y comunicación segura
+- **`offline/`**: Gestión de estado offline
+- **`adapters/`**: Adaptadores RecyclerView
+- **`utils/`**: Utilidades reutilizables
+- **`managers/`**: Gestores especializados
+
+#### 🔄 **Flujo de Datos**
+```
+UI (Activities/Fragments) 
+    ↕️
+ViewModels 
+    ↕️
+Use Cases (Domain) 
+    ↕️
+Repositories 
+    ↕️
+DAOs ↔️ Network
+    ↕️
+Database (Room)
+```
+
+#### **Beneficios de la Arquitectura**
+- **Separación de Responsabilidades**: Cada capa tiene un propósito específico
+- **Testabilidad**: Fácil mockeo de dependencias
+- **Mantenibilidad**: Código organizado y fácil de localizar
+- **Escalabilidad**: Estructura preparada para crecimiento
+- **Reactividad**: StateFlow + LiveData para actualizaciones automáticas
 
 ### Tecnologías Utilizadas
 
-- **Firebase Authentication**: Autenticación de usuarios
-- **Firebase Realtime Database**: Base de datos en tiempo real
+#### **Base de Datos y Persistencia**
+- **Room Database**: Base de datos local SQLite con ORM
+- **Firebase Realtime Database**: Base de datos en tiempo real (legacy)
 - **Firebase Storage**: Almacenamiento de archivos
+- **SharedPreferences**: Almacenamiento de configuraciones
+
+#### **Autenticación y Seguridad**
+- **Firebase Authentication**: Autenticación de usuarios
+- **Custom Security**: Validación de QR y comunicación segura
+- **Session Management**: Gestión de sesiones de usuario
+
+#### **Networking y Sincronización**
+- **Retrofit**: Cliente HTTP para APIs REST
+- **WorkManager**: Tareas en background y sincronización
+- **OkHttp**: Cliente HTTP con interceptores
+- **Gson**: Serialización/deserialización JSON
+
+#### **UI y UX**
+- **Material Design**: Componentes de UI modernos
+- **Data Binding**: Vinculación reactiva de datos
+- **ViewBinding**: Acceso seguro a vistas
+- **Navigation Component**: Navegación entre fragmentos
+
+#### **Funcionalidades Específicas**
 - **ZXing**: Librería para escaneo de códigos QR
 - **Glide**: Carga y cache de imágenes
-- **Material Design**: Componentes de UI
+- **CameraX**: API moderna de cámara
 
-## 🚀 Funcionalidades Detalladas
+#### **Arquitectura y Patrones**
+- **MVVM**: Patrón Model-View-ViewModel
+- **StateFlow**: Manejo de estado reactivo
+- **LiveData**: Observación lifecycle-aware
+- **Coroutines**: Programación asíncrona
+- **Dependency Injection**: Inyección de dependencias manual
+
+## Funcionalidades Detalladas
 
 ### 1. Sistema de Autenticación
 - Registro de nuevos usuarios con email y contraseña
@@ -136,7 +225,7 @@ La aplicación sigue una arquitectura **MVP (Model-View-Presenter)** simplificad
 - Control de beneficios y promociones
 - Estadísticas y reportes
 
-## 📋 Requisitos del Sistema
+## Requisitos del Sistema
 
 - **Android API Level**: Mínimo 21 (Android 5.0)
 - **Target SDK**: 34 (Android 14)
@@ -145,26 +234,10 @@ La aplicación sigue una arquitectura **MVP (Model-View-Presenter)** simplificad
   - `INTERNET`: Para conexión a Firebase
   - `ACCESS_NETWORK_STATE`: Para verificar conectividad
 
-## 🛠️ Configuración del Proyecto
+## Configuración del Proyecto
 
-### 1. Clonar el Repositorio
-```bash
-git clone [URL_DEL_REPOSITORIO]
-cd cafeFidelidaQRdemo
-```
 
-### 2. Configurar Firebase
-1. Crear un proyecto en [Firebase Console](https://console.firebase.google.com/)
-2. Agregar una aplicación Android
-3. Descargar `google-services.json` y colocarlo en `app/`
-4. Habilitar Authentication y Realtime Database
-
-### 3. Compilar y Ejecutar
-```bash
-./gradlew assembleDebug
-```
-
-## 📱 Flujo de Usuario
+## Flujo de Usuario
 
 ### Cliente
 1. **Registro/Login** → Crear cuenta o iniciar sesión
@@ -181,36 +254,13 @@ cd cafeFidelidaQRdemo
 4. **Sucursales** → Administrar ubicaciones
 5. **Escáner** → Registrar compras de clientes
 
-## 🔐 Seguridad
+## Seguridad
 
 - Autenticación segura con Firebase
 - Validación de datos en cliente y servidor
 - Reglas de seguridad en Firebase Database
 - Encriptación de comunicaciones HTTPS
 
-## 🐛 Problemas Conocidos
-
-- Algunos warnings de deprecación en Gradle
-- Optimización pendiente para dispositivos de baja gama
-- Mejoras en la UI para tablets
-
-## 🤝 Contribución
-
-Para contribuir al proyecto:
-1. Fork el repositorio
-2. Crear una rama para la nueva funcionalidad
-3. Realizar los cambios y commits
-4. Crear un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
-## 📞 Contacto
-
-Para soporte o consultas, contactar al equipo de desarrollo.
-
----
 
 **Versión**: 1.0.0  
 **Última actualización**: Enero 2025

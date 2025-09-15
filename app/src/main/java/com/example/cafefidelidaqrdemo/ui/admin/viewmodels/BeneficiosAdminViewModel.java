@@ -78,19 +78,49 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         refreshTrigger.setValue(true);
     }
     
-    // Operaciones CRUD - Temporalmente deshabilitadas
+    // Operaciones CRUD
     public void createBeneficio(BeneficioEntity beneficio) {
-        // TODO: Implementar conversión entre tipos de Beneficio
-        operationResultLiveData.postValue(
-            new OperationResult(false, "Funcionalidad en desarrollo")
-        );
+        if (!validateBeneficioData(beneficio)) {
+            operationResultLiveData.postValue(
+                new OperationResult(false, "Datos del beneficio inválidos")
+            );
+            return;
+        }
+        
+        beneficioRepository.insertBeneficio(beneficio, success -> {
+            if (success) {
+                operationResultLiveData.postValue(
+                    new OperationResult(true, "Beneficio creado exitosamente")
+                );
+                refreshBeneficios();
+            } else {
+                operationResultLiveData.postValue(
+                    new OperationResult(false, "Error al crear el beneficio")
+                );
+            }
+        });
     }
     
     public void updateBeneficio(BeneficioEntity beneficio) {
-        // TODO: Implementar conversión entre tipos de Beneficio
-        operationResultLiveData.postValue(
-            new OperationResult(false, "Funcionalidad en desarrollo")
-        );
+        if (!validateBeneficioData(beneficio)) {
+            operationResultLiveData.postValue(
+                new OperationResult(false, "Datos del beneficio inválidos")
+            );
+            return;
+        }
+        
+        beneficioRepository.updateBeneficio(beneficio, success -> {
+            if (success) {
+                operationResultLiveData.postValue(
+                    new OperationResult(true, "Beneficio actualizado exitosamente")
+                );
+                refreshBeneficios();
+            } else {
+                operationResultLiveData.postValue(
+                    new OperationResult(false, "Error al actualizar el beneficio")
+                );
+            }
+        });
     }
     
     public void deleteBeneficio(String beneficioId) {

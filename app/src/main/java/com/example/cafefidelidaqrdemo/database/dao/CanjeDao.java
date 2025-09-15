@@ -67,10 +67,11 @@ public interface CanjeDao {
     @Query("SELECT * FROM canjes WHERE id_cliente = :idCliente AND estado = :estado ORDER BY fecha_solicitud DESC")
     LiveData<List<CanjeEntity>> getCanjesByClienteYEstado(String idCliente, String estado);
     
-    @Query("SELECT * FROM canjes WHERE estado = 'PENDIENTE' AND otp_expiracion > :tiempoActual")
+    // Consultas optimizadas para OTP con índices compuestos
+    @Query("SELECT * FROM canjes WHERE estado = 'PENDIENTE' AND otp_expiracion > :tiempoActual ORDER BY otp_expiracion ASC LIMIT 100")
     List<CanjeEntity> getCanjesPendientesValidos(long tiempoActual);
-    
-    @Query("SELECT * FROM canjes WHERE estado = 'PENDIENTE' AND otp_expiracion <= :tiempoActual")
+
+    @Query("SELECT * FROM canjes WHERE estado = 'PENDIENTE' AND otp_expiracion <= :tiempoActual ORDER BY otp_expiracion ASC LIMIT 100")
     List<CanjeEntity> getCanjesToExpirar(long tiempoActual);
     
     // ========== CONSULTAS DE OTP ==========
@@ -78,18 +79,19 @@ public interface CanjeDao {
     @Query("SELECT * FROM canjes WHERE id_cliente = :idCliente AND estado = 'PENDIENTE' AND otp_expiracion > :tiempoActual LIMIT 1")
     CanjeEntity getOtpActivoCliente(String idCliente, long tiempoActual);
     
-    @Query("UPDATE canjes SET otp_usado = 1, estado = 'CANJEADO', fecha_canje = :fechaCanje, cajero_id = :cajeroId WHERE otp_codigo = :otpCodigo AND otp_usado = 0")
+    // Operaciones atómicas optimizadas para OTP
+    @Query("UPDATE canjes SET otp_usado = 1, estado = 'CANJEADO', fecha_canje = :fechaCanje, cajero_id = :cajeroId, needsSync = 1 WHERE otp_codigo = :otpCodigo AND otp_usado = 0 AND estado = 'PENDIENTE'")
     int marcarOtpUsado(String otpCodigo, long fechaCanje, String cajeroId);
-    
-    @Query("UPDATE canjes SET estado = 'EXPIRADO' WHERE estado = 'PENDIENTE' AND otp_expiracion <= :tiempoActual")
+
+    @Query("UPDATE canjes SET estado = 'EXPIRADO', needsSync = 1 WHERE estado = 'PENDIENTE' AND otp_expiracion <= :tiempoActual")
     int expirarOtpsVencidos(long tiempoActual);
     
-    // ========== CONSULTAS DE SINCRONIZACIÓN ==========
-    
-    @Query("SELECT * FROM canjes WHERE needsSync = 1")
+    // ========== CONSULTAS DE SINCRONIZACIÓN OPTIMIZADAS ==========
+
+    @Query("SELECT * FROM canjes WHERE needsSync = 1 ORDER BY fecha_solicitud ASC LIMIT 200")
     List<CanjeEntity> getCanjesParaSincronizar();
-    
-    @Query("SELECT * FROM canjes WHERE synced = 0")
+
+    @Query("SELECT * FROM canjes WHERE synced = 0 ORDER BY fecha_solicitud ASC LIMIT 200")
     List<CanjeEntity> getCanjesNoSincronizados();
     
     @Query("UPDATE canjes SET needsSync = 1, synced = 0 WHERE id_canje = :idCanje")

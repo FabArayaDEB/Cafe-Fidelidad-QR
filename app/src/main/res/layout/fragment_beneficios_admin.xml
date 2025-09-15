@@ -20,7 +20,9 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/color_primary"
             app:title="Gestión de Beneficios"
-            app:titleTextColor="@color/color_on_primary" />
+            app:titleTextColor="@color/color_on_primary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationContentDescription="Volver al menú principal" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

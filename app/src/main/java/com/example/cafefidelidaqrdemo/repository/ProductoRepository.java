@@ -39,7 +39,7 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
         this.searchManager = new SearchManager();
     }
     
-    // ==================== GETTERS PARA LIVEDATA ====================
+    //GETTERS PARA LIVEDATA
     
     public LiveData<List<ProductoEntity>> getAllProductos() {
         return productoDao.getAllProductos();
@@ -57,7 +57,7 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
         return _searchResults;
     }
     
-    // ==================== OPERACIONES PRINCIPALES ====================
+    // OPERACIONES PRINCIPALES
     
     /**
      * Refresca la lista de productos desde la API

@@ -7,11 +7,30 @@
     android:background="@color/surface"
     tools:context=".ui.admin.FragmentReportesAdmin">
 
+    <!-- AppBar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/color_primary"
+            app:title="Reportes y Estadísticas"
+            app:titleTextColor="@color/color_on_primary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationContentDescription="Volver al menú principal" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
     <!-- SwipeRefreshLayout principal -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_reportes"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- ScrollView con contenido -->
         <ScrollView

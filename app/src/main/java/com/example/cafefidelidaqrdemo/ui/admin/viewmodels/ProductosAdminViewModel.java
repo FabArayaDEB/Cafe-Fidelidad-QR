@@ -120,8 +120,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 }
                 
                 // Verificar si ya existe un producto con el mismo código
-                if (producto.getCodigo() != null && !producto.getCodigo().isEmpty()) {
-                    if (adminRepository.existeProductoPorCodigo(producto.getCodigo())) {
+                if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty()) {
+                    if (adminRepository.existeProductoPorCodigo(producto.getCodigoBarras())) {
                         errorMessage.postValue("Ya existe un producto con ese código");
                         return;
                     }

@@ -167,6 +167,11 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     }
     
     private void setupUI() {
+        // Configurar toolbar
+        if (binding.toolbar != null) {
+            binding.toolbar.setNavigationOnClickListener(v -> volverAlMenuPrincipal());
+        }
+        
         // El título se establece en el toolbar del layout XML
         actualizarTextoFiltro();
         
@@ -663,6 +668,13 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     private void sincronizarSucursales() {
         viewModel.sincronizarConServidor();
         Toast.makeText(getContext(), "Sincronizando con servidor...", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void volverAlMenuPrincipal() {
+        // Navegar de vuelta al dashboard de administración
+        if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+            getParentFragmentManager().popBackStack();
+        }
     }
     
     @Override

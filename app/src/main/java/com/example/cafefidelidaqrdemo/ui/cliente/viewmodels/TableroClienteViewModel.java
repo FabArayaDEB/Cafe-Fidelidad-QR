@@ -5,10 +5,14 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.data.entities.TableroEntity;
-import com.example.cafefidelidaqrdemo.data.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import com.example.cafefidelidaqrdemo.repository.TableroRepository;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -83,10 +87,11 @@ public class TableroClienteViewModel extends AndroidViewModel {
         if (tablero != null) {
             // Crear ClienteEntity desde TableroEntity
             ClienteEntity cliente = new ClienteEntity();
-            cliente.setClienteId(tablero.getClienteId());
+            cliente.setId_cliente(tablero.getClienteId());
             cliente.setNombre(tablero.getNombreCliente());
-            cliente.setPuntos(tablero.getPuntosDisponibles());
-            cliente.setNivelFidelidad(tablero.getNivelFidelidad());
+            // Los puntos y nivel se calculan automáticamente en ClienteEntity
+              // cliente.setPuntos(tablero.getPuntosDisponibles());
+              // cliente.setNivelFidelidad(tablero.getNivelFidelidad());
             clienteDataLiveData.setValue(cliente);
         }
         return clienteDataLiveData;

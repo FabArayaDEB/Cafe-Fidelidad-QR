@@ -3,7 +3,7 @@ package com.example.cafefidelidaqrdemo.viewmodels;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 
 /**
  * ViewModel SIMPLIFICADO para LoginActivity

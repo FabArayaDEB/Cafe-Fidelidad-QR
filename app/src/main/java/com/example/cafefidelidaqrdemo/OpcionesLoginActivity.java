@@ -27,7 +27,7 @@ import com.example.cafefidelidaqrdemo.databinding.ActivityOpcionesLoginBinding;
 // import com.google.firebase.database.FirebaseDatabase;
 // import com.google.firebase.database.ValueEventListener;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 
 import java.util.HashMap;
 

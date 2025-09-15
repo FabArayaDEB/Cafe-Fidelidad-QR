@@ -60,7 +60,7 @@ public class ProgresoRepository extends BaseRepository {
          executor.execute(() -> {
              try {
                  // Implementación básica - puede expandirse según necesidades
-                 List<ProximoBeneficio> proximos = null; // Implementar lógica
+                 List<ProximoBeneficio> proximos = null;
                  result.postValue(proximos);
              } catch (Exception e) {
                  setError("Error obteniendo próximos beneficios: " + e.getMessage());

@@ -18,7 +18,7 @@ import java.util.Date;
                 parentColumns = "id_cliente",
                 childColumns = "clienteId",
                 onDelete = ForeignKey.CASCADE),
-        indices = {@Index("clienteId")})
+        indices = {@Index(value = "clienteId")})
 public class CompraEntity {
 
     @PrimaryKey(autoGenerate = true)

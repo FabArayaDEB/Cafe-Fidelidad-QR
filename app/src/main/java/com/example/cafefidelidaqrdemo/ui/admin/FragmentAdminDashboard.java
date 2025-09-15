@@ -215,9 +215,8 @@ public class FragmentAdminDashboard extends Fragment {
         try {
             FragmentProductosAdmin fragment = new FragmentProductosAdmin();
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            // TODO: Implementar fragment_container en el layout
-            // transaction.replace(R.id.fragment_container, fragment);
-            transaction.addToBackStack(null);
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("ProductosAdmin");
             transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a productos", Toast.LENGTH_SHORT).show();
@@ -228,9 +227,8 @@ public class FragmentAdminDashboard extends Fragment {
         try {
             FragmentBeneficiosAdmin fragment = new FragmentBeneficiosAdmin();
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            // TODO: Implementar fragment_container en el layout
-            // transaction.replace(R.id.fragment_container, fragment);
-            transaction.addToBackStack(null);
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("BeneficiosAdmin");
             transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a beneficios", Toast.LENGTH_SHORT).show();
@@ -241,9 +239,8 @@ public class FragmentAdminDashboard extends Fragment {
         try {
             FragmentSucursalesAdmin fragment = new FragmentSucursalesAdmin();
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            // TODO: Implementar fragment_container en el layout
-            // transaction.replace(R.id.fragment_container, fragment);
-            transaction.addToBackStack(null);
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("SucursalesAdmin");
             transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a sucursales", Toast.LENGTH_SHORT).show();
@@ -252,8 +249,11 @@ public class FragmentAdminDashboard extends Fragment {
     
     private void navegarAEstadisticas() {
         try {
-            // TODO: Implementar FragmentEstadisticasAdmin cuando esté disponible
-            Toast.makeText(getContext(), "Estadísticas - Próximamente", Toast.LENGTH_SHORT).show();
+            FragmentReportesAdmin fragment = new FragmentReportesAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("ReportesAdmin");
+            transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a estadísticas", Toast.LENGTH_SHORT).show();
         }

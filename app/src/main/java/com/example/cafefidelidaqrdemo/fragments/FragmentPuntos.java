@@ -20,7 +20,7 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentUserBinding;
 import com.example.cafefidelidaqrdemo.ui.cliente.viewmodels.TableroClienteViewModel;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
-import com.example.cafefidelidaqrdemo.data.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +109,7 @@ public class FragmentPuntos extends Fragment {
         if (cliente == null) return;
         
         int puntos = cliente.getPuntos();
-        String nivel = cliente.getNivelFidelidad();
+        String nivel = cliente.getNivel();
         
         if (nivel == null || nivel.isEmpty()) {
             nivel = Contantes.calcularNivel(puntos);

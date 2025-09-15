@@ -43,7 +43,7 @@ public class ReportesRepository {
         this.executor = Executors.newFixedThreadPool(3);
     }
     
-    // ==================== GETTERS PARA LIVEDATA ====================
+    //GETTERS PARA LIVEDATA
     
     public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
@@ -51,7 +51,7 @@ public class ReportesRepository {
     public LiveData<Boolean> getIsSyncing() { return isSyncing; }
     public LiveData<Integer> getSyncProgress() { return syncProgress; }
     
-    // ==================== OPERACIONES BÁSICAS ====================
+    // OPERACIONES BÁSICAS
     
     public LiveData<List<ReporteEntity>> obtenerTodosLosReportes() {
         return reporteDao.obtenerTodosLiveData();

@@ -111,6 +111,12 @@ public class FragmentReportesAdmin extends Fragment {
     }
     
     private void initializeViews(View view) {
+        // Configurar toolbar
+        androidx.appcompat.widget.Toolbar toolbar = view.findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> volverAlMenuPrincipal());
+        }
+        
         // Vistas principales
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_reportes);
         scrollViewContent = view.findViewById(R.id.scroll_view_content);
@@ -510,6 +516,13 @@ public class FragmentReportesAdmin extends Fragment {
     private void onTopClienteClick(ReportesAdminViewModel.TopClienteInfo cliente) {
         // Navegar a detalles del cliente
         Toast.makeText(getContext(), "Ver detalles de: " + cliente.nombre, Toast.LENGTH_SHORT).show();
+    }
+    
+    private void volverAlMenuPrincipal() {
+        // Navegar de vuelta al dashboard de administración
+        if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+            getParentFragmentManager().popBackStack();
+        }
     }
     
     @Override

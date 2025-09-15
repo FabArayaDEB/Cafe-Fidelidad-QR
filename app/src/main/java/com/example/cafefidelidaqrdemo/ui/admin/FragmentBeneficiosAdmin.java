@@ -78,6 +78,12 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
         // fabNuevoBeneficio = view.findViewById(R.id.fabNuevoBeneficio); // TODO: Agregar este ID al layout
         progressIndicator = view.findViewById(R.id.progressIndicator);
         emptyStateView = view.findViewById(R.id.emptyStateView);
+        
+        // Configurar toolbar
+        androidx.appcompat.widget.Toolbar toolbar = view.findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> volverAlMenuPrincipal());
+        }
     }
     
     private void setupRecyclerView() {
@@ -184,6 +190,13 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
     private void showSuccess(String message) {
         if (getContext() != null) {
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void volverAlMenuPrincipal() {
+        // Navegar de vuelta al dashboard de administración
+        if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+            getParentFragmentManager().popBackStack();
         }
     }
     

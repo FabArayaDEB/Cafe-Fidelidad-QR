@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.data.entities.TableroEntity;
+import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
 import com.example.cafefidelidaqrdemo.ui.cliente.viewmodels.TableroClienteViewModel;
 import com.example.cafefidelidaqrdemo.ui.adapters.CanjesRecientesAdapter;
 import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;

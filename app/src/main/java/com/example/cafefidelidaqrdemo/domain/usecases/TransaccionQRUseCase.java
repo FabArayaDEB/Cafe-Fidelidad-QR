@@ -1,8 +1,8 @@
 package com.example.cafefidelidaqrdemo.domain.usecases;
 
-import com.example.cafefidelidaqrdemo.data.repositories.TransaccionRepository;
-import com.example.cafefidelidaqrdemo.data.repositories.ClienteRepository;
-import com.example.cafefidelidaqrdemo.data.repositories.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.TransaccionRepository;
+import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 

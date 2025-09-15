@@ -1,4 +1,4 @@
-package com.example.cafefidelidaqrdemo.data.repositories;
+package com.example.cafefidelidaqrdemo.repository;
 
 import android.content.Context;
 import androidx.lifecycle.LiveData;
@@ -19,8 +19,8 @@ public class AuthRepository {
     // Credenciales simples
     private static final Map<String, LocalUser> USERS = new HashMap<>();
     static {
-        USERS.put("cliente@cafe.com", new LocalUser("cliente123", "Cliente Demo", "cliente", "user_001"));
-        USERS.put("admin@cafe.com", new LocalUser("admin123", "Administrador", "admin", "admin_001"));
+        USERS.put("cliente@test.com", new LocalUser("cliente123", "Cliente Demo", "cliente", "user_001"));
+        USERS.put("admin@test.com", new LocalUser("admin123", "Administrador", "admin", "admin_001"));
     }
     
     private LocalUser currentUser;
@@ -214,8 +214,8 @@ public class AuthRepository {
      */
     public String getAvailableCredentials() {
         return "Credenciales disponibles:\n" +
-               "Cliente: cliente@cafe.com / cliente123\n" +
-               "Administrador: admin@cafe.com / admin123";
+               "Cliente: cliente@test.com / cliente123\n" +
+               "Administrador: admin@test.com / admin123";
     }
     
     /**

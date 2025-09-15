@@ -1,4 +1,4 @@
-package com.example.cafefidelidaqrdemo.data.repositories;
+package com.example.cafefidelidaqrdemo.repository;
 
 import android.content.Context;
 import androidx.lifecycle.LiveData;
@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.database.dao.TransaccionDao;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
-import com.example.cafefidelidaqrdemo.data.model.Transaccion;
+import com.example.cafefidelidaqrdemo.Transaccion;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import java.util.concurrent.ExecutorService;
