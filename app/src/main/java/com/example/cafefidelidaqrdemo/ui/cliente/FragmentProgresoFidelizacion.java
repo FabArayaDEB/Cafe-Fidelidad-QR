@@ -99,25 +99,20 @@ public class FragmentProgresoFidelizacion extends Fragment {
     private void initViews(View view) {
         // Layouts principales
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        // layoutProgreso = view.findViewById(R.id.layoutProgreso);
-        // layoutBeneficiosDisponibles = view.findViewById(R.id.layoutBeneficiosDisponibles);
-        // layoutProximosBeneficios = view.findViewById(R.id.layoutProximosBeneficios);
-        emptyStateView = view.findViewById(R.id.emptyStateView);
-        // errorStateView = view.findViewById(R.id.errorStateView); // TODO: Agregar este ID al layout
+        layoutBeneficiosDisponibles = view.findViewById(R.id.layoutBeneficiosDisponibles);
+        layoutProximosBeneficios = view.findViewById(R.id.layoutProximosBeneficios);
+        emptyStateView = view.findViewById(R.id.layoutEmpty);
         
         // Views de progreso
         textTotalVisitas = view.findViewById(R.id.textTotalVisitas);
-        // textProgresoGeneral = view.findViewById(R.id.textProgresoGeneral);
         progressCircular = view.findViewById(R.id.progressCircular);
-        // textEstadoSync = view.findViewById(R.id.textEstadoSync);
+        textEstadoSync = view.findViewById(R.id.textSyncStatus);
         
         // Views de beneficios disponibles
-        // recyclerBeneficiosDisponibles = view.findViewById(R.id.recyclerBeneficiosDisponibles);
-        // textBeneficiosDisponiblesTitle = view.findViewById(R.id.textBeneficiosDisponiblesTitle);
+        recyclerBeneficiosDisponibles = view.findViewById(R.id.recyclerViewBeneficiosDisponibles);
         
         // Views de próximos beneficios
-        // recyclerProximosBeneficios = view.findViewById(R.id.recyclerProximosBeneficios);
-        // textProximosBeneficiosTitle = view.findViewById(R.id.textProximosBeneficiosTitle);
+        recyclerProximosBeneficios = view.findViewById(R.id.recyclerViewProximosBeneficios);
     }
     
     private void setupRecyclerViews() {

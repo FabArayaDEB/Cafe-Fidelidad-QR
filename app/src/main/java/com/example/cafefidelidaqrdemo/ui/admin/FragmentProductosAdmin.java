@@ -23,7 +23,7 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentProductosAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogProductoBinding;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
-import com.example.cafefidelidaqrdemo.ui.admin.adapters.ProductosAdminAdapter;
+import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.ProductosAdminViewModel;
 
 import java.text.NumberFormat;
@@ -39,7 +39,7 @@ public class FragmentProductosAdmin extends Fragment {
     
     private FragmentProductosAdminBinding binding;
     private ProductosAdminViewModel viewModel;
-    private ProductosAdminAdapter adapter;
+    private ProductosAdapter adapter;
     private List<ProductoEntity> productosList = new ArrayList<>();
     private boolean mostrarSoloActivos = true;
     
@@ -100,8 +100,8 @@ public class FragmentProductosAdmin extends Fragment {
     }
     
     private void setupRecyclerView() {
-        adapter = new ProductosAdminAdapter();
-        adapter.setOnProductoClickListener(new ProductosAdminAdapter.OnProductoClickListener() {
+        adapter = new ProductosAdapter(getContext(), true); // true para modo administrador
+        adapter.setOnProductoAdminActionListener(new ProductosAdapter.OnProductoAdminActionListener() {
             @Override
             public void onProductoClick(ProductoEntity producto) {
                 mostrarDetalleProducto(producto);
@@ -188,15 +188,36 @@ public class FragmentProductosAdmin extends Fragment {
     }
     
     private void setupSearchView() {
-        // Búsqueda deshabilitada temporalmente
-        // TODO: Implementar búsqueda cuando los elementos de UI estén disponibles
+        binding.etBuscarProducto.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String query = s.toString().trim();
+                if (query.isEmpty()) {
+                    // Mostrar todos los productos según el filtro actual
+                    if (mostrarSoloActivos) {
+                        viewModel.getProductosActivos().observe(getViewLifecycleOwner(), FragmentProductosAdmin.this::actualizarListaProductos);
+                    } else {
+                        viewModel.getAllProductos().observe(getViewLifecycleOwner(), FragmentProductosAdmin.this::actualizarListaProductos);
+                    }
+                } else {
+                    // Realizar búsqueda
+                    viewModel.buscarProductos(query).observe(getViewLifecycleOwner(), FragmentProductosAdmin.this::actualizarListaProductos);
+                }
+            }
+        });
     }
     
     private void actualizarListaProductos(List<ProductoEntity> productos) {
         if (productos != null) {
             productosList.clear();
             productosList.addAll(productos);
-            adapter.notifyDataSetChanged();
+            adapter.submitList(productos);
             
             // Mostrar/ocultar mensaje de lista vacía
             if (productos.isEmpty()) {
@@ -376,15 +397,21 @@ public class FragmentProductosAdmin extends Fragment {
     private ProductoEntity crearProductoDesdeFormulario(DialogProductoBinding dialogBinding) {
         ProductoEntity producto = new ProductoEntity();
         
+        // Generar ID único para el producto usando solo timestamp
+        producto.setId_producto(String.valueOf(System.currentTimeMillis()));
+        
         producto.setNombre(dialogBinding.editNombre.getText().toString().trim());
         producto.setDescripcion(dialogBinding.editDescripcion.getText().toString().trim());
         producto.setPrecio(Double.parseDouble(dialogBinding.editPrecio.getText().toString().trim()));
-        // producto.setPuntosRequeridos(Integer.parseInt(dialogBinding.editPuntos.getText().toString().trim())); // Campo no disponible en ProductoEntity
         producto.setCategoria(dialogBinding.editCategoria.getText().toString().trim());
         producto.setEstado(dialogBinding.switchDisponible.isChecked() ? "activo" : "inactivo");
-        // Valores por defecto para campos no incluidos en el formulario
+        
+        // Valores por defecto para campos requeridos
         producto.setStockDisponible(0); // Stock inicial
-        // producto.setCreadoPor("admin"); // Campo no disponible en ProductoEntity
+        producto.setVersion(1); // Versión inicial
+        producto.setNeedsSync(true); // Necesita sincronización
+        producto.setSynced(false); // No sincronizado aún
+        producto.setLastSync(System.currentTimeMillis());
         
         return producto;
     }

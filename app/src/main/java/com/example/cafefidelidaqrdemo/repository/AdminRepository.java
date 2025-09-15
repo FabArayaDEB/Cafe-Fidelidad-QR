@@ -66,10 +66,16 @@ public class AdminRepository {
      * Obtiene un producto por ID
      */
     public LiveData<ProductoEntity> getProductoById(long id) {
-        // TODO: Implementar getProductoByIdLiveData en database.dao.ProductoDao
-        // return productoDao.getProductoByIdLiveData(id);
         MutableLiveData<ProductoEntity> result = new MutableLiveData<>();
-        result.setValue(null); // Temporal
+        executor.execute(() -> {
+            try {
+                ProductoEntity producto = productoDao.getProductoById(id);
+                result.postValue(producto);
+            } catch (Exception e) {
+                result.postValue(null);
+                errorMessage.postValue("Error al obtener producto: " + e.getMessage());
+            }
+        });
         return result;
     }
 
@@ -77,9 +83,23 @@ public class AdminRepository {
      * Busca productos por nombre
      */
     public LiveData<List<ProductoEntity>> buscarProductos(String nombre) {
-        // TODO: Implementar buscarProductosPorNombre en database.dao.ProductoDao
-        // return productoDao.buscarProductosPorNombre(nombre);
-        return new MutableLiveData<>(new java.util.ArrayList<>()); // Temporal
+        MutableLiveData<List<ProductoEntity>> result = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                if (nombre == null || nombre.trim().isEmpty()) {
+                    result.postValue(new java.util.ArrayList<>());
+                    return;
+                }
+                
+                String query = "%" + nombre.trim() + "%";
+                List<ProductoEntity> productos = productoDao.search(query);
+                result.postValue(productos != null ? productos : new java.util.ArrayList<>());
+            } catch (Exception e) {
+                result.postValue(new java.util.ArrayList<>());
+                errorMessage.postValue("Error al buscar productos: " + e.getMessage());
+            }
+        });
+        return result;
     }
 
     /**
@@ -96,15 +116,18 @@ public class AdminRepository {
         return productoDao.existeProductoConNombre(nombre, 0) > 0;
     }
 
+
+
     /**
-     * Verifica si existe un producto con el código dado
+     * Verifica si existe un producto con el código especificado
      */
     public boolean existeProductoPorCodigo(String codigo) {
-        // TODO: Implementar existeProductoPorCodigo en database.dao.ProductoDao
-        // return productoDao.existeProductoPorCodigo(codigo) > 0;
-        return false; // Temporal
+        return productoDao.existeProductoPorCodigo(codigo) > 0;
     }
 
+    /**
+     * Verifica si existe un producto con el código especificado (excluyendo un ID)
+     */
     public boolean existeProductoPorCodigoExcluyendoId(String codigo, String idExcluir) {
         return productoDao.existeProductoPorCodigoExcluyendoId(codigo, idExcluir) > 0;
     }
@@ -112,17 +135,29 @@ public class AdminRepository {
     /**
      * Obtiene un producto por ID (síncrono)
      */
+    public ProductoEntity getProductoPorId(Long id) {
+        return productoDao.getProductoById(id);
+    }
+    
+    /**
+     * Obtiene un producto por ID (síncrono) - sobrecarga para String
+     */
     public ProductoEntity getProductoPorId(String id) {
-        return productoDao.getProductoById(Long.parseLong(id));
+        return getProductoPorId(Long.parseLong(id));
     }
 
+    /**
+     * Verifica si existe una sucursal con el nombre especificado (excluyendo un ID)
+     */
+    public boolean existeSucursalPorNombreExcluyendoId(String nombre, Long idExcluir) {
+        return sucursalDao.existeSucursalPorNombreExcluyendoId(nombre, String.valueOf(idExcluir)) > 0;
+    }
+    
     /**
      * Obtiene productos con stock bajo
      */
     public LiveData<List<ProductoEntity>> getProductosStockBajo(int umbral) {
-        // TODO: Implementar getProductosConStockBajo en database.dao.ProductoDao
-        // return productoDao.getProductosConStockBajo(umbral);
-        return new MutableLiveData<>(new java.util.ArrayList<>()); // Temporal
+        return productoDao.getProductosConStockBajo(umbral);
     }
 
     /**
@@ -132,16 +167,17 @@ public class AdminRepository {
         executor.execute(() -> {
             try {
                 long fechaModificacion = System.currentTimeMillis();
-                // TODO: Implementar actualizarStock en database.dao.ProductoDao
-                // int filasAfectadas = productoDao.actualizarStock(productoId, nuevoStock, fechaModificacion);
-                int filasAfectadas = 1; // Temporal
+                int filasAfectadas = productoDao.actualizarStock(productoId, nuevoStock, fechaModificacion);
                 
                 if (filasAfectadas > 0) {
+                    successMessage.postValue("Stock actualizado exitosamente");
                     // Registrar el cambio en historial si es necesario
                     // historialDao.insertarCambioStock(productoId, nuevoStock, motivo, fechaModificacion);
+                } else {
+                    errorMessage.postValue("No se pudo actualizar el stock del producto");
                 }
             } catch (Exception e) {
-                // Manejar error
+                errorMessage.postValue("Error al actualizar stock: " + e.getMessage());
                 e.printStackTrace();
             }
         });
@@ -235,9 +271,13 @@ public class AdminRepository {
                 }
                 
                 // Insertar en base de datos local
-                // TODO: Corregir tipos - insertAll espera List y setId_producto espera String
-                // long id = productoDao.insertAll(producto);
-                // producto.setId_producto(id);
+                try {
+                    productoDao.insert(producto);
+                } catch (Exception e) {
+                    callback.onError("Error al insertar producto en base de datos local: " + e.getMessage());
+                    isLoading.postValue(false);
+                    return;
+                }
                 
                 // Sincronizar con API
                 sincronizarProductoConAPI(producto, "CREATE", new AdminCallback<ProductoEntity>() {
@@ -297,14 +337,10 @@ public class AdminRepository {
                 // }
                 
                 // Actualizar en base de datos local
-                // TODO: Implementar setFechaModificacion en ProductoEntity
-                // producto.setFechaModificacion(System.currentTimeMillis());
-                // TODO: Implementar updateProducto en database.dao.ProductoDao
-                // int rowsUpdated = productoDao.updateProducto(producto);
-                
-                // Asumir que la actualización fue exitosa
-                if (false) {
-                    callback.onError("No se pudo actualizar el producto");
+                try {
+                    productoDao.update(producto);
+                } catch (Exception e) {
+                    callback.onError("Error al actualizar producto en base de datos local: " + e.getMessage());
                     isLoading.postValue(false);
                     return;
                 }
@@ -348,11 +384,9 @@ public class AdminRepository {
                 }
                 
                 // Desactivar producto
-                // TODO: Implementar desactivarProducto en database.dao.ProductoDao
-                // int rowsUpdated = productoDao.desactivarProducto(id, System.currentTimeMillis(), "admin");
+                int rowsUpdated = productoDao.desactivarProducto(id, System.currentTimeMillis());
                 
-                // Asumir que la desactivación fue exitosa
-                if (true) {
+                if (rowsUpdated > 0) {
                     // Sincronizar con API
                     sincronizarDesactivacionConAPI("producto", id, motivo, new AdminCallback<Boolean>() {
                         @Override
@@ -389,11 +423,9 @@ public class AdminRepository {
         executor.execute(() -> {
             try {
                 // Activar producto
-                // TODO: Implementar activarProducto en database.dao.ProductoDao
-                // int rowsUpdated = productoDao.activarProducto(id, System.currentTimeMillis(), "admin");
+                int rowsUpdated = productoDao.activarProducto(id, System.currentTimeMillis());
                 
-                // Asumir que la activación fue exitosa
-                if (true) {
+                if (rowsUpdated > 0) {
                     // Sincronizar con API
                     sincronizarActivacionConAPI("producto", id, new AdminCallback<Boolean>() {
                         @Override
@@ -594,7 +626,7 @@ public class AdminRepository {
         });
     }
     
-    // ========== GESTIÓN DE BENEFICIOS ==========
+    //GESTIÓN DE BENEFICIOS
     
     /**
      * Obtiene todos los beneficios
@@ -654,7 +686,7 @@ public class AdminRepository {
         });
     }
     
-    // ========== MÉTODOS DE VALIDACIÓN ==========
+    //MÉTODOS DE VALIDACIÓN
     
     private boolean validarProducto(ProductoEntity producto) {
         return producto != null &&
@@ -680,7 +712,7 @@ public class AdminRepository {
                beneficio.getVigencia_fin() > beneficio.getVigencia_ini();
     }
     
-    // ========== MÉTODOS DE SINCRONIZACIÓN CON API ==========
+    //MÉTODOS DE SINCRONIZACIÓN CON API
     
     private void sincronizarProductoConAPI(ProductoEntity producto, String operacion, AdminCallback<ProductoEntity> callback) {
         // Implementar llamadas a la API según la operación
@@ -777,7 +809,7 @@ public class AdminRepository {
     
 
     
-    // ========== GETTERS PARA OBSERVABLES ==========
+    // GETTERS PARA OBSERVABLES
     
     public LiveData<String> getErrorMessage() {
         return errorMessage;
@@ -791,7 +823,7 @@ public class AdminRepository {
         return successMessage;
     }
     
-    // ========== ESTADÍSTICAS ==========
+    //ESTADÍSTICAS
     
     public LiveData<Integer> getCountProductosActivos() {
         MutableLiveData<Integer> result = new MutableLiveData<>();
@@ -860,14 +892,14 @@ public class AdminRepository {
         return beneficioDao.getCountBeneficiosInactivosSync();
     }
     
-    // ========== INTERFACE PARA CALLBACKS ==========
+    //INTERFACE PARA CALLBACKS
     
     public interface AdminCallback<T> {
         void onSuccess(T result);
         void onError(String error);
     }
     
-    // ========== EXPORTACIÓN ==========
+    // EXPORTACIÓN
     
     /**
      * Exporta todos los productos a formato CSV
@@ -921,7 +953,7 @@ public class AdminRepository {
         return R * c;
     }
     
-    // ========== MÉTODOS PARA DASHBOARD ==========
+    // MÉTODOS PARA DASHBOARD
     
     /**
      * Obtiene actividades recientes
@@ -1016,31 +1048,9 @@ public class AdminRepository {
         });
     }
     
-    /**
-     * Verifica si existe un producto con el mismo nombre excluyendo el ID especificado
-     */
-    public boolean existeProductoPorNombreExcluyendoId(String nombre, long idExcluir) {
-        try {
-            // TODO: Implementar existeProductoPorNombreExcluyendoId en database.dao.ProductoDao
-            // return productoDao.existeProductoPorNombreExcluyendoId(nombre, idExcluir) > 0;
-            return false; // Temporal
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
     
-    /**
-     * Verifica si existe una sucursal con el mismo nombre excluyendo el ID especificado
-     */
-    public boolean existeSucursalPorNombreExcluyendoId(String nombre, String idExcluir) {
-        try {
-            // TODO: Implementar existeSucursalPorNombreExcluyendoId en database.dao.SucursalDao
-            // return sucursalDao.existeSucursalPorNombreExcluyendoId(nombre, idExcluir) > 0;
-            return false; // Temporal
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
     
     /**
      * Verifica el estado de salud del sistema
@@ -1104,20 +1114,7 @@ public class AdminRepository {
         return result;
     }
     
-    /**
-     * Verifica si hay cambios pendientes de sincronización
-     */
-    public boolean checkPendingChanges() {
-        try {
-            // TODO: Implementar métodos getCountXXXNeedSync en los DAOs
-            // return productoDao.getCountProductosNeedSync() > 0 ||
-            //        beneficioDao.getCountBeneficiosNeedSync() > 0 ||
-            //        sucursalDao.getCountSucursalesNeedSync() > 0;
-            return false; // Temporal
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
     
     /**
      * Sincroniza todos los datos con el servidor
@@ -1147,66 +1144,11 @@ public class AdminRepository {
         }
     }
     
-    /**
-     * Activa una sucursal
-     */
-    public void activarSucursal(long sucursalId) {
-        executor.execute(() -> {
-            try {
-                // TODO: Implementar activarSucursal en database.dao.SucursalDao
-                // int rowsUpdated = sucursalDao.activarSucursal(sucursalId, System.currentTimeMillis(), "admin");
-                int rowsUpdated = 0; // Temporal
-                if (rowsUpdated > 0) {
-                    successMessage.postValue("Sucursal activada exitosamente");
-                } else {
-                    errorMessage.postValue("No se pudo activar la sucursal");
-                }
-            } catch (Exception e) {
-                errorMessage.postValue("Error al activar sucursal: " + e.getMessage());
-            }
-        });
-    }
+
     
-    /**
-     * Desactiva una sucursal
-     */
-    public void desactivarSucursal(long sucursalId, String motivo) {
-        executor.execute(() -> {
-            try {
-                // TODO: Implementar desactivarSucursal en database.dao.SucursalDao
-                // int rowsUpdated = sucursalDao.desactivarSucursal(sucursalId, System.currentTimeMillis(), "admin");
-                int rowsUpdated = 0; // Temporal
-                if (rowsUpdated > 0) {
-                    successMessage.postValue("Sucursal desactivada exitosamente");
-                } else {
-                    errorMessage.postValue("No se pudo desactivar la sucursal");
-                }
-            } catch (Exception e) {
-                errorMessage.postValue("Error al desactivar sucursal: " + e.getMessage());
-            }
-        });
-    }
+
     
-    /**
-     * Elimina una sucursal (eliminación lógica)
-     */
-    public void eliminarSucursal(long sucursalId) {
-        executor.execute(() -> {
-            try {
-                // Para eliminación lógica, simplemente desactivamos la sucursal
-                // TODO: Implementar desactivarSucursal en database.dao.SucursalDao
-                // int rowsUpdated = sucursalDao.desactivarSucursal(sucursalId, System.currentTimeMillis(), "admin");
-                int rowsUpdated = 0; // Temporal
-                if (rowsUpdated > 0) {
-                    successMessage.postValue("Sucursal eliminada exitosamente");
-                } else {
-                    errorMessage.postValue("No se pudo eliminar la sucursal");
-                }
-            } catch (Exception e) {
-                errorMessage.postValue("Error al eliminar sucursal: " + e.getMessage());
-            }
-        });
-    }
+
     
     /**
      * Verifica si una sucursal tiene dependencias
@@ -1224,7 +1166,7 @@ public class AdminRepository {
         return false;
     }
     
-    // ========== LIMPIEZA DE DATOS ==========
+    // LIMPIEZA DE DATOS
     
     /**
      * Limpia todos los datos locales de la base de datos
@@ -1244,7 +1186,49 @@ public class AdminRepository {
         });
     }
     
-    // ========== LIMPIEZA DE RECURSOS ==========
+    /**
+     * Activa una sucursal
+     */
+    public void activarSucursal(long sucursalId) {
+        executor.execute(() -> {
+            try {
+                sucursalDao.activarSucursal(sucursalId);
+                successMessage.postValue("Sucursal activada exitosamente");
+            } catch (Exception e) {
+                errorMessage.postValue("Error al activar sucursal: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Desactiva una sucursal
+     */
+    public void desactivarSucursal(long sucursalId, String motivo) {
+        executor.execute(() -> {
+            try {
+                sucursalDao.desactivarSucursal(sucursalId);
+                successMessage.postValue("Sucursal desactivada exitosamente");
+            } catch (Exception e) {
+                errorMessage.postValue("Error al desactivar sucursal: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Elimina una sucursal (eliminación lógica)
+     */
+    public void eliminarSucursal(long sucursalId) {
+        executor.execute(() -> {
+            try {
+                sucursalDao.eliminarSucursal(sucursalId);
+                successMessage.postValue("Sucursal eliminada exitosamente");
+            } catch (Exception e) {
+                errorMessage.postValue("Error al eliminar sucursal: " + e.getMessage());
+            }
+        });
+    }
+    
+    // LIMPIEZA DE RECURSOS
     
     public void cleanup() {
         if (executor != null && !executor.isShutdown()) {

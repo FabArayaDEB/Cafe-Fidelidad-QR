@@ -185,22 +185,25 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
         });
     }
     
+
+    
+
+    
     /**
      * Busca productos localmente
      */
+    @Override
     public void searchProductos(String query, RepositoryCallback<List<ProductoEntity>> callback) {
-        executeInBackground(() -> {
+        executor.execute(() -> {
             try {
-                List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-                // TODO: Implementar searchProductosLocal en SearchManager
-                // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, null, null);
-                List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
-                _searchResults.postValue(results);
-                if (callback != null) callback.onSuccess(results);
+                List<ProductoEntity> productos = productoDao.searchProductos(query);
+                if (callback != null) {
+                    callback.onSuccess(productos);
+                }
             } catch (Exception e) {
-                String error = "Error en búsqueda: " + e.getMessage();
-                setError(error);
-                if (callback != null) callback.onError(error);
+                if (callback != null) {
+                    callback.onError("Error al buscar productos: " + e.getMessage());
+                }
             }
         });
     }
@@ -208,19 +211,42 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
     /**
      * Busca productos por categoría
      */
+    @Override
     public void searchProductosByCategory(String query, String categoria, Boolean disponible, RepositoryCallback<List<ProductoEntity>> callback) {
-        executeInBackground(() -> {
+        executor.execute(() -> {
             try {
-                List<ProductoEntity> allProductos = productoDao.getAllProductosSync();
-                // TODO: Implementar searchProductosLocal en SearchManager
-                // List<ProductoEntity> results = searchManager.searchProductosLocal(allProductos, query, categoria, disponible);
-                List<ProductoEntity> results = allProductos; // Temporal: devolver todos los productos
-                _searchResults.postValue(results);
-                if (callback != null) callback.onSuccess(results);
+                List<ProductoEntity> productos;
+                if (query == null || query.trim().isEmpty()) {
+                    if (categoria == null || categoria.trim().isEmpty()) {
+                        productos = productoDao.getAllProductosSync();
+                    } else {
+                        // Usar búsqueda por nombre ya que no hay método específico por categoría sync
+                        productos = productoDao.searchProductos(categoria);
+                    }
+                } else {
+                    productos = productoDao.searchProductos(query);
+                    // Filtrar por categoría si se especifica
+                    if (categoria != null && !categoria.trim().isEmpty()) {
+                        final String cat = categoria.toLowerCase();
+                        productos = productos.stream()
+                                .filter(p -> p.getCategoria() != null && p.getCategoria().toLowerCase().contains(cat))
+                                .collect(java.util.stream.Collectors.toList());
+                    }
+                }
+                
+                if (disponible != null && disponible) {
+                    productos = productos.stream()
+                            .filter(p -> "disponible".equals(p.getEstado()))
+                            .collect(java.util.stream.Collectors.toList());
+                }
+                
+                if (callback != null) {
+                    callback.onSuccess(productos);
+                }
             } catch (Exception e) {
-                String error = "Error en búsqueda por categoría: " + e.getMessage();
-                setError(error);
-                if (callback != null) callback.onError(error);
+                if (callback != null) {
+                    callback.onError("Error al buscar productos: " + e.getMessage());
+                }
             }
         });
     }

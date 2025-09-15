@@ -84,16 +84,24 @@ public class FragmentMisBeneficios extends Fragment {
     
     private void initViews(View view) {
         recyclerViewBeneficios = view.findViewById(R.id.recyclerViewBeneficios);
-        // textViewNoBeneficios = view.findViewById(R.id.textViewNoBeneficios); // TODO: Agregar este ID al layout
-        // cardViewOtp = view.findViewById(R.id.cardViewOtp); // TODO: Agregar este ID al layout
-        // textViewOtpCodigo = view.findViewById(R.id.textViewOtpCodigo); // TODO: Agregar este ID al layout
-        // textViewTiempoRestante = view.findViewById(R.id.textViewTiempoRestante); // TODO: Agregar este ID al layout
-        // textViewBeneficioSeleccionado = view.findViewById(R.id.textViewBeneficioSeleccionado); // TODO: Agregar este ID al layout
-        // buttonSolicitarNuevo = view.findViewById(R.id.buttonSolicitarNuevo); // TODO: Agregar este ID al layout
-        // buttonCancelarOtp = view.findViewById(R.id.buttonCancelarOtp); // TODO: Agregar este ID al layout
         
-        // Inicialmente ocultar card de OTP
-        cardViewOtp.setVisibility(View.GONE);
+        // Elementos del layout principal
+        View layoutOtp = view.findViewById(R.id.layoutOtp);
+        
+        // Elementos del dialog OTP (se obtienen cuando se incluye el layout)
+        if (layoutOtp != null) {
+            textViewOtpCodigo = layoutOtp.findViewById(R.id.textViewCodigoOtp);
+            textViewTiempoRestante = layoutOtp.findViewById(R.id.textViewTiempoRestante);
+            textViewBeneficioSeleccionado = layoutOtp.findViewById(R.id.textViewNombreBeneficio);
+            buttonSolicitarNuevo = layoutOtp.findViewById(R.id.buttonSolicitarNuevoOtp);
+            buttonCancelarOtp = layoutOtp.findViewById(R.id.buttonCancelarCanje);
+            cardViewOtp = layoutOtp.findViewById(R.id.layoutOtp); // El contenedor principal
+        }
+        
+        // Inicialmente ocultar layout de OTP
+        if (layoutOtp != null) {
+            layoutOtp.setVisibility(View.GONE);
+        }
     }
     
     private void initViewModel() {

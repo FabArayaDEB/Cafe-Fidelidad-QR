@@ -184,6 +184,8 @@ public class BeneficioDialogFragment extends DialogFragment {
         
         if (beneficio == null) {
             beneficio = new BeneficioEntity();
+            // Generar ID único para el nuevo beneficio
+            beneficio.setId_beneficio(System.currentTimeMillis() + "_" + Math.random());
         }
         
 

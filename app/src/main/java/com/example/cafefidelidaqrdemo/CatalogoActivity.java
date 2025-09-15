@@ -16,8 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cafefidelidaqrdemo.adapters.ProductoAdapter;
-import com.example.cafefidelidaqrdemo.models.Producto;
+import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
+import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -33,9 +33,9 @@ import java.util.List;
 public class CatalogoActivity extends AppCompatActivity {
 
     private RecyclerView recyclerViewProductos;
-    private ProductoAdapter productoAdapter;
-    private List<Producto> listaProductos;
-    private List<Producto> listaProductosFiltrada;
+    private ProductosAdapter productoAdapter;
+    private List<ProductoEntity> listaProductos;
+    private List<ProductoEntity> listaProductosFiltrada;
     private EditText etBuscar;
     private Spinner spinnerCategoria, spinnerOrden;
     private ProgressDialog progressDialog;
@@ -110,7 +110,9 @@ public class CatalogoActivity extends AppCompatActivity {
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerViewProductos.setLayoutManager(layoutManager);
         
-        productoAdapter = new ProductoAdapter(this, listaProductosFiltrada);
+        productoAdapter = new ProductosAdapter(this, false);
+        productoAdapter.setOnProductoClickListener(this::onProductoClick);
+        productoAdapter.submitList(listaProductosFiltrada);
         recyclerViewProductos.setAdapter(productoAdapter);
     }
 
@@ -202,7 +204,7 @@ public class CatalogoActivity extends AppCompatActivity {
         
         listaProductosFiltrada.clear();
         
-        for (Producto producto : listaProductos) {
+        for (ProductoEntity producto : listaProductos) {
             boolean coincideTexto = textoBusqueda.isEmpty() || 
                     producto.getNombre().toLowerCase().contains(textoBusqueda) ||
                     producto.getDescripcion().toLowerCase().contains(textoBusqueda);
@@ -223,52 +225,58 @@ public class CatalogoActivity extends AppCompatActivity {
         
         switch (ordenSeleccionado) {
             case "Nombre A-Z":
-                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
                     @Override
-                    public int compare(Producto p1, Producto p2) {
+                    public int compare(ProductoEntity p1, ProductoEntity p2) {
                         return p1.getNombre().compareToIgnoreCase(p2.getNombre());
                     }
                 });
                 break;
                 
             case "Nombre Z-A":
-                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
                     @Override
-                    public int compare(Producto p1, Producto p2) {
+                    public int compare(ProductoEntity p1, ProductoEntity p2) {
                         return p2.getNombre().compareToIgnoreCase(p1.getNombre());
                     }
                 });
                 break;
                 
             case "Precio Menor":
-                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
                     @Override
-                    public int compare(Producto p1, Producto p2) {
-                        return Double.compare(p1.getPrecioConDescuento(), p2.getPrecioConDescuento());
+                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                        return Double.compare(p1.getPrecio(), p2.getPrecio());
                     }
                 });
                 break;
                 
             case "Precio Mayor":
-                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
                     @Override
-                    public int compare(Producto p1, Producto p2) {
-                        return Double.compare(p2.getPrecioConDescuento(), p1.getPrecioConDescuento());
+                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                        return Double.compare(p2.getPrecio(), p1.getPrecio());
                     }
                 });
                 break;
                 
             case "Más Popular":
-                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
-                    @Override
-                    public int compare(Producto p1, Producto p2) {
-                        return Boolean.compare(p2.isEsPopular(), p1.isEsPopular());
-                    }
-                });
+                // Ordenar por popularidad no está disponible en ProductoEntity
+                // Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
+                //     @Override
+                //     public int compare(ProductoEntity p1, ProductoEntity p2) {
+                //         return Boolean.compare(p2.isEsPopular(), p1.isEsPopular());
+                //     }
+                // });
                 break;
         }
         
-        productoAdapter.notifyDataSetChanged();
+        productoAdapter.submitList(new ArrayList<>(listaProductosFiltrada));
+    }
+
+    private void onProductoClick(ProductoEntity producto) {
+        Toast.makeText(this, "Producto seleccionado: " + producto.getNombre(), Toast.LENGTH_SHORT).show();
+        // TODO: Implementar navegación a detalle del producto
     }
 
     @Override

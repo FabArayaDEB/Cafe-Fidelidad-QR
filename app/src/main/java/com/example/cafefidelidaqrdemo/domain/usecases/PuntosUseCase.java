@@ -292,6 +292,8 @@ public class PuntosUseCase {
      */
     private void registrarTransaccionCanje(String clienteId, String beneficioId, int puntosUsados, TransaccionRepository.TransaccionCallback callback) {
         TransaccionEntity transaccion = new TransaccionEntity();
+        // Generar ID único para la transacción de canje
+        transaccion.setId(System.currentTimeMillis() + "_" + Math.random());
         transaccion.setUserId(clienteId);
         transaccion.setMonto(0); // Los canjes no tienen monto monetario
         transaccion.setDescripcion("Canje: " + getNombreBeneficio(beneficioId));

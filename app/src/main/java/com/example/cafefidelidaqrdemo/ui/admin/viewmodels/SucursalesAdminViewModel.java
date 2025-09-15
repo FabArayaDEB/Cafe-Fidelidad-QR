@@ -193,7 +193,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                 }
                 
                 // Verificar nombres duplicados (excluyendo la sucursal actual)
-                if (adminRepository.existeSucursalPorNombreExcluyendoId(sucursal.getNombre(), String.valueOf(sucursal.getId_sucursal()))) {
+                if (adminRepository.existeSucursalPorNombreExcluyendoId(sucursal.getNombre(), Long.parseLong(sucursal.getId_sucursal()))) {
                     errorMessage.postValue("Ya existe otra sucursal con ese nombre");
                     return;
                 }

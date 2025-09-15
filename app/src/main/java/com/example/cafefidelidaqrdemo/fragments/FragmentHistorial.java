@@ -80,16 +80,14 @@ public class FragmentHistorial extends Fragment {
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmpty = view.findViewById(R.id.tv_empty_message);
         tvSyncStatus = view.findViewById(R.id.tv_sync_status);
-        // tvFilterInfo = view.findViewById(R.id.tv_filter_info); // No existe en el layout
         
         // Filtros
-        chipGroupFiltros = view.findViewById(R.id.chip_group_filtros);
+        chipGroupFiltros = view.findViewById(R.id.chip_group_tipo);
         chipTodos = view.findViewById(R.id.chip_todos);
         chipVisitas = view.findViewById(R.id.chip_visitas);
         chipCanjes = view.findViewById(R.id.chip_canjes);
         chipPendientes = view.findViewById(R.id.chip_pendientes);
         chipEnviados = view.findViewById(R.id.chip_enviados);
-        // btnFiltroFecha = view.findViewById(R.id.btn_filtro_fecha); // No existe en el layout
         
         fabScrollTop = view.findViewById(R.id.fab_scroll_top);
         

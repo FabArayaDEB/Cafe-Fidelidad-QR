@@ -53,6 +53,11 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         productosActivos = adminRepository.getProductosActivos();
         countProductosActivos = adminRepository.getCountProductosActivos();
         countProductosInactivos = adminRepository.getCountProductosInactivos();
+        
+        // Observar los LiveData del repository para sincronizar estados
+        adminRepository.getIsLoading().observeForever(isLoading::setValue);
+        adminRepository.getErrorMessage().observeForever(errorMessage::setValue);
+        adminRepository.getSuccessMessage().observeForever(successMessage::setValue);
     }
     
     // Getters para LiveData
