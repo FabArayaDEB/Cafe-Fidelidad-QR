@@ -4,6 +4,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
@@ -22,7 +23,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     
     // LiveData para la UI
     private final LiveData<List<BeneficioEntity>> allBeneficiosLiveData;
-    private final MutableLiveData<List<BeneficioEntity>> beneficiosLiveData = new MutableLiveData<>();
+    private final MediatorLiveData<List<BeneficioEntity>> beneficiosLiveData = new MediatorLiveData<>();
     private final MutableLiveData<OperationResult> operationResultLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> refreshTrigger = new MutableLiveData<>();
     
@@ -53,10 +54,10 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     private void setupBeneficiosObserver() {
-        // Observar cambios en allBeneficiosLiveData y actualizar beneficiosLiveData
-        allBeneficiosLiveData.observeForever(beneficios -> {
+        // Usar MediatorLiveData para una observación segura
+        beneficiosLiveData.addSource(allBeneficiosLiveData, beneficios -> {
             if (beneficios != null) {
-                beneficiosLiveData.postValue(beneficios);
+                beneficiosLiveData.setValue(beneficios);
             }
         });
         
