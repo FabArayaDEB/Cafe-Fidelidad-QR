@@ -65,7 +65,16 @@ public class AdminMainActivity extends AppCompatActivity {
                 .replace(R.id.fragmentFL, adminDashboard)
                 .commit();
     }
-
+    
+    // Método initializeOfflineManager removido para simplificación
+    
+    /**
+     * Configura la sincronización automática de datos
+     */
+    private void configurarSincronizacionAutomatica() {
+        // Sincronización offline removida para simplificación
+        // com.example.cafefidelidaqrdemo.offline.SyncWorker.schedulePeriodicSync(this);
+    }
     
     /**
      * Cierra la sesión del administrador
