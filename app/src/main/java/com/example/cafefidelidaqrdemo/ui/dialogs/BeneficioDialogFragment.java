@@ -64,11 +64,11 @@ public class BeneficioDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        
         if (getArguments() != null) {
             beneficio = (BeneficioEntity) getArguments().getSerializable(ARG_BENEFICIO);
         }
+        // Inicializar dateFormat
+        dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
     }
     
     @Nullable
@@ -123,8 +123,11 @@ public class BeneficioDialogFragment extends DialogFragment {
     }
     
     private void populateFields() {
-        editNombre.setText(beneficio.getNombre());
-        // Note: BeneficioEntity doesn't have getDescripcion method
+        if (beneficio == null) return;
+        
+        editNombre.setText(beneficio.getNombre() != null ? beneficio.getNombre() : "");
+        // BeneficioEntity no tiene descripción, usar nombre como descripción por defecto
+        editDescripcion.setText(beneficio.getNombre() != null ? beneficio.getNombre() : "");
         
         if (beneficio.getTipo() != null) {
             String[] tipos = {"DESCUENTO_PORCENTAJE", "DESCUENTO_MONTO", "DOS_POR_UNO", "PREMIO"};
@@ -190,7 +193,8 @@ public class BeneficioDialogFragment extends DialogFragment {
         
 
         beneficio.setNombre(editNombre.getText().toString().trim());
-
+        // BeneficioEntity no tiene setDescripcion, pero podemos usar el nombre
+        
         beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
         double valor = Double.parseDouble(editValor.getText().toString());
 
@@ -231,10 +235,11 @@ public class BeneficioDialogFragment extends DialogFragment {
             return false;
         }
         
-        if (editDescripcion.getText().toString().trim().isEmpty()) {
-            editDescripcion.setError("La descripción es requerida");
-            return false;
-        }
+        // La descripción es opcional ya que BeneficioEntity no la maneja
+        // if (editDescripcion.getText().toString().trim().isEmpty()) {
+        //     editDescripcion.setError("La descripción es requerida");
+        //     return false;
+        // }
         
         try {
             Double.parseDouble(editValor.getText().toString());

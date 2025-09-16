@@ -23,7 +23,7 @@ public interface ApiService {
         return ApiClient.getApiService();
     }
     
-    // AUTENTICACIÓN
+    // ========== AUTENTICACIÓN ==========
     @POST("auth/login")
     Call<Map<String, Object>> login(@Body Map<String, String> credentials);
     
@@ -33,7 +33,7 @@ public interface ApiService {
     @POST("auth/logout")
     Call<Void> logout(@Header("Authorization") String token);
     
-    // CLIENTES
+    // ========== CLIENTES ==========
     @GET("clientes/{id}")
     Call<ClienteEntity> getCliente(@Path("id") String clienteId);
     
@@ -49,7 +49,7 @@ public interface ApiService {
     @GET("clientes/{id}/puntos")
     Call<Map<String, Object>> getPuntosCliente(@Path("id") String clienteId);
     
-    //PRODUCTOS
+    // ========== PRODUCTOS ==========
     @GET("productos")
     Call<List<ProductoEntity>> getProductos();
     
@@ -65,7 +65,7 @@ public interface ApiService {
     @DELETE("productos/{id}")
     Call<Void> deleteProducto(@Path("id") Long id);
     
-    //BENEFICIOS
+    // ========== BENEFICIOS ==========
     @GET("beneficios")
     Call<List<BeneficioEntity>> getBeneficios();
     
@@ -78,7 +78,7 @@ public interface ApiService {
     @DELETE("beneficios/{id}")
     Call<Void> deleteBeneficio(@Path("id") Long id);
     
-    //SUCURSALES
+    // ========== SUCURSALES ==========
     @GET("sucursales")
     Call<List<SucursalEntity>> getSucursales();
     
@@ -94,7 +94,7 @@ public interface ApiService {
     @GET("sucursales/{id}")
     Call<Sucursal> getSucursalById(@Path("id") Long id);
     
-    // TRANSACCIONES
+    // ========== TRANSACCIONES ==========
     @POST("transacciones")
     Call<TransaccionEntity> createTransaccion(@Body TransaccionEntity transaccion);
     
@@ -104,7 +104,7 @@ public interface ApiService {
     @GET("transacciones/historial")
     Call<List<TransaccionEntity>> getHistorialTransacciones();
     
-    // REPORTES
+    // ========== REPORTES ==========
     @GET("reportes/ventas")
     Call<Map<String, Object>> getReporteVentas(@Query("fechaInicio") String fechaInicio, @Query("fechaFin") String fechaFin);
     
@@ -114,7 +114,7 @@ public interface ApiService {
     @GET("reportes/productos")
     Call<Map<String, Object>> getReporteProductos();
     
-    // VISITAS
+    // ========== VISITAS ==========
     @POST("visitas")
     Call<Visita> createVisita(@Body Visita visita);
     
