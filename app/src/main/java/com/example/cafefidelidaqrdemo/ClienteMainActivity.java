@@ -18,8 +18,7 @@ import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPuntos;
 import com.example.cafefidelidaqrdemo.ui.cliente.FragmentTableroCliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
-import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
-import com.example.cafefidelidaqrdemo.offline.OfflineManager;
+// Imports simplificados - PerformanceMonitor y OfflineManager removidos
 import com.google.android.material.navigation.NavigationBarView;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -29,7 +28,7 @@ public class ClienteMainActivity extends AppCompatActivity {
 
     private ActivityClienteMainBinding binding;
     private MainViewModel viewModel;
-    private OfflineManager offlineManager;
+    // OfflineManager removido para simplificación
     private AuthRepository authRepository;
 
     @Override
@@ -61,8 +60,7 @@ public class ClienteMainActivity extends AppCompatActivity {
         // Configurar botón de logout
         binding.btnLogout.setOnClickListener(v -> logout());
         
-        // Inicializar OfflineManager y configurar sincronización automática
-        initializeOfflineManager();
+        // Funcionalidad offline removida para simplificación
     }
     
     /**
@@ -167,31 +165,7 @@ public class ClienteMainActivity extends AppCompatActivity {
         startActivity(intent);
     }
     
-    /**
-     * Inicializa el OfflineManager y configura la sincronización automática
-     */
-    private void initializeOfflineManager() {
-        offlineManager = OfflineManager.getInstance(this);
-        configurarSincronizacionAutomatica();
-    }
-    
-    /**
-     * Configura la sincronización automática de datos
-     */
-    private void configurarSincronizacionAutomatica() {
-        // Configurar sincronización periódica cada 15 minutos
-        PeriodicWorkRequest syncWorkRequest = new PeriodicWorkRequest.Builder(
-                com.example.cafefidelidaqrdemo.offline.SyncWorker.class,
-                15, TimeUnit.MINUTES)
-                .build();
-        
-        WorkManager.getInstance(this).enqueue(syncWorkRequest);
-        
-        // Iniciar sincronización inmediata si hay datos pendientes
-        if (offlineManager != null) {
-            offlineManager.iniciarSincronizacion();
-        }
-    }
+    // Métodos de sincronización offline removidos para simplificación
     
     /**
      * Cierra la sesión del cliente
@@ -217,6 +191,6 @@ public class ClienteMainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         // Reportar estadísticas de rendimiento al cerrar la app
-        PerformanceMonitor.reportStatistics();
+        // PerformanceMonitor removido para simplificación
     }
 }

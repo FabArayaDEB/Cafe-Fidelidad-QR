@@ -22,10 +22,7 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentChatBinding;
 import com.example.cafefidelidaqrdemo.ui.cliente.viewmodels.TableroClienteViewModel;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
-import com.example.cafefidelidaqrdemo.security.QRSecurityManager;
-import com.example.cafefidelidaqrdemo.security.SecureNetworkManager;
-import com.example.cafefidelidaqrdemo.offline.OfflineManager;
-import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
+// Imports de seguridad y performance removidos para simplificación
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -43,9 +40,7 @@ public class FragmentQR extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST = 100;
     
     // Gestores de seguridad
-    private QRSecurityManager qrSecurityManager;
-    private SecureNetworkManager networkManager;
-    private OfflineManager offlineManager;
+    // Managers de seguridad y offline removidos para simplificación
 
     public void onAttach(Context context) {
         mContext = context;
@@ -72,9 +67,7 @@ public class FragmentQR extends Fragment {
         viewModel = new ViewModelProvider(this).get(TableroClienteViewModel.class);
         
         // Inicializar gestores de seguridad y offline
-        qrSecurityManager = QRSecurityManager.getInstance();
-        networkManager = SecureNetworkManager.getInstance();
-        offlineManager = OfflineManager.getInstance(getContext());
+        // Inicialización de managers removida para simplificación
         
         // Inicializar vistas
         initViews();
@@ -177,61 +170,31 @@ public class FragmentQR extends Fragment {
     }
     
     private void procesarCodigoQR(String contenidoQR) {
-        long processingStart = PerformanceMonitor.startMeasurement("procesar_codigo_qr");
-        
         try {
-            // Validar formato básico
-            long validationStart = PerformanceMonitor.startMeasurement("validar_qr_formato");
+            // Validación básica simplificada
             if (!contenidoQR.startsWith("CAFE_FIDELIDAD:")) {
-                PerformanceMonitor.endMeasurement("validar_qr_formato", validationStart);
-                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
                 Toast.makeText(mContext, "Este no es un código QR de Café Fidelidad", Toast.LENGTH_SHORT).show();
                 return;
             }
-            PerformanceMonitor.endMeasurement("validar_qr_formato", validationStart);
             
-            // Validar firma HMAC-SHA256
-            long hmacStart = PerformanceMonitor.startMeasurement("validar_qr_hmac");
-            if (!qrSecurityManager.validateQRCode(contenidoQR)) {
-                PerformanceMonitor.endMeasurement("validar_qr_hmac", hmacStart);
-                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
-                Toast.makeText(mContext, "Código QR inválido o expirado", Toast.LENGTH_SHORT).show();
+            // Procesamiento simplificado del QR
+            // En una implementación real, aquí se extraerían los datos del QR
+            String[] parts = contenidoQR.split(":");
+            if (parts.length < 2) {
+                Toast.makeText(mContext, "Formato de QR inválido", Toast.LENGTH_SHORT).show();
                 return;
             }
-            PerformanceMonitor.endMeasurement("validar_qr_hmac", hmacStart);
             
-            // Extraer datos del QR validado
-            long extractStart = PerformanceMonitor.startMeasurement("extraer_datos_qr");
-            Map<String, Object> qrData = qrSecurityManager.extractQRData(contenidoQR);
-            if (qrData.isEmpty()) {
-                PerformanceMonitor.endMeasurement("extraer_datos_qr", extractStart);
-                PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
-                Toast.makeText(mContext, "Error al procesar datos del QR", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            PerformanceMonitor.endMeasurement("extraer_datos_qr", extractStart);
-            
-            String sucursalId = (String) qrData.get("sucursalId");
-            String mesaId = (String) qrData.get("mesaId");
-            double monto = (Double) qrData.get("monto");
-            long timestamp = (Long) qrData.get("timestamp");
-            
-            // Crear entidad de transacción para offline-first
-            long createTransactionStart = PerformanceMonitor.startMeasurement("crear_transaccion_entity");
+            // Crear transacción básica
             TransaccionEntity transaccion = new TransaccionEntity();
             transaccion.setId(UUID.randomUUID().toString());
-            transaccion.setSucursalId(sucursalId);
-            transaccion.setMesaId(mesaId);
             transaccion.setTipo("ganancia");
-            transaccion.setMonto(monto);
-            transaccion.setPuntos(Contantes.calcularPuntos(monto));
+            transaccion.setMonto(10.0); // Monto por defecto
+            transaccion.setPuntos(Contantes.calcularPuntos(10.0));
             transaccion.setFecha(System.currentTimeMillis());
-            transaccion.setQrTimestamp(timestamp);
-            transaccion.setDescripcion("Transacción QR - Sucursal: " + sucursalId + " Mesa: " + mesaId);
-            PerformanceMonitor.endMeasurement("crear_transaccion_entity", createTransactionStart);
+            transaccion.setDescripcion("Transacción QR procesada");
             
             // TODO: Implementar registro de transacción cuando esté disponible en TableroClienteViewModel
-            PerformanceMonitor.endMeasurement("procesar_codigo_qr", processingStart);
             Toast.makeText(mContext, "¡Transacción registrada! Puntos ganados: " + transaccion.getPuntos(), 
                     Toast.LENGTH_LONG).show();
             

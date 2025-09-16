@@ -10,7 +10,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.cafefidelidaqrdemo.databinding.ActivityMainBinding;
 import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
-import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
+// Import de PerformanceMonitor removido para simplificación
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import android.util.Log;
 
@@ -147,6 +147,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         // Reportar estadísticas de rendimiento al cerrar la app
-        PerformanceMonitor.reportStatistics();
+        // PerformanceMonitor removido para simplificación
     }
 }

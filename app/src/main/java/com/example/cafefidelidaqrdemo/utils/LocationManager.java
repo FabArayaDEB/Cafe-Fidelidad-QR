@@ -1,246 +1,169 @@
 package com.example.cafefidelidaqrdemo.utils;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+/**
+ * Versión simplificada de LocationManager para funciones básicas
+ */
 public class LocationManager implements LocationListener {
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
-    private static final String[] LOCATION_PERMISSIONS = {
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-    };
-
+    
     private Context context;
-    private android.location.LocationManager locationManager;
+    private android.location.LocationManager systemLocationManager;
     private MutableLiveData<Location> currentLocation = new MutableLiveData<>();
-    private MutableLiveData<Boolean> locationPermissionGranted = new MutableLiveData<>();
     private MutableLiveData<String> locationError = new MutableLiveData<>();
-
+    
     public LocationManager(Context context) {
         this.context = context;
-        this.locationManager = (android.location.LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        checkLocationPermissions();
+        this.systemLocationManager = (android.location.LocationManager) 
+            context.getSystemService(Context.LOCATION_SERVICE);
     }
-
+    
     /**
-     * Verifica si los permisos de ubicación están concedidos
+     * Verifica si tiene permisos de ubicación
      */
     public boolean hasLocationPermissions() {
-        for (String permission : LOCATION_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) 
+            == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) 
+            == PackageManager.PERMISSION_GRANTED;
     }
-
+    
     /**
-     * Verifica si la ubicación está habilitada en el dispositivo
+     * Verifica si la ubicación está habilitada
      */
     public boolean isLocationEnabled() {
-        return locationManager != null && 
-               (locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER));
+        if (systemLocationManager == null) {
+            return false;
+        }
+        return systemLocationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+               systemLocationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER);
     }
-
+    
     /**
-     * Solicita permisos de ubicación
-     */
-    public void requestLocationPermissions(Activity activity) {
-        ActivityCompat.requestPermissions(activity, LOCATION_PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
-    }
-
-    /**
-     * Verifica y actualiza el estado de los permisos
-     */
-    private void checkLocationPermissions() {
-        boolean hasPermissions = hasLocationPermissions();
-        locationPermissionGranted.setValue(hasPermissions);
-    }
-
-    /**
-     * Inicia la obtención de ubicación
+     * Inicia las actualizaciones de ubicación
      */
     public void startLocationUpdates() {
         if (!hasLocationPermissions()) {
             locationError.setValue("Permisos de ubicación no concedidos");
             return;
         }
-
-        if (locationManager == null) {
-            locationError.setValue("Servicio de ubicación no disponible");
+        
+        if (!isLocationEnabled()) {
+            locationError.setValue("Ubicación no habilitada");
             return;
         }
-
+        
         try {
-            // Verificar si GPS está habilitado
-            if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) &&
-                !locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)) {
-                locationError.setValue("GPS y red deshabilitados. Habilite al menos uno para obtener ubicación.");
-                return;
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) 
+                == PackageManager.PERMISSION_GRANTED) {
+                systemLocationManager.requestLocationUpdates(
+                    android.location.LocationManager.GPS_PROVIDER, 
+                    5000, 10, this);
             }
-
-            // Solicitar actualizaciones de ubicación
-            if (locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
-                locationManager.requestLocationUpdates(
-                        android.location.LocationManager.GPS_PROVIDER,
-                        5000, // 5 segundos
-                        10,    // 10 metros
-                        this
-                );
-            }
-
-            if (locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)) {
-                locationManager.requestLocationUpdates(
-                        android.location.LocationManager.NETWORK_PROVIDER,
-                        5000, // 5 segundos
-                        10,    // 10 metros
-                        this
-                );
-            }
-
-            // Obtener última ubicación conocida
-            Location lastKnownLocation = getLastKnownLocation();
-            if (lastKnownLocation != null) {
-                currentLocation.setValue(lastKnownLocation);
-            }
-
-        } catch (SecurityException e) {
-            locationError.setValue("Error de seguridad al acceder a la ubicación: " + e.getMessage());
+        } catch (Exception e) {
+            locationError.setValue("Error al iniciar ubicación: " + e.getMessage());
         }
     }
-
+    
     /**
      * Detiene las actualizaciones de ubicación
      */
     public void stopLocationUpdates() {
-        if (locationManager != null) {
-            try {
-                locationManager.removeUpdates(this);
-            } catch (SecurityException e) {
-                locationError.setValue("Error al detener actualizaciones de ubicación: " + e.getMessage());
-            }
+        if (systemLocationManager != null) {
+            systemLocationManager.removeUpdates(this);
         }
     }
-
+    
     /**
      * Obtiene la última ubicación conocida
      */
     public Location getLastKnownLocation() {
-        if (!hasLocationPermissions()) {
+        if (!hasLocationPermissions() || systemLocationManager == null) {
             return null;
         }
-
+        
         try {
-            Location gpsLocation = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER);
-            Location networkLocation = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
-
-            // Retornar la ubicación más reciente
-            if (gpsLocation != null && networkLocation != null) {
-                return gpsLocation.getTime() > networkLocation.getTime() ? gpsLocation : networkLocation;
-            } else if (gpsLocation != null) {
-                return gpsLocation;
-            } else {
-                return networkLocation;
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) 
+                == PackageManager.PERMISSION_GRANTED) {
+                return systemLocationManager.getLastKnownLocation(
+                    android.location.LocationManager.GPS_PROVIDER);
             }
-        } catch (SecurityException e) {
-            locationError.setValue("Error al obtener última ubicación: " + e.getMessage());
-            return null;
+        } catch (Exception e) {
+            locationError.setValue("Error al obtener ubicación: " + e.getMessage());
         }
+        
+        return null;
     }
-
+    
     /**
-     * Calcula la distancia entre dos ubicaciones en metros
+     * Calcula la distancia entre dos ubicaciones
      */
-    public static float calculateDistance(Location location1, Location location2) {
+    public double calculateDistance(Location location1, Location location2) {
         if (location1 == null || location2 == null) {
             return -1;
         }
         return location1.distanceTo(location2);
     }
-
+    
     /**
-     * Verifica si el usuario está cerca de una ubicación específica
+     * Verifica si está cerca de una ubicación
      */
-    public boolean isNearLocation(Location targetLocation, float radiusInMeters) {
-        Location currentLoc = currentLocation.getValue();
-        if (currentLoc == null || targetLocation == null) {
+    public boolean isNearLocation(Location targetLocation, double radiusInMeters) {
+        Location current = getLastKnownLocation();
+        if (current == null || targetLocation == null) {
             return false;
         }
-        return calculateDistance(currentLoc, targetLocation) <= radiusInMeters;
+        
+        double distance = calculateDistance(current, targetLocation);
+        return distance <= radiusInMeters;
     }
-
-    // LiveData getters
-    public LiveData<Location> getCurrentLocation() {
+    
+    /**
+     * Obtiene LiveData de la ubicación actual
+     */
+    public MutableLiveData<Location> getCurrentLocation() {
         return currentLocation;
     }
-
-    public LiveData<Boolean> getLocationPermissionGranted() {
-        return locationPermissionGranted;
-    }
-
-    public LiveData<String> getLocationError() {
+    
+    /**
+     * Obtiene LiveData de errores de ubicación
+     */
+    public MutableLiveData<String> getLocationError() {
         return locationError;
     }
-
-    // LocationListener implementation
-    @Override
-    public void onLocationChanged(@NonNull Location location) {
-        currentLocation.setValue(location);
-        locationError.setValue(null); // Limpiar errores previos
-    }
-
-    @Override
-    public void onProviderEnabled(@NonNull String provider) {
-        // Provider habilitado
-    }
-
-    @Override
-    public void onProviderDisabled(@NonNull String provider) {
-        locationError.setValue("Proveedor de ubicación " + provider + " deshabilitado");
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        // Estado del proveedor cambió
-    }
-
-    /**
-     * Maneja el resultado de la solicitud de permisos
-     */
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            boolean allPermissionsGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allPermissionsGranted = false;
-                    break;
-                }
-            }
-            locationPermissionGranted.setValue(allPermissionsGranted);
-            
-            if (allPermissionsGranted) {
-                startLocationUpdates();
-            } else {
-                locationError.setValue("Permisos de ubicación denegados");
-            }
-        }
-    }
-
+    
     /**
      * Limpia recursos
      */
     public void cleanup() {
         stopLocationUpdates();
+    }
+    
+    // Implementación de LocationListener
+    @Override
+    public void onLocationChanged(Location location) {
+        currentLocation.setValue(location);
+    }
+    
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        // No implementado en versión simplificada
+    }
+    
+    @Override
+    public void onProviderEnabled(String provider) {
+        // No implementado en versión simplificada
+    }
+    
+    @Override
+    public void onProviderDisabled(String provider) {
+        locationError.setValue("Proveedor de ubicación deshabilitado: " + provider);
     }
 }

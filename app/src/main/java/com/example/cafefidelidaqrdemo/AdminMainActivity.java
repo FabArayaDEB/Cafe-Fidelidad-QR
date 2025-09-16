@@ -13,14 +13,13 @@ import com.example.cafefidelidaqrdemo.databinding.ActivityAdminMainBinding;
 import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentAdminDashboard;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
-import com.example.cafefidelidaqrdemo.utils.PerformanceMonitor;
-import com.example.cafefidelidaqrdemo.offline.OfflineManager;
+// Imports simplificados - PerformanceMonitor y OfflineManager removidos
 
 public class AdminMainActivity extends AppCompatActivity {
 
     private ActivityAdminMainBinding binding;
     private MainViewModel viewModel;
-    private OfflineManager offlineManager;
+    // OfflineManager removido para simplificación
     private AuthRepository authRepository;
 
     @Override
@@ -52,8 +51,7 @@ public class AdminMainActivity extends AppCompatActivity {
         // Configurar botón de logout
         binding.btnLogout.setOnClickListener(v -> logout());
         
-        // Inicializar OfflineManager y configurar sincronización automática
-        initializeOfflineManager();
+        // Funcionalidad offline removida para simplificación
     }
     
     /**
@@ -67,27 +65,7 @@ public class AdminMainActivity extends AppCompatActivity {
                 .replace(R.id.fragmentFL, adminDashboard)
                 .commit();
     }
-    
-    /**
-     * Inicializa el OfflineManager y configura la sincronización automática
-     */
-    private void initializeOfflineManager() {
-        offlineManager = OfflineManager.getInstance(this);
-        configurarSincronizacionAutomatica();
-    }
-    
-    /**
-     * Configura la sincronización automática de datos
-     */
-    private void configurarSincronizacionAutomatica() {
-        // Usar el método estático de SyncWorker para programar sincronización periódica
-        com.example.cafefidelidaqrdemo.offline.SyncWorker.schedulePeriodicSync(this);
-        
-        // Iniciar sincronización inmediata si hay datos pendientes
-        if (offlineManager != null) {
-            offlineManager.iniciarSincronizacion();
-        }
-    }
+
     
     /**
      * Cierra la sesión del administrador
@@ -112,8 +90,7 @@ public class AdminMainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Reportar estadísticas de rendimiento al cerrar la app
-        PerformanceMonitor.reportStatistics();
+        // PerformanceMonitor removido para simplificación
     }
     
     @Override

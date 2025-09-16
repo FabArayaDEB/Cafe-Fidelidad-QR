@@ -8,7 +8,7 @@ import com.example.cafefidelidaqrdemo.database.dao.SucursalDao;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.network.ApiService;
-import com.example.cafefidelidaqrdemo.sync.SyncManager;
+// SyncManager removido para simplificación
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import com.example.cafefidelidaqrdemo.utils.SearchManager;
 import com.example.cafefidelidaqrdemo.utils.LocationUtils;
@@ -26,7 +26,7 @@ import retrofit2.Response;
 public class SucursalRepository {
     private final SucursalDao sucursalDao;
     private final ApiService apiService;
-    private final SyncManager syncManager;
+    // SyncManager removido para simplificación
     private final SearchManager searchManager;
     private final ExecutorService executor;
     private final Context context;
@@ -36,10 +36,10 @@ public class SucursalRepository {
     private final MutableLiveData<Boolean> isOffline = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> locationPermissionDenied = new MutableLiveData<>(false);
     
-    public SucursalRepository(SucursalDao sucursalDao, ApiService apiService, SyncManager syncManager, Context context) {
+    public SucursalRepository(SucursalDao sucursalDao, ApiService apiService, Context context) {
         this.sucursalDao = sucursalDao;
         this.apiService = apiService;
-        this.syncManager = syncManager;
+        // SyncManager removido para simplificación
         this.searchManager = new SearchManager();
         this.executor = Executors.newFixedThreadPool(2);
         this.context = context;
@@ -85,23 +85,18 @@ public class SucursalRepository {
         isOffline.postValue(false);
         error.postValue(null);
         
-        apiService.getSucursales().enqueue(new Callback<List<Sucursal>>() {
+        apiService.getSucursales().enqueue(new Callback<List<SucursalEntity>>() {
             @Override
-            public void onResponse(Call<List<Sucursal>> call, Response<List<Sucursal>> response) {
+            public void onResponse(Call<List<SucursalEntity>> call, Response<List<SucursalEntity>> response) {
                 isLoading.postValue(false);
                 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Sucursal> sucursales = response.body();
+                    List<SucursalEntity> sucursales = response.body();
                     executor.execute(() -> {
-                        // Convertir y guardar en cache local
-                        List<SucursalEntity> entities = new ArrayList<>();
-                        for (Sucursal sucursal : sucursales) {
-                            entities.add(convertToEntity(sucursal));
-                        }
-                        
+                        // Guardar en cache local (ya son SucursalEntity)
                         // Limpiar cache anterior y insertar nuevos datos
                         sucursalDao.deleteAll();
-                        sucursalDao.insertAll(entities);
+                        sucursalDao.insertAll(sucursales);
                     });
                 } else {
                     error.postValue("Error al cargar sucursales: " + response.message());
@@ -109,7 +104,7 @@ public class SucursalRepository {
             }
             
             @Override
-            public void onFailure(Call<List<Sucursal>> call, Throwable t) {
+            public void onFailure(Call<List<SucursalEntity>> call, Throwable t) {
                 isLoading.postValue(false);
                 error.postValue("Error de conexión: " + t.getMessage());
             }
@@ -267,7 +262,7 @@ public class SucursalRepository {
     }
     
     public void forceSyncSucursales() {
-        SyncManager.forceSyncAll(context);
+        // SyncManager removido para simplificación
     }
     
     public void setLocationPermissionDenied(boolean denied) {

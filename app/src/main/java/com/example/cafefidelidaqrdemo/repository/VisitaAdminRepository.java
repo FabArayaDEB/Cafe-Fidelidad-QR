@@ -229,10 +229,10 @@ public class VisitaAdminRepository {
      */
     private void enviarVisitaAlServidor(VisitaEntity visita, QRProcessCallback callback) {
         ApiService.VisitaRequest request = new ApiService.VisitaRequest(
-            visita.getHash_qr(),
             "cliente_default", // TODO: obtener clienteId del contexto
-            visita.getFecha_hora(),
-            visita.getId_sucursal()
+            Long.valueOf(visita.getId_sucursal()),
+            String.valueOf(visita.getFecha_hora()),
+            0 // puntos por defecto
         );
         Call<VisitaResponse> call = apiService.registrarVisita(request);
         
