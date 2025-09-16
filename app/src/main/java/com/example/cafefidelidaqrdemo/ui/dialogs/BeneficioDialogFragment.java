@@ -251,7 +251,7 @@ public class BeneficioDialogFragment extends DialogFragment {
     private boolean validateFields() {
         boolean isValid = true;
         
-        // Validar solo campos esenciales
+        // Validar nombre (requerido)
         if (editNombre.getText().toString().trim().isEmpty()) {
             editNombre.setError("El nombre es requerido");
             isValid = false;
@@ -259,7 +259,21 @@ public class BeneficioDialogFragment extends DialogFragment {
             editNombre.setError(null);
         }
         
-        // Validar valor básico
+        // Validar descripción (requerida)
+        if (editDescripcion.getText().toString().trim().isEmpty()) {
+            editDescripcion.setError("La descripción es requerida");
+            isValid = false;
+        } else {
+            editDescripcion.setError(null);
+        }
+        
+        // Validar tipo de beneficio (requerido)
+        if (spinnerTipo.getSelectedItemPosition() == 0) {
+            Toast.makeText(getContext(), "Debe seleccionar un tipo de beneficio", Toast.LENGTH_SHORT).show();
+            isValid = false;
+        }
+        
+        // Validar valor (requerido y mayor a 0)
         String valorText = editValor.getText().toString().trim();
         if (valorText.isEmpty()) {
             editValor.setError("El valor es requerido");
