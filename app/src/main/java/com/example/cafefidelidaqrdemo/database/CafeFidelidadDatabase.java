@@ -18,6 +18,7 @@ import com.example.cafefidelidaqrdemo.database.dao.ReglaDao;
 import com.example.cafefidelidaqrdemo.database.dao.ReporteDao;
 import com.example.cafefidelidaqrdemo.database.dao.CompraDao;
 import com.example.cafefidelidaqrdemo.database.dao.UbicacionDao;
+import com.example.cafefidelidaqrdemo.database.dao.TableroDao;
 import com.example.cafefidelidaqrdemo.database.Converters;
 import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
@@ -31,6 +32,7 @@ import com.example.cafefidelidaqrdemo.database.entities.ReglaEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
 import com.example.cafefidelidaqrdemo.database.entities.CompraEntity;
 import com.example.cafefidelidaqrdemo.database.entities.UbicacionEntity;
+import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
 
 /**
  * Base de datos Room principal para cache offline
@@ -48,9 +50,10 @@ import com.example.cafefidelidaqrdemo.database.entities.UbicacionEntity;
         ReglaEntity.class,
         ReporteEntity.class,
         CompraEntity.class,
-        UbicacionEntity.class
+        UbicacionEntity.class,
+        TableroEntity.class
     },
-    version = 7,
+    version = 1,
     exportSchema = false
 )
 @androidx.room.TypeConverters({Converters.class})
@@ -72,6 +75,7 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
     public abstract ReporteDao reporteDao();
     public abstract CompraDao compraDao();
     public abstract UbicacionDao ubicacionDao();
+    public abstract TableroDao tableroDao();
     
     /**
      * Singleton pattern para obtener instancia de la base de datos
@@ -85,8 +89,8 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
                             CafeFidelidadDatabase.class,
                             DATABASE_NAME
                     )
+                    .fallbackToDestructiveMigration() // Permite recrear la BD si hay cambios de esquema
                     .addCallback(roomCallback)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7) // Migraciones para nuevas entidades
                     .build();
                 }
             }
@@ -109,114 +113,7 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
             super.onOpen(db);
             // Configuraciones que se ejecutan cada vez que se abre la DB
         }
-    };
-    
-    /**
-     * Migración de versión 1 a 2 - Agregar nuevas entidades del modelo ER
-     */
-    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // Las nuevas tablas se crearán automáticamente por Room
-            // cuando se detecten las nuevas entidades
-        }
-    };
-    
-    /**
-     * Migración de versión 2 a 3 - Agregar tabla beneficios mejorada
-     */
-    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // Crear nueva tabla beneficios con estructura mejorada
-            database.execSQL("CREATE TABLE IF NOT EXISTS `beneficios_new` (" +
-                    "`id` TEXT NOT NULL, " +
-                    "`nombre` TEXT, " +
-                    "`descripcion` TEXT, " +
-                    "`tipo` TEXT, " +
-                    "`valor` REAL NOT NULL, " +
-                    "`reglasJson` TEXT, " +
-                    "`fechaInicio` INTEGER, " +
-                    "`fechaFin` INTEGER, " +
-                    "`sucursalesAplicables` TEXT, " +
-                    "`activo` INTEGER NOT NULL, " +
-                    "`fechaCreacion` INTEGER, " +
-                    "`fechaModificacion` INTEGER, " +
-                    "PRIMARY KEY(`id`))");
-            
-            // Migrar datos existentes si los hay
-            database.execSQL("INSERT INTO beneficios_new (id, nombre, descripcion, tipo, valor, reglasJson, activo, fechaCreacion, fechaModificacion) " +
-                    "SELECT id_beneficio, nombre, tipo, regla, COALESCE(descuento_pct, descuento_monto, 0), regla, " +
-                    "CASE WHEN estado = 'activo' THEN 1 ELSE 0 END, " +
-                    "COALESCE(lastSync, 0), COALESCE(lastSync, 0) " +
-                    "FROM beneficios WHERE id_beneficio IS NOT NULL");
-            
-            // Eliminar tabla antigua y renombrar la nueva
-            database.execSQL("DROP TABLE IF EXISTS beneficios");
-            database.execSQL("ALTER TABLE beneficios_new RENAME TO beneficios");
-        }
-    };
-    
-    /**
-     * Migración de versión 3 a 4 - Agregar tabla reportes
-     */
-    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // La tabla reportes se creará automáticamente por Room
-            // cuando detecte la nueva entidad ReporteEntity
-        }
-    };
-    
-    /**
-     * Migración de versión 4 a 5 - Agregar tabla compras
-     */
-    private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            database.execSQL("CREATE TABLE IF NOT EXISTS `compras` (" +
-                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                    "`clienteId` INTEGER NOT NULL, " +
-                    "`monto` REAL NOT NULL, " +
-                    "`fecha` TEXT NOT NULL, " +
-                    "`descripcion` TEXT, " +
-                    "`mcId` TEXT NOT NULL, " +
-                    "FOREIGN KEY(`clienteId`) REFERENCES `clientes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
-        }
-    };
-    
-    /**
-     * Migración de versión 5 a 6 - Agregar tabla ubicaciones
-     */
-    private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            database.execSQL("CREATE TABLE IF NOT EXISTS `ubicaciones` (" +
-                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                    "`usuario_id` INTEGER NOT NULL, " +
-                    "`latitud` REAL NOT NULL, " +
-                    "`longitud` REAL NOT NULL, " +
-                    "`precision` REAL NOT NULL, " +
-                    "`direccion` TEXT, " +
-                    "`ciudad` TEXT, " +
-                    "`fecha_registro` INTEGER NOT NULL, " +
-                    "`es_sucursal_cercana` INTEGER NOT NULL DEFAULT 0, " +
-                    "`sucursal_id` INTEGER, " +
-                    "`distancia_sucursal` REAL, " +
-                    "`sincronizado` INTEGER NOT NULL DEFAULT 0)");
-        }
-    };
-    
-    /**
-     * Migración de versión 6 a 7 - Actualización de esquema
-     */
-    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // Migración automática - Room detectará los cambios en el esquema
-            // y aplicará las modificaciones necesarias
-        }
-    };
+     };
     
     /**
      * Cierra la base de datos (útil para testing)

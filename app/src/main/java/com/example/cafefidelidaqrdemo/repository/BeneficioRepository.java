@@ -10,6 +10,7 @@ import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import android.util.Log;
 
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.concurrent.Executors;
  */
 public class BeneficioRepository {
     
+    private static final String TAG = "BeneficioRepository";
     private final BeneficioDao beneficioDao;
     private final ExecutorService executor;
     private final Gson gson;
@@ -121,7 +123,17 @@ public class BeneficioRepository {
                 // Establecer fechas de auditoría
                 beneficio.setLastSync(System.currentTimeMillis());
                 
-                beneficioDao.insertBeneficio(beneficio);
+                Log.d(TAG, "Insertando beneficio: " + beneficio.getNombre() + ", ID: " + beneficio.getId_beneficio());
+                long insertId = beneficioDao.insertBeneficio(beneficio);
+                Log.d(TAG, "Beneficio insertado con ID de retorno: " + insertId);
+                
+                // Verificar que se guardó correctamente
+                BeneficioEntity verificacion = beneficioDao.getBeneficioByIdSync(beneficio.getId_beneficio());
+                if (verificacion != null) {
+                    Log.d(TAG, "✓ ÉXITO: Beneficio encontrado en BD - Nombre: " + verificacion.getNombre() + ", Estado: " + verificacion.getEstado());
+                } else {
+                    Log.e(TAG, "✗ ERROR: Beneficio NO encontrado en BD después de insertar");
+                }
                 
                 isLoadingLiveData.postValue(false);
                 errorLiveData.postValue(null);
