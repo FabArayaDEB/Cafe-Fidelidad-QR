@@ -173,6 +173,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
             return false;
         }
         
+        // Validaciones esenciales únicamente
         if (beneficio.getNombre() == null || beneficio.getNombre().trim().isEmpty()) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "El nombre del beneficio es obligatorio")
@@ -190,24 +191,6 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         if (beneficio.getDescuento_pct() <= 0 && beneficio.getDescuento_monto() <= 0) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "El beneficio debe tener un descuento válido")
-            );
-            return false;
-        }
-        
-        if (beneficio.getVigencia_ini() > 0 && beneficio.getVigencia_fin() > 0) {
-            if (beneficio.getVigencia_ini() > beneficio.getVigencia_fin()) {
-                operationResultLiveData.postValue(
-                    new OperationResult(false, "La fecha de inicio no puede ser posterior a la fecha de fin")
-                );
-                return false;
-            }
-        }
-        
-        // Validar reglas JSON
-        BeneficioRepository.ValidationResult validationResult = validateBeneficioRules(beneficio.getRegla());
-        if (!validationResult.isValid) {
-            operationResultLiveData.postValue(
-                new OperationResult(false, validationResult.errorMessage)
             );
             return false;
         }
