@@ -75,7 +75,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
     
     private void initViews(View view) {
         recyclerViewBeneficios = view.findViewById(R.id.recyclerViewBeneficios);
-        // fabNuevoBeneficio = view.findViewById(R.id.fabNuevoBeneficio); // TODO: Agregar este ID al layout
+        fabNuevoBeneficio = view.findViewById(R.id.fabAgregarBeneficio);
         progressIndicator = view.findViewById(R.id.progressIndicator);
         emptyStateView = view.findViewById(R.id.emptyStateView);
         
@@ -129,10 +129,12 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
     }
     
     private void setupClickListeners() {
-        fabNuevoBeneficio.setOnClickListener(v -> {
-            // Abrir dialog para crear nuevo beneficio
-            showCreateBeneficioDialog();
-        });
+        if (fabNuevoBeneficio != null) {
+            fabNuevoBeneficio.setOnClickListener(v -> {
+                // Abrir dialog para crear nuevo beneficio
+                showCreateBeneficioDialog();
+            });
+        }
     }
     
     private void updateEmptyState(boolean isEmpty) {
