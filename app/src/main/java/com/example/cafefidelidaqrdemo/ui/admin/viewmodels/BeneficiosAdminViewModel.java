@@ -71,11 +71,11 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     
     // Métodos de carga
     public void loadBeneficios() {
-        refreshTrigger.setValue(true);
+        refreshTrigger.postValue(true);
     }
     
     public void refreshBeneficios() {
-        refreshTrigger.setValue(true);
+        refreshTrigger.postValue(true);
     }
     
     // Operaciones CRUD
