@@ -346,7 +346,7 @@ public class UbicacionViewModel extends AndroidViewModel {
      * Calcula la distancia entre dos ubicaciones
      */
     public float calculateDistance(Location location1, Location location2) {
-        return locationManager.calculateDistance(location1, location2);
+        return (float) locationManager.calculateDistance(location1, location2);
     }
 
     /**

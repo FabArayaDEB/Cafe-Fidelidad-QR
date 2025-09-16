@@ -80,22 +80,17 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
         setOffline(false);
         clearError();
         
-        apiService.getProductos().enqueue(new Callback<List<Producto>>() {
+        apiService.getProductos().enqueue(new Callback<List<ProductoEntity>>() {
             @Override
-            public void onResponse(Call<List<Producto>> call, Response<List<Producto>> response) {
+            public void onResponse(Call<List<ProductoEntity>> call, Response<List<ProductoEntity>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Producto> productos = response.body();
+                    List<ProductoEntity> productos = response.body();
                     executeInBackground(() -> {
                         try {
-                            // Convertir y guardar en cache local
-                            List<ProductoEntity> entities = new ArrayList<>();
-                            for (Producto producto : productos) {
-                                entities.add(convertToEntity(producto));
-                            }
-                            
+                            // Guardar en cache local (ya son ProductoEntity)
                             // Limpiar cache anterior y insertar nuevos datos
                             productoDao.deleteAll();
-                            productoDao.insertAll(entities);
+                            productoDao.insertAll(productos);
                             
                             setSuccess("Productos actualizados exitosamente");
                             if (callback != null) callback.onSuccess();
@@ -113,7 +108,7 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
             }
             
             @Override
-            public void onFailure(Call<List<Producto>> call, Throwable t) {
+            public void onFailure(Call<List<ProductoEntity>> call, Throwable t) {
                 String error = "Error de conexión: " + t.getMessage();
                 setError(error);
                 setOffline(true);
@@ -151,13 +146,13 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
         }
         
         setLoading(true);
-        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<Producto>() {
+        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<ProductoEntity>() {
             @Override
-            public void onResponse(Call<Producto> call, Response<Producto> response) {
+            public void onResponse(Call<ProductoEntity> call, Response<ProductoEntity> response) {
                 setLoading(false);
                 if (response.isSuccessful() && response.body() != null) {
-                    Producto producto = response.body();
-                    ProductoEntity entity = convertToEntity(producto);
+                    ProductoEntity producto = response.body();
+                    ProductoEntity entity = producto; // Ya es ProductoEntity
                     // Guardar en cache
                     executeInBackground(() -> {
                         try {
@@ -175,7 +170,7 @@ public class ProductoRepository extends BaseRepository implements IProductoRepos
             }
 
             @Override
-            public void onFailure(Call<Producto> call, Throwable t) {
+            public void onFailure(Call<ProductoEntity> call, Throwable t) {
                 setLoading(false);
                 String error = "Error de conexión: " + t.getMessage();
                 setError(error);

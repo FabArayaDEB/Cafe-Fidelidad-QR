@@ -10,7 +10,7 @@ import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
-import com.example.cafefidelidaqrdemo.sync.SyncManager;
+// SyncManager removido para simplificación
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Date;
@@ -101,12 +101,11 @@ public class ClienteRepository {
                     // Intentar enviar a API primero
                     try {
                         Cliente clienteModel = convertToModel(cliente);
-                        Response<Cliente> response = apiService.updateCliente(cliente.getId_cliente(), clienteModel).execute();
+                        Response<ClienteEntity> response = apiService.updateCliente(cliente.getId_cliente(), cliente).execute();
                         
                         if (response.isSuccessful() && response.body() != null) {
-                            Cliente updatedCliente = response.body();
+                            ClienteEntity updatedEntity = response.body();
                             // Si la API responde exitosamente, actualizar cache
-                            ClienteEntity updatedEntity = convertToEntity(updatedCliente);
                             updatedEntity.setSynced(true);
                             updatedEntity.setNeedsSync(false);
                             updatedEntity.setLastSync(System.currentTimeMillis());
@@ -150,7 +149,7 @@ public class ClienteRepository {
         syncStatusLiveData.postValue(false);
         
         // Programar sincronización automática
-        SyncManager.scheduleClienteSync(context);
+        // SyncManager removido para simplificación
     }
     
     /**
@@ -193,9 +192,9 @@ public class ClienteRepository {
                 for (ClienteEntity cliente : pendingClientes) {
                     try {
                         Cliente clienteModel = convertToModel(cliente);
-                        Response<Cliente> response = apiService.updateCliente(cliente.getId_cliente(), clienteModel).execute();
+                        Response<ClienteEntity> response = apiService.updateCliente(cliente.getId_cliente(), cliente).execute();
                         if (response.isSuccessful() && response.body() != null) {
-                            Cliente syncedCliente = response.body();
+                            ClienteEntity syncedCliente = response.body();
                             
                             // Marcar como sincronizado
                             cliente.setSynced(true);

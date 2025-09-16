@@ -1,9 +1,11 @@
 package com.example.cafefidelidaqrdemo.network.response;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 /**
- * Respuesta de la API para el registro de visitas
+ * Respuesta de API para operaciones de visitas
+ * Clase simplificada para manejar respuestas del servidor
  */
 public class VisitaResponse {
     
@@ -13,35 +15,11 @@ public class VisitaResponse {
     @SerializedName("message")
     private String message;
     
-    @SerializedName("visita_id")
-    private String visitaId;
+    @SerializedName("data")
+    private VisitaData data;
     
-    @SerializedName("sucursal_id")
-    private String sucursalId;
-    
-    @SerializedName("sucursal_nombre")
-    private String sucursalNombre;
-    
-    @SerializedName("fecha_registro")
-    private String fechaRegistro;
-    
-    @SerializedName("progreso")
-    private String progreso;
-    
-    @SerializedName("visitas_totales")
-    private int visitasTotales;
-    
-    @SerializedName("visitas_mes")
-    private int visitasMes;
-    
-    @SerializedName("puntos_ganados")
-    private int puntosGanados;
-    
-    @SerializedName("nivel_actual")
-    private String nivelActual;
-    
-    @SerializedName("siguiente_beneficio")
-    private SiguienteBeneficio siguienteBeneficio;
+    @SerializedName("errors")
+    private List<String> errors;
     
     // Constructores
     public VisitaResponse() {}
@@ -68,207 +46,104 @@ public class VisitaResponse {
         this.message = message;
     }
     
-    public String getVisitaId() {
-        return visitaId;
+    public VisitaData getData() {
+        return data;
     }
     
-    public void setVisitaId(String visitaId) {
-        this.visitaId = visitaId;
+    public void setData(VisitaData data) {
+        this.data = data;
     }
     
-    public String getSucursalId() {
-        return sucursalId;
+    public List<String> getErrors() {
+        return errors;
     }
     
-    public void setSucursalId(String sucursalId) {
-        this.sucursalId = sucursalId;
-    }
-    
-    public String getSucursalNombre() {
-        return sucursalNombre;
-    }
-    
-    public void setSucursalNombre(String sucursalNombre) {
-        this.sucursalNombre = sucursalNombre;
-    }
-    
-    public String getFechaRegistro() {
-        return fechaRegistro;
-    }
-    
-    public void setFechaRegistro(String fechaRegistro) {
-        this.fechaRegistro = fechaRegistro;
-    }
-    
-    public String getProgreso() {
-        return progreso;
-    }
-    
-    public void setProgreso(String progreso) {
-        this.progreso = progreso;
-    }
-    
-    public int getVisitasTotales() {
-        return visitasTotales;
-    }
-    
-    public void setVisitasTotales(int visitasTotales) {
-        this.visitasTotales = visitasTotales;
-    }
-    
-    public int getVisitasMes() {
-        return visitasMes;
-    }
-    
-    public void setVisitasMes(int visitasMes) {
-        this.visitasMes = visitasMes;
-    }
-    
-    public int getPuntosGanados() {
-        return puntosGanados;
-    }
-    
-    public void setPuntosGanados(int puntosGanados) {
-        this.puntosGanados = puntosGanados;
-    }
-    
-    public String getNivelActual() {
-        return nivelActual;
-    }
-    
-    public void setNivelActual(String nivelActual) {
-        this.nivelActual = nivelActual;
-    }
-    
-    public SiguienteBeneficio getSiguienteBeneficio() {
-        return siguienteBeneficio;
-    }
-    
-    public void setSiguienteBeneficio(SiguienteBeneficio siguienteBeneficio) {
-        this.siguienteBeneficio = siguienteBeneficio;
+    public void setErrors(List<String> errors) {
+        this.errors = errors;
     }
     
     /**
-     * Formatear progreso para mostrar al usuario
+     * Clase interna para datos de visita
      */
-    public String getProgresoFormateado() {
-        if (progreso != null && !progreso.isEmpty()) {
-            return progreso;
-        }
+    public static class VisitaData {
+        @SerializedName("visitaId")
+        private String visitaId;
         
-        StringBuilder sb = new StringBuilder();
+        @SerializedName("clienteId")
+        private String clienteId;
         
-        if (visitasTotales > 0) {
-            sb.append("Visitas totales: ").append(visitasTotales);
-        }
+        @SerializedName("sucursalId")
+        private Long sucursalId;
         
-        if (visitasMes > 0) {
-            if (sb.length() > 0) sb.append("\n");
-            sb.append("Visitas este mes: ").append(visitasMes);
-        }
+        @SerializedName("fecha")
+        private String fecha;
         
-        if (puntosGanados > 0) {
-            if (sb.length() > 0) sb.append("\n");
-            sb.append("Puntos ganados: +").append(puntosGanados);
-        }
+        @SerializedName("puntosGanados")
+        private int puntosGanados;
         
-        if (nivelActual != null && !nivelActual.isEmpty()) {
-            if (sb.length() > 0) sb.append("\n");
-            sb.append("Nivel actual: ").append(nivelActual);
-        }
-        
-        if (siguienteBeneficio != null) {
-            if (sb.length() > 0) sb.append("\n\n");
-            sb.append(siguienteBeneficio.getDescripcion());
-        }
-        
-        return sb.toString();
-    }
-    
-    /**
-     * Clase para información del siguiente beneficio
-     */
-    public static class SiguienteBeneficio {
-        
-        @SerializedName("nombre")
-        private String nombre;
-        
-        @SerializedName("visitas_restantes")
-        private int visitasRestantes;
-        
-        @SerializedName("puntos_restantes")
-        private int puntosRestantes;
-        
-        @SerializedName("descripcion")
-        private String descripcion;
+        @SerializedName("estado")
+        private String estado;
         
         // Constructores
-        public SiguienteBeneficio() {}
-        
-        public SiguienteBeneficio(String nombre, int visitasRestantes, int puntosRestantes) {
-            this.nombre = nombre;
-            this.visitasRestantes = visitasRestantes;
-            this.puntosRestantes = puntosRestantes;
-        }
+        public VisitaData() {}
         
         // Getters y Setters
-        public String getNombre() {
-            return nombre;
+        public String getVisitaId() {
+            return visitaId;
         }
         
-        public void setNombre(String nombre) {
-            this.nombre = nombre;
+        public void setVisitaId(String visitaId) {
+            this.visitaId = visitaId;
         }
         
-        public int getVisitasRestantes() {
-            return visitasRestantes;
+        public String getClienteId() {
+            return clienteId;
         }
         
-        public void setVisitasRestantes(int visitasRestantes) {
-            this.visitasRestantes = visitasRestantes;
+        public void setClienteId(String clienteId) {
+            this.clienteId = clienteId;
         }
         
-        public int getPuntosRestantes() {
-            return puntosRestantes;
+        public Long getSucursalId() {
+            return sucursalId;
         }
         
-        public void setPuntosRestantes(int puntosRestantes) {
-            this.puntosRestantes = puntosRestantes;
+        public void setSucursalId(Long sucursalId) {
+            this.sucursalId = sucursalId;
         }
         
-        public String getDescripcion() {
-            return descripcion;
+        public String getFecha() {
+            return fecha;
         }
         
-        public void setDescripcion(String descripcion) {
-            this.descripcion = descripcion;
+        public void setFecha(String fecha) {
+            this.fecha = fecha;
         }
         
-        /**
-         * Generar descripción automática si no viene del servidor
-         */
-        public String getDescripcionGenerada() {
-            if (descripcion != null && !descripcion.isEmpty()) {
-                return descripcion;
-            }
-            
-            StringBuilder sb = new StringBuilder();
-            
-            if (nombre != null && !nombre.isEmpty()) {
-                sb.append("Próximo beneficio: ").append(nombre);
-            }
-            
-            if (visitasRestantes > 0) {
-                if (sb.length() > 0) sb.append("\n");
-                sb.append("Te faltan ").append(visitasRestantes).append(" visitas");
-            }
-            
-            if (puntosRestantes > 0) {
-                if (sb.length() > 0) sb.append("\n");
-                sb.append("Te faltan ").append(puntosRestantes).append(" puntos");
-            }
-            
-            return sb.toString();
+        public int getPuntosGanados() {
+            return puntosGanados;
         }
+        
+        public void setPuntosGanados(int puntosGanados) {
+            this.puntosGanados = puntosGanados;
+        }
+        
+        public String getEstado() {
+            return estado;
+        }
+        
+        public void setEstado(String estado) {
+            this.estado = estado;
+        }
+    }
+    
+    /**
+     * Método para obtener progreso (compatibilidad)
+     */
+    public String getProgreso() {
+        if (data != null) {
+            return "Puntos ganados: " + data.getPuntosGanados();
+        }
+        return "Sin progreso disponible";
     }
 }

@@ -59,7 +59,6 @@ public class SucursalesViewModel extends AndroidViewModel {
         repository = new SucursalRepository(
             database.sucursalDao(),
             ApiService.getInstance(),
-            null,
             application
         );
         
