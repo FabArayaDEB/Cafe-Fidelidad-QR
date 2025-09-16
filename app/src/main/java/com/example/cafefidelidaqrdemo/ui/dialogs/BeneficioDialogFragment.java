@@ -220,10 +220,20 @@ public class BeneficioDialogFragment extends DialogFragment {
             
             beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
             
+            // Configurar regla por defecto si no existe
+            if (beneficio.getRegla() == null || beneficio.getRegla().isEmpty()) {
+                beneficio.setRegla("{}"); // JSON vacío válido
+            }
+            
             // Parsing seguro de números
             try {
                 double valor = Double.parseDouble(editValor.getText().toString().trim());
                 String tipo = spinnerTipo.getSelectedItem().toString();
+                
+                // Inicializar ambos campos en 0 y luego establecer el correcto
+                beneficio.setDescuento_pct(0.0);
+                beneficio.setDescuento_monto(0.0);
+                
                 if (tipo.contains("PORCENTAJE")) {
                     beneficio.setDescuento_pct(valor);
                 } else if (tipo.contains("MONTO")) {
