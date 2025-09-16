@@ -198,6 +198,7 @@ public class BeneficioDialogFragment extends DialogFragment {
     private void guardarBeneficio() {
         try {
             if (!validateFields()) {
+                Toast.makeText(getContext(), "Por favor, corrige los errores en el formulario", Toast.LENGTH_LONG).show();
                 return;
             }
             
@@ -274,32 +275,111 @@ public class BeneficioDialogFragment extends DialogFragment {
     }
     
     private boolean validateFields() {
+        boolean isValid = true;
+        
+        // Validar nombre
         if (editNombre.getText().toString().trim().isEmpty()) {
             editNombre.setError("El nombre es requerido");
-            return false;
+            isValid = false;
+        } else {
+            editNombre.setError(null);
         }
         
-        // La descripción es opcional ya que BeneficioEntity no la maneja
-        // if (editDescripcion.getText().toString().trim().isEmpty()) {
-        //     editDescripcion.setError("La descripción es requerida");
-        //     return false;
-        // }
-        
-        try {
-            Double.parseDouble(editValor.getText().toString());
-        } catch (NumberFormatException e) {
-            editValor.setError("Valor inválido");
-            return false;
+        // Validar valor
+        String valorText = editValor.getText().toString().trim();
+        if (valorText.isEmpty()) {
+            editValor.setError("El valor es requerido");
+            isValid = false;
+        } else {
+            try {
+                double valor = Double.parseDouble(valorText);
+                if (valor <= 0) {
+                    editValor.setError("El valor debe ser mayor a 0");
+                    isValid = false;
+                } else {
+                    // Validar según el tipo de beneficio
+                    String tipo = spinnerTipo.getSelectedItem().toString();
+                    if (tipo.contains("PORCENTAJE") && valor > 100) {
+                        editValor.setError("El porcentaje no puede ser mayor a 100");
+                        isValid = false;
+                    } else {
+                        editValor.setError(null);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                editValor.setError("Valor numérico inválido");
+                isValid = false;
+            }
         }
         
-        try {
-            Integer.parseInt(editVisitasRequeridas.getText().toString());
-        } catch (NumberFormatException e) {
-            editVisitasRequeridas.setError("Número de visitas inválido");
-            return false;
+        // Validar visitas requeridas
+        String visitasText = editVisitasRequeridas.getText().toString().trim();
+        if (visitasText.isEmpty()) {
+            editVisitasRequeridas.setError("Las visitas requeridas son necesarias");
+            isValid = false;
+        } else {
+            try {
+                int visitas = Integer.parseInt(visitasText);
+                if (visitas <= 0) {
+                    editVisitasRequeridas.setError("Debe ser mayor a 0");
+                    isValid = false;
+                } else {
+                    editVisitasRequeridas.setError(null);
+                }
+            } catch (NumberFormatException e) {
+                editVisitasRequeridas.setError("Número de visitas inválido");
+                isValid = false;
+            }
         }
         
-        return true;
+        // Validar fechas si están presentes
+        String fechaInicioText = editFechaInicio.getText().toString().trim();
+        String fechaFinText = editFechaFin.getText().toString().trim();
+        
+        if (!fechaInicioText.isEmpty()) {
+            try {
+                Date fechaInicio = dateFormat.parse(fechaInicioText);
+                if (fechaInicio == null) {
+                    editFechaInicio.setError("Fecha inválida");
+                    isValid = false;
+                } else {
+                    editFechaInicio.setError(null);
+                }
+            } catch (Exception e) {
+                editFechaInicio.setError("Formato de fecha inválido (dd/MM/yyyy)");
+                isValid = false;
+            }
+        }
+        
+        if (!fechaFinText.isEmpty()) {
+            try {
+                Date fechaFin = dateFormat.parse(fechaFinText);
+                if (fechaFin == null) {
+                    editFechaFin.setError("Fecha inválida");
+                    isValid = false;
+                } else {
+                    editFechaFin.setError(null);
+                    
+                    // Validar que fecha fin sea posterior a fecha inicio
+                    if (!fechaInicioText.isEmpty()) {
+                        try {
+                            Date fechaInicio = dateFormat.parse(fechaInicioText);
+                            if (fechaInicio != null && fechaFin.before(fechaInicio)) {
+                                editFechaFin.setError("La fecha fin debe ser posterior a la fecha inicio");
+                                isValid = false;
+                            }
+                        } catch (Exception e) {
+                            // Error ya manejado arriba
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                editFechaFin.setError("Formato de fecha inválido (dd/MM/yyyy)");
+                isValid = false;
+            }
+        }
+        
+        return isValid;
     }
     
     public void setOnBeneficioSavedListener(OnBeneficioSavedListener listener) {
