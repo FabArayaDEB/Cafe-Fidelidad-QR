@@ -231,8 +231,14 @@ public class BeneficioRepository {
     
     // Verificar conflictos de vigencia
     private boolean hasConflictingVigencia(BeneficioEntity beneficio) {
-        if (beneficio.getVigencia_ini() == 0 || beneficio.getVigencia_fin() == 0) {
+        // Si no hay fechas de vigencia definidas (0), no verificar conflictos
+        if (beneficio.getVigencia_ini() <= 0 || beneficio.getVigencia_fin() <= 0) {
             return false; // Sin fechas definidas, no hay conflicto
+        }
+        
+        // Si la fecha de inicio es mayor o igual a la fecha de fin, es inválido
+        if (beneficio.getVigencia_ini() >= beneficio.getVigencia_fin()) {
+            return false; // Fechas inválidas, pero permitir la operación
         }
         
         try {
@@ -243,7 +249,8 @@ public class BeneficioRepository {
             );
             return conflictos > 0;
         } catch (Exception e) {
-            return false; // En caso de error, permitir la operación
+            // En caso de error en la consulta, permitir la operación
+            return false;
         }
     }
     
