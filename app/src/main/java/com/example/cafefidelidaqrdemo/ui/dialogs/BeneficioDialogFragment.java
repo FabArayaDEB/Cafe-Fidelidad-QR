@@ -259,11 +259,8 @@ public class BeneficioDialogFragment extends DialogFragment {
             editNombre.setError(null);
         }
         
-        // Validar descripción (requerida)
-        if (editDescripcion.getText().toString().trim().isEmpty()) {
-            editDescripcion.setError("La descripción es requerida");
-            isValid = false;
-        } else {
+        // Validar descripción (opcional)
+        if (editDescripcion != null && !editDescripcion.getText().toString().trim().isEmpty()) {
             editDescripcion.setError(null);
         }
         
