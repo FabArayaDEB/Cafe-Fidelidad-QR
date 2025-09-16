@@ -210,35 +210,16 @@ public class BeneficioRepository {
         });
     }
     
-    // Validación de reglas JSON
+    // Validación simplificada de reglas JSON
     public ValidationResult validateReglasJson(String reglasJson) {
+        // Permitir reglas vacías o nulas para CRUD básico
         if (reglasJson == null || reglasJson.trim().isEmpty()) {
-            return new ValidationResult(false, "Las reglas no pueden estar vacías");
+            return new ValidationResult(true, null);
         }
         
         try {
-            JsonObject reglas = gson.fromJson(reglasJson, JsonObject.class);
-            
-            // Validar esquemas conocidos
-            if (reglas.has("cadaNVisitas")) {
-                int visitas = reglas.get("cadaNVisitas").getAsInt();
-                if (visitas <= 0) {
-                    return new ValidationResult(false, "cadaNVisitas debe ser mayor a 0");
-                }
-            } else if (reglas.has("montoMinimo")) {
-                double monto = reglas.get("montoMinimo").getAsDouble();
-                if (monto <= 0) {
-                    return new ValidationResult(false, "montoMinimo debe ser mayor a 0");
-                }
-            } else if (reglas.has("fechaEspecial")) {
-                String fecha = reglas.get("fechaEspecial").getAsString();
-                if (fecha == null || fecha.trim().isEmpty()) {
-                    return new ValidationResult(false, "fechaEspecial no puede estar vacía");
-                }
-            } else {
-                return new ValidationResult(false, "Esquema de regla no reconocido. Use: cadaNVisitas, montoMinimo o fechaEspecial");
-            }
-            
+            // Solo validar que sea JSON válido
+            gson.fromJson(reglasJson, JsonObject.class);
             return new ValidationResult(true, null);
             
         } catch (JsonSyntaxException e) {

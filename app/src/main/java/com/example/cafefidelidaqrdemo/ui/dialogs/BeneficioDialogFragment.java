@@ -208,70 +208,34 @@ public class BeneficioDialogFragment extends DialogFragment {
                 beneficio.setId_beneficio(System.currentTimeMillis() + "_" + Math.random());
             }
             
-            // Validar que las vistas no sean null
-            if (editNombre == null || spinnerTipo == null || editValor == null || 
-                editVisitasRequeridas == null || switchActivo == null) {
-                Toast.makeText(getContext(), "Error: Vistas no inicializadas", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
+            // Configurar campos esenciales
             beneficio.setNombre(editNombre.getText().toString().trim());
-            // BeneficioEntity no tiene setDescripcion, pero podemos usar el nombre
-            
             beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
+            beneficio.setRegla("{}"); // JSON vacío válido
             
-            // Configurar regla por defecto si no existe
-            if (beneficio.getRegla() == null || beneficio.getRegla().isEmpty()) {
-                beneficio.setRegla("{}"); // JSON vacío válido
-            }
-            
-            // Parsing seguro de números
+            // Configurar valor según tipo
             try {
                 double valor = Double.parseDouble(editValor.getText().toString().trim());
                 String tipo = spinnerTipo.getSelectedItem().toString();
                 
-                // Inicializar ambos campos en 0 y luego establecer el correcto
                 beneficio.setDescuento_pct(0.0);
                 beneficio.setDescuento_monto(0.0);
                 
                 if (tipo.contains("PORCENTAJE")) {
                     beneficio.setDescuento_pct(valor);
-                } else if (tipo.contains("MONTO")) {
+                } else {
                     beneficio.setDescuento_monto(valor);
                 }
             } catch (NumberFormatException e) {
-                Toast.makeText(getContext(), "Error: Valor numérico inválido", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Valor numérico inválido", Toast.LENGTH_SHORT).show();
                 return;
             }
             
-            try {
-                int visitas = Integer.parseInt(editVisitasRequeridas.getText().toString().trim());
-                beneficio.setRequisito_visitas(visitas);
-            } catch (NumberFormatException e) {
-                Toast.makeText(getContext(), "Error: Número de visitas inválido", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
+            // Configurar valores por defecto
+            beneficio.setRequisito_visitas(1); // Valor por defecto
             beneficio.setEstado(switchActivo.isChecked() ? "activo" : "inactivo");
-            
-            // Parsing de fechas
-            try {
-                if (editFechaInicio != null && !editFechaInicio.getText().toString().trim().isEmpty()) {
-                    Date fechaInicio = dateFormat.parse(editFechaInicio.getText().toString().trim());
-                    if (fechaInicio != null) {
-                        beneficio.setVigencia_ini(fechaInicio.getTime());
-                    }
-                }
-                if (editFechaFin != null && !editFechaFin.getText().toString().trim().isEmpty()) {
-                    Date fechaFin = dateFormat.parse(editFechaFin.getText().toString().trim());
-                    if (fechaFin != null) {
-                        beneficio.setVigencia_fin(fechaFin.getTime());
-                    }
-                }
-            } catch (Exception e) {
-                Toast.makeText(getContext(), "Error en formato de fecha: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                return;
-            }
+            beneficio.setVigencia_ini(0); // Sin fecha de inicio
+            beneficio.setVigencia_fin(0); // Sin fecha de fin
             
             if (listener != null) {
                 listener.onBeneficioSaved(beneficio);
@@ -287,7 +251,7 @@ public class BeneficioDialogFragment extends DialogFragment {
     private boolean validateFields() {
         boolean isValid = true;
         
-        // Validar nombre
+        // Validar solo campos esenciales
         if (editNombre.getText().toString().trim().isEmpty()) {
             editNombre.setError("El nombre es requerido");
             isValid = false;
@@ -295,7 +259,7 @@ public class BeneficioDialogFragment extends DialogFragment {
             editNombre.setError(null);
         }
         
-        // Validar valor
+        // Validar valor básico
         String valorText = editValor.getText().toString().trim();
         if (valorText.isEmpty()) {
             editValor.setError("El valor es requerido");
@@ -307,84 +271,10 @@ public class BeneficioDialogFragment extends DialogFragment {
                     editValor.setError("El valor debe ser mayor a 0");
                     isValid = false;
                 } else {
-                    // Validar según el tipo de beneficio
-                    String tipo = spinnerTipo.getSelectedItem().toString();
-                    if (tipo.contains("PORCENTAJE") && valor > 100) {
-                        editValor.setError("El porcentaje no puede ser mayor a 100");
-                        isValid = false;
-                    } else {
-                        editValor.setError(null);
-                    }
+                    editValor.setError(null);
                 }
             } catch (NumberFormatException e) {
                 editValor.setError("Valor numérico inválido");
-                isValid = false;
-            }
-        }
-        
-        // Validar visitas requeridas
-        String visitasText = editVisitasRequeridas.getText().toString().trim();
-        if (visitasText.isEmpty()) {
-            editVisitasRequeridas.setError("Las visitas requeridas son necesarias");
-            isValid = false;
-        } else {
-            try {
-                int visitas = Integer.parseInt(visitasText);
-                if (visitas <= 0) {
-                    editVisitasRequeridas.setError("Debe ser mayor a 0");
-                    isValid = false;
-                } else {
-                    editVisitasRequeridas.setError(null);
-                }
-            } catch (NumberFormatException e) {
-                editVisitasRequeridas.setError("Número de visitas inválido");
-                isValid = false;
-            }
-        }
-        
-        // Validar fechas si están presentes
-        String fechaInicioText = editFechaInicio.getText().toString().trim();
-        String fechaFinText = editFechaFin.getText().toString().trim();
-        
-        if (!fechaInicioText.isEmpty()) {
-            try {
-                Date fechaInicio = dateFormat.parse(fechaInicioText);
-                if (fechaInicio == null) {
-                    editFechaInicio.setError("Fecha inválida");
-                    isValid = false;
-                } else {
-                    editFechaInicio.setError(null);
-                }
-            } catch (Exception e) {
-                editFechaInicio.setError("Formato de fecha inválido (dd/MM/yyyy)");
-                isValid = false;
-            }
-        }
-        
-        if (!fechaFinText.isEmpty()) {
-            try {
-                Date fechaFin = dateFormat.parse(fechaFinText);
-                if (fechaFin == null) {
-                    editFechaFin.setError("Fecha inválida");
-                    isValid = false;
-                } else {
-                    editFechaFin.setError(null);
-                    
-                    // Validar que fecha fin sea posterior a fecha inicio
-                    if (!fechaInicioText.isEmpty()) {
-                        try {
-                            Date fechaInicio = dateFormat.parse(fechaInicioText);
-                            if (fechaInicio != null && fechaFin.before(fechaInicio)) {
-                                editFechaFin.setError("La fecha fin debe ser posterior a la fecha inicio");
-                                isValid = false;
-                            }
-                        } catch (Exception e) {
-                            // Error ya manejado arriba
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                editFechaFin.setError("Formato de fecha inválido (dd/MM/yyyy)");
                 isValid = false;
             }
         }
