@@ -89,7 +89,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             textDescripcion = itemView.findViewById(R.id.textDescripcion);
             chipTipo = itemView.findViewById(R.id.chipTipo);
             textVigencia = itemView.findViewById(R.id.textVigencia);
-            textUsos = itemView.findViewById(R.id.textContadorBeneficios); // Cambiado de textUsos
+            textUsos = itemView.findViewById(R.id.textUsosTotales);
             textClientesBeneficiados = itemView.findViewById(R.id.textClientesBeneficiados);
             switchActivo = itemView.findViewById(R.id.switchActivo);
             btnEditar = itemView.findViewById(R.id.btnEditar);
