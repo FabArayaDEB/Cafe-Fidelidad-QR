@@ -21,6 +21,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     private final BeneficioRepository beneficioRepository;
     
     // LiveData para la UI
+    private final LiveData<List<BeneficioEntity>> allBeneficiosLiveData;
     private final MutableLiveData<List<BeneficioEntity>> beneficiosLiveData = new MutableLiveData<>();
     private final MutableLiveData<OperationResult> operationResultLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> refreshTrigger = new MutableLiveData<>();
@@ -39,13 +40,28 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         this.errorLiveData = beneficioRepository.getError();
         this.syncStatusLiveData = beneficioRepository.getSyncStatus();
         
+        // Configurar conexión automática de beneficios
+        this.allBeneficiosLiveData = Transformations.switchMap(refreshTrigger, trigger -> {
+            if (trigger != null && trigger) {
+                return beneficioRepository.getAllBeneficios();
+            }
+            return beneficioRepository.getAllBeneficios();
+        });
+        
         // Configurar observación automática de beneficios
         setupBeneficiosObserver();
     }
     
     private void setupBeneficiosObserver() {
-        // Funcionalidad temporalmente deshabilitada debido a incompatibilidad de tipos
-        // TODO: Implementar conversión entre BeneficioEntity y Beneficio
+        // Observar cambios en allBeneficiosLiveData y actualizar beneficiosLiveData
+        allBeneficiosLiveData.observeForever(beneficios -> {
+            if (beneficios != null) {
+                beneficiosLiveData.postValue(beneficios);
+            }
+        });
+        
+        // Cargar beneficios inicialmente
+        refreshTrigger.setValue(true);
     }
     
     // Getters para LiveData
@@ -200,7 +216,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     
     // Métodos de filtrado y búsqueda
     public void filterBeneficiosByType(String tipo) {
-        List<BeneficioEntity> currentBeneficios = beneficiosLiveData.getValue();
+        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
             List<BeneficioEntity> filtered = currentBeneficios.stream()
                 .filter(b -> tipo.equals(b.getTipo()))
@@ -210,7 +226,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     public void filterBeneficiosByStatus(boolean activo) {
-        List<BeneficioEntity> currentBeneficios = beneficiosLiveData.getValue();
+        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
             List<BeneficioEntity> filtered = currentBeneficios.stream()
                 .filter(b -> b.isActivo() == activo)
@@ -225,7 +241,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
             return;
         }
         
-        List<BeneficioEntity> currentBeneficios = beneficiosLiveData.getValue();
+        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
             String lowerQuery = query.toLowerCase();
             List<BeneficioEntity> filtered = currentBeneficios.stream()
