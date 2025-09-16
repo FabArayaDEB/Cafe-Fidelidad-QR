@@ -81,12 +81,27 @@ public class BeneficioDialogFragment extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        initViews(view);
-        setupSpinner();
-        setupClickListeners();
-        
-        if (beneficio != null) {
-            populateFields();
+        try {
+            initViews(view);
+            
+            // Verificar que todas las vistas se inicializaron correctamente
+             if (editNombre == null || editDescripcion == null || spinnerTipo == null || 
+                 editValor == null || editVisitasRequeridas == null || editFechaInicio == null || 
+                 editFechaFin == null || switchActivo == null || buttonGuardar == null || buttonCancelar == null) {
+                 Toast.makeText(getContext(), "Error: No se pudieron inicializar las vistas", Toast.LENGTH_LONG).show();
+                 dismiss();
+                 return;
+             }
+            
+            setupSpinner();
+            setupClickListeners();
+            
+            if (beneficio != null) {
+                populateFields();
+            }
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error crítico al inicializar el diálogo: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            dismiss();
         }
     }
     
@@ -181,52 +196,81 @@ public class BeneficioDialogFragment extends DialogFragment {
     }
     
     private void guardarBeneficio() {
-        if (!validateFields()) {
-            return;
-        }
-        
-        if (beneficio == null) {
-            beneficio = new BeneficioEntity();
-            // Generar ID único para el nuevo beneficio
-            beneficio.setId_beneficio(System.currentTimeMillis() + "_" + Math.random());
-        }
-        
-
-        beneficio.setNombre(editNombre.getText().toString().trim());
-        // BeneficioEntity no tiene setDescripcion, pero podemos usar el nombre
-        
-        beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
-        double valor = Double.parseDouble(editValor.getText().toString());
-
-        String tipo = spinnerTipo.getSelectedItem().toString();
-        if (tipo.contains("PORCENTAJE")) {
-            beneficio.setDescuento_pct(valor);
-        } else if (tipo.contains("MONTO")) {
-            beneficio.setDescuento_monto(valor);
-        }
-        beneficio.setRequisito_visitas(Integer.parseInt(editVisitasRequeridas.getText().toString()));
-        beneficio.setEstado(switchActivo.isChecked() ? "activo" : "inactivo");
-        
-
         try {
-            if (!editFechaInicio.getText().toString().isEmpty()) {
-                Date fechaInicio = dateFormat.parse(editFechaInicio.getText().toString());
-                beneficio.setVigencia_ini(fechaInicio.getTime());
+            if (!validateFields()) {
+                return;
             }
-            if (!editFechaFin.getText().toString().isEmpty()) {
-                Date fechaFin = dateFormat.parse(editFechaFin.getText().toString());
-                beneficio.setVigencia_fin(fechaFin.getTime());
+            
+            if (beneficio == null) {
+                beneficio = new BeneficioEntity();
+                // Generar ID único para el nuevo beneficio
+                beneficio.setId_beneficio(System.currentTimeMillis() + "_" + Math.random());
             }
+            
+            // Validar que las vistas no sean null
+            if (editNombre == null || spinnerTipo == null || editValor == null || 
+                editVisitasRequeridas == null || switchActivo == null) {
+                Toast.makeText(getContext(), "Error: Vistas no inicializadas", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            beneficio.setNombre(editNombre.getText().toString().trim());
+            // BeneficioEntity no tiene setDescripcion, pero podemos usar el nombre
+            
+            beneficio.setTipo(spinnerTipo.getSelectedItem().toString());
+            
+            // Parsing seguro de números
+            try {
+                double valor = Double.parseDouble(editValor.getText().toString().trim());
+                String tipo = spinnerTipo.getSelectedItem().toString();
+                if (tipo.contains("PORCENTAJE")) {
+                    beneficio.setDescuento_pct(valor);
+                } else if (tipo.contains("MONTO")) {
+                    beneficio.setDescuento_monto(valor);
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getContext(), "Error: Valor numérico inválido", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            try {
+                int visitas = Integer.parseInt(editVisitasRequeridas.getText().toString().trim());
+                beneficio.setRequisito_visitas(visitas);
+            } catch (NumberFormatException e) {
+                Toast.makeText(getContext(), "Error: Número de visitas inválido", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            beneficio.setEstado(switchActivo.isChecked() ? "activo" : "inactivo");
+            
+            // Parsing de fechas
+            try {
+                if (editFechaInicio != null && !editFechaInicio.getText().toString().trim().isEmpty()) {
+                    Date fechaInicio = dateFormat.parse(editFechaInicio.getText().toString().trim());
+                    if (fechaInicio != null) {
+                        beneficio.setVigencia_ini(fechaInicio.getTime());
+                    }
+                }
+                if (editFechaFin != null && !editFechaFin.getText().toString().trim().isEmpty()) {
+                    Date fechaFin = dateFormat.parse(editFechaFin.getText().toString().trim());
+                    if (fechaFin != null) {
+                        beneficio.setVigencia_fin(fechaFin.getTime());
+                    }
+                }
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Error en formato de fecha: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (listener != null) {
+                listener.onBeneficioSaved(beneficio);
+            }
+            
+            dismiss();
+            
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Error en formato de fecha", Toast.LENGTH_SHORT).show();
-            return;
+            Toast.makeText(getContext(), "Error inesperado: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
-        
-        if (listener != null) {
-            listener.onBeneficioSaved(beneficio);
-        }
-        
-        dismiss();
     }
     
     private boolean validateFields() {
