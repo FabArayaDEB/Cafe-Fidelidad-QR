@@ -94,15 +94,15 @@ public interface ApiService {
     @GET("sucursales/{id}")
     Call<Sucursal> getSucursalById(@Path("id") Long id);
     
-    // ========== TRANSACCIONES ==========
-    @POST("transacciones")
-    Call<TransaccionEntity> createTransaccion(@Body TransaccionEntity transaccion);
+    // ========== CANJES ==========
+    @POST("canjes")
+    Call<CanjeEntity> createCanje(@Body CanjeEntity canje);
     
-    @GET("transacciones/cliente/{clienteId}")
-    Call<List<TransaccionEntity>> getTransaccionesCliente(@Path("clienteId") String clienteId);
+    @GET("canjes/cliente/{clienteId}")
+    Call<List<CanjeEntity>> getCanjesCliente(@Path("clienteId") String clienteId);
     
-    @GET("transacciones/historial")
-    Call<List<TransaccionEntity>> getHistorialTransacciones();
+    @GET("canjes/historial")
+    Call<List<CanjeEntity>> getHistorialCanjes();
     
     // ========== REPORTES ==========
     @GET("reportes/ventas")

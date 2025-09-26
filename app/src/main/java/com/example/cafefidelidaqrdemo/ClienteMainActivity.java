@@ -13,10 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.databinding.ActivityClienteMainBinding;
 import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
-import com.example.cafefidelidaqrdemo.fragments.FragmentQR;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
-import com.example.cafefidelidaqrdemo.fragments.FragmentPuntos;
-import com.example.cafefidelidaqrdemo.ui.cliente.FragmentTableroCliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 // Imports simplificados - PerformanceMonitor y OfflineManager removidos
 import com.google.android.material.navigation.NavigationBarView;
@@ -70,10 +67,10 @@ public class ClienteMainActivity extends AppCompatActivity {
         // Configurar navegación normal para clientes
         setupNavigation();
         
-        // Mostrar tablero de cliente por defecto
-        FragmentTableroCliente tableroCliente = new FragmentTableroCliente();
+        // Mostrar perfil de cliente por defecto
+        FragmentPerfil fragmentPerfil = new FragmentPerfil();
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentFL, tableroCliente)
+                .replace(R.id.fragmentFL, fragmentPerfil)
                 .commit();
     }
     
@@ -130,11 +127,8 @@ public class ClienteMainActivity extends AppCompatActivity {
      */
     private void verFragPuntos(){
         binding.tvTitulo.setText("Mis Puntos");
-
-        FragmentPuntos fragment = new FragmentPuntos();
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentPuntos");
-        fragmentTransaction.commit();
+        // TODO: Implementar fragmento de puntos simplificado
+        Toast.makeText(this, "Funcionalidad de puntos en desarrollo", Toast.LENGTH_SHORT).show();
     }
     
     /**
@@ -142,11 +136,8 @@ public class ClienteMainActivity extends AppCompatActivity {
      */
     private void verFragQR(){
         binding.tvTitulo.setText("Escanear QR");
-
-        FragmentQR fragment = new FragmentQR();
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentQR");
-        fragmentTransaction.commit();
+        // TODO: Implementar fragmento de QR simplificado
+        Toast.makeText(this, "Funcionalidad de QR en desarrollo", Toast.LENGTH_SHORT).show();
     }
     
     /**
