@@ -9,8 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.repository.AdminRepository;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

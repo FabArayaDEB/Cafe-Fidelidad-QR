@@ -17,7 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.BeneficiosDisponiblesAdapter;
 import com.example.cafefidelidaqrdemo.adapters.ProgresoFidelizacionAdapter;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.dialogs.ProximoBeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
@@ -221,7 +221,7 @@ public class FragmentProgresoFidelizacion extends Fragment {
         }
     }
     
-    private void updateBeneficiosDisponibles(List<BeneficioEntity> beneficios) {
+    private void updateBeneficiosDisponibles(List<Beneficio> beneficios) {
         if (beneficios.isEmpty()) {
             // layoutBeneficiosDisponibles.setVisibility(View.GONE);
         } else {
@@ -302,7 +302,7 @@ public class FragmentProgresoFidelizacion extends Fragment {
     }
     
     // Callbacks de clicks
-    private void onBeneficioDisponibleClick(BeneficioEntity beneficio) {
+    private void onBeneficioDisponibleClick(Beneficio beneficio) {
         // Mostrar detalles del beneficio disponible
         BeneficioDetailsDialogFragment dialog = BeneficioDetailsDialogFragment.newInstance(beneficio);
         dialog.show(getParentFragmentManager(), "BeneficioDetailsDialog");

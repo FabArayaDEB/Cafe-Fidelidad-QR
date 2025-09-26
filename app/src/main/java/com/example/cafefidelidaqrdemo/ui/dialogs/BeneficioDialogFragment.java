@@ -17,7 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -43,15 +43,15 @@ public class BeneficioDialogFragment extends DialogFragment {
     private Button buttonCancelar;
     
     // Data
-    private BeneficioEntity beneficio;
+    private Beneficio beneficio;
     private OnBeneficioSavedListener listener;
     private SimpleDateFormat dateFormat;
     
     public interface OnBeneficioSavedListener {
-        void onBeneficioSaved(BeneficioEntity beneficio);
+        void onBeneficioSaved(Beneficio beneficio);
     }
     
-    public static BeneficioDialogFragment newInstance(@Nullable BeneficioEntity beneficio) {
+    public static BeneficioDialogFragment newInstance(@Nullable Beneficio beneficio) {
         BeneficioDialogFragment fragment = new BeneficioDialogFragment();
         Bundle args = new Bundle();
         if (beneficio != null) {
@@ -65,7 +65,7 @@ public class BeneficioDialogFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            beneficio = (BeneficioEntity) getArguments().getSerializable(ARG_BENEFICIO);
+            beneficio = (Beneficio) getArguments().getSerializable(ARG_BENEFICIO);
         }
         // Inicializar dateFormat
         dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -203,7 +203,7 @@ public class BeneficioDialogFragment extends DialogFragment {
             }
             
             if (beneficio == null) {
-                beneficio = new BeneficioEntity();
+                beneficio = new Beneficio();
                 // Generar ID único para el nuevo beneficio
                 beneficio.setId_beneficio(System.currentTimeMillis() + "_" + Math.random());
             }

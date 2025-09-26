@@ -1,8 +1,7 @@
 package com.example.cafefidelidaqrdemo.repository.interfaces;
 
 import androidx.lifecycle.LiveData;
-import com.example.cafefidelidaqrdemo.models.Producto;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
 import java.util.List;
@@ -18,12 +17,12 @@ public interface IProductoRepository {
     /**
      * LiveData con todos los productos
      */
-    LiveData<List<ProductoEntity>> getAllProductos();
+    LiveData<List<Producto>> getAllProductos();
     
     /**
      * LiveData con resultados de búsqueda
      */
-    LiveData<List<ProductoEntity>> getSearchResults();
+    LiveData<List<Producto>> getSearchResults();
     
     /**
      * Estado de carga
@@ -45,7 +44,7 @@ public interface IProductoRepository {
     /**
      * Obtiene un producto por ID
      */
-    void getProductoById(Long idProducto, BaseRepository.RepositoryCallback<ProductoEntity> callback);
+    void getProductoById(Long idProducto, BaseRepository.RepositoryCallback<Producto> callback);
     
     /**
      * Actualiza la lista de productos desde el servidor
@@ -72,19 +71,19 @@ public interface IProductoRepository {
     /**
      * Busca productos localmente
      */
-    void searchProductos(String query, BaseRepository.RepositoryCallback<List<ProductoEntity>> callback);
+    void searchProductos(String query, BaseRepository.RepositoryCallback<List<Producto>> callback);
     
     /**
      * Busca productos por categoría
      */
     void searchProductosByCategory(String query, String categoria, Boolean disponible, 
-                                   BaseRepository.RepositoryCallback<List<ProductoEntity>> callback);
+                                   BaseRepository.RepositoryCallback<List<Producto>> callback);
     
     /**
      * Busca productos remotamente
      */
     void searchProductosRemote(String query, String categoria, 
-                              BaseRepository.RepositoryCallback<List<ProductoEntity>> callback);
+                              BaseRepository.RepositoryCallback<List<Producto>> callback);
     
     // UTILIDADES
     

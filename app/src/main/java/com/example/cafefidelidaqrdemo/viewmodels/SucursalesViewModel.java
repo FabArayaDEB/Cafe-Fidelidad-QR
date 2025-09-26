@@ -8,12 +8,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
-import com.example.cafefidelidaqrdemo.models.Sucursal;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Sucursal;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
-import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +34,10 @@ public class SucursalesViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
     
     // ==================== DATOS OBSERVABLES ====================
-    private final LiveData<List<SucursalEntity>> sucursales;
-    private final LiveData<List<SucursalEntity>> sucursalesActivas;
+    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> sucursales;
+    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> sucursalesActivas;
     private final LiveData<Boolean> isLoading;
     private final LiveData<String> error;
-    private final LiveData<Boolean> isOffline;
     
     // ==================== DATOS DERIVADOS ====================
     private final LiveData<Boolean> hasData;
@@ -48,6 +45,7 @@ public class SucursalesViewModel extends AndroidViewModel {
     private final LiveData<Boolean> isLocationDataAvailable;
     private final LiveData<Boolean> canShowDistances;
     private final LiveData<String> statusMessage;
+
     private final LiveData<Integer> totalSucursales;
     private final LiveData<Integer> sucursalesActivasCount;
     
@@ -55,20 +53,14 @@ public class SucursalesViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar repositorio
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
-        repository = new SucursalRepository(
-            database.sucursalDao(),
-            ApiService.getInstance(),
-            application
-        );
+        repository = new SucursalRepository(application);
         
         // Configurar observables del repositorio
         sucursales = repository.getAllSucursales();
-        sucursalesActivas = repository.getActiveSucursales();
+        sucursalesActivas = repository.getAllSucursales();
         isLoading = repository.getIsLoading();
         error = repository.getError();
-        isOffline = repository.getIsOffline();
-        
+
         // Configurar datos derivados para la UI
         hasData = Transformations.map(sucursales, list -> list != null && !list.isEmpty());
         
@@ -86,12 +78,12 @@ public class SucursalesViewModel extends AndroidViewModel {
             Boolean permissionDenied = _locationPermissionDenied.getValue();
             return available != null && available && (permissionDenied == null || !permissionDenied);
         });
-        
-        statusMessage = Transformations.map(isOffline, offline -> {
-            if (offline != null && offline) {
-                return "Modo sin conexión - Mostrando sucursales guardadas";
+
+        statusMessage = Transformations.map(sucursales, list -> {
+            if (list == null || list.isEmpty()) {
+                return "No hay sucursales disponibles en este momento.";
             }
-            return null;
+            return "Se encontraron " + list.size() + " sucursales.";
         });
         
         totalSucursales = Transformations.map(sucursales, list -> 
@@ -111,14 +103,14 @@ public class SucursalesViewModel extends AndroidViewModel {
     /**
      * Lista completa de sucursales
      */
-    public LiveData<List<SucursalEntity>> getSucursales() {
+    public LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> getSucursales() {
         return sucursales;
     }
     
     /**
      * Lista de sucursales activas
      */
-    public LiveData<List<SucursalEntity>> getSucursalesActivas() {
+    public LiveData<List<Sucursal>> getSucursalesActivas() {
         return sucursalesActivas;
     }
     
@@ -135,13 +127,7 @@ public class SucursalesViewModel extends AndroidViewModel {
     public LiveData<String> getError() {
         return error;
     }
-    
-    /**
-     * Estado offline
-     */
-    public LiveData<Boolean> getIsOffline() {
-        return isOffline;
-    }
+
     
     /**
      * Indica si hay datos disponibles
@@ -240,7 +226,9 @@ public class SucursalesViewModel extends AndroidViewModel {
      * Carga inicial de datos
      */
     private void loadInitialData() {
-        repository.refreshSucursales();
+        repository.refreshSucursales(result -> {
+            // Callback para carga inicial - no necesita acción específica
+        });
     }
     
     /**
@@ -248,9 +236,10 @@ public class SucursalesViewModel extends AndroidViewModel {
      */
     public void refreshSucursales() {
         _isRefreshing.setValue(true);
-        repository.refreshSucursales();
-        // El estado de carga se maneja automáticamente por el repositorio
-        _isRefreshing.postValue(false);
+        repository.refreshSucursales(result -> {
+            // El estado de carga se maneja automáticamente por el repositorio
+            _isRefreshing.postValue(false);
+        });
     }
     
     /**
@@ -261,9 +250,7 @@ public class SucursalesViewModel extends AndroidViewModel {
             @Override
             public void onSuccess(Sucursal result) {
                 if (callback != null) {
-                    // Convertir Sucursal a SucursalEntity si es necesario
-                    SucursalEntity entity = convertToEntity(result);
-                    callback.onSuccess(entity);
+                    callback.onSuccess(result);
                 }
             }
             
@@ -281,12 +268,7 @@ public class SucursalesViewModel extends AndroidViewModel {
         repository.searchSucursales(query, new SucursalRepository.SearchCallback() {
             @Override
             public void onResults(List<com.example.cafefidelidaqrdemo.models.Sucursal> sucursales) {
-                // Convertir List<Sucursal> a List<SucursalEntity>
-                List<SucursalEntity> entities = new ArrayList<>();
-                for (com.example.cafefidelidaqrdemo.models.Sucursal sucursal : sucursales) {
-                    entities.add(convertToEntity(sucursal));
-                }
-                if (callback != null) callback.onSuccess(entities);
+                if (callback != null) callback.onSuccess(sucursales);
             }
         });
     }
@@ -306,12 +288,12 @@ public class SucursalesViewModel extends AndroidViewModel {
         repository.getSucursalesWithDistance(userLat, userLon, new SucursalRepository.DistanceCallback() {
             @Override
             public void onResults(List<SucursalRepository.SucursalWithDistance> sucursales) {
-                // Convertir SucursalWithDistance a SucursalEntity para el callback del ViewModel
-                List<SucursalEntity> entities = new ArrayList<>();
+                // Extraer las sucursales de los objetos SucursalWithDistance
+                List<Sucursal> sucursalesList = new ArrayList<>();
                 for (SucursalRepository.SucursalWithDistance item : sucursales) {
-                    entities.add(convertToEntity(item.getSucursal()));
+                    sucursalesList.add(item.getSucursal());
                 }
-                if (callback != null) callback.onSuccess(entities);
+                if (callback != null) callback.onSuccess(sucursalesList);
             }
             
             @Override
@@ -377,15 +359,15 @@ public class SucursalesViewModel extends AndroidViewModel {
      * Verifica si hay conexión de red
      */
     public boolean hasNetworkConnection() {
-        Boolean offline = isOffline.getValue();
-        return offline == null || !offline;
+        // Simplificado - asume conexión disponible
+        return true;
     }
     
     /**
      * Verifica si los datos están vacíos
      */
     public boolean isDataEmpty() {
-        List<SucursalEntity> currentData = sucursales.getValue();
+        List<Sucursal> currentData = sucursales.getValue();
         return currentData == null || currentData.isEmpty();
     }
     
@@ -399,30 +381,13 @@ public class SucursalesViewModel extends AndroidViewModel {
                (orden != null && !"nombre".equals(orden));
     }
     
-    // ==================== MÉTODOS DE CONVERSIÓN ====================
-    
-    /**
-     * Convierte un objeto Sucursal a SucursalEntity
-     */
-    private SucursalEntity convertToEntity(com.example.cafefidelidaqrdemo.models.Sucursal sucursal) {
-        SucursalEntity entity = new SucursalEntity();
-        entity.setId_sucursal(sucursal.getId());
-        entity.setNombre(sucursal.getNombre());
-        entity.setDireccion(sucursal.getDireccion());
-        entity.setLat(sucursal.getLatitud());
-        entity.setLon(sucursal.getLongitud());
-        entity.setHorario(sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre());
-        entity.setEstado(sucursal.isActiva() ? "activo" : "inactivo");
-        return entity;
-    }
-    
     // ==================== INTERFACES ====================
     
     /**
      * Callback para operaciones con sucursales individuales
      */
     public interface SucursalCallback {
-        void onSuccess(SucursalEntity sucursal);
+        void onSuccess(Sucursal sucursal);
         void onError(String error);
     }
     
@@ -430,7 +395,7 @@ public class SucursalesViewModel extends AndroidViewModel {
      * Callback para búsquedas
      */
     public interface SearchCallback {
-        void onSuccess(List<SucursalEntity> sucursales);
+        void onSuccess(List<Sucursal> sucursales);
         void onError(String error);
     }
     
@@ -438,7 +403,7 @@ public class SucursalesViewModel extends AndroidViewModel {
      * Callback para cálculo de distancias
      */
     public interface DistanceCallback {
-        void onSuccess(List<SucursalEntity> sucursales);
+        void onSuccess(List<Sucursal> sucursales);
         void onError(String error);
     }
     

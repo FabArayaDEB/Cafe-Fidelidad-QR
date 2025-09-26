@@ -22,7 +22,7 @@ import androidx.appcompat.widget.SearchView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.SucursalesAdapter;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
 import com.example.cafefidelidaqrdemo.viewmodels.SucursalesViewModel;
 // import com.google.android.gms.location.FusedLocationProviderClient;
@@ -62,7 +62,7 @@ public class FragmentSucursales extends Fragment {
     private String ordenSeleccionado = "nombre";
     private String estadoSeleccionado = "";
     private String queryBusqueda = "";
-    private List<SucursalEntity> sucursalesOriginales = new ArrayList<>();
+    private List<Sucursal> sucursalesOriginales = new ArrayList<>();
     private Location userLocation;
     private boolean locationPermissionGranted = false;
     
@@ -272,7 +272,7 @@ public class FragmentSucursales extends Fragment {
         // Observar lista de sucursales
         viewModel.getSucursales().observe(getViewLifecycleOwner(), sucursales -> {
             if (sucursales != null) {
-                sucursalesOriginales = new ArrayList<>(sucursales);
+                sucursalesOriginales = new ArrayList<Sucursal>(sucursales);
                 applyFiltersAndSort();
             }
         });
@@ -382,9 +382,9 @@ public class FragmentSucursales extends Fragment {
     }
     
     private void applyFiltersAndSort() {
-        List<SucursalEntity> sucursalesFiltradas = new ArrayList<>();
+        List<Sucursal> sucursalesFiltradas = new ArrayList<>();
         
-        for (SucursalEntity sucursal : sucursalesOriginales) {
+        for (Sucursal sucursal : sucursalesOriginales) {
             boolean pasaFiltroEstado = estadoSeleccionado.isEmpty() || 
                 (estadoSeleccionado.equalsIgnoreCase("activo") && sucursal.getEstado().equals("activo")) ||
                 (estadoSeleccionado.equalsIgnoreCase("inactivo") && !sucursal.getEstado().equals("activo"));
@@ -403,10 +403,10 @@ public class FragmentSucursales extends Fragment {
             viewModel.getSucursalesWithDistance(userLocation.getLatitude(), 
                 userLocation.getLongitude(), new SucursalesViewModel.DistanceCallback() {
                     @Override
-                    public void onSuccess(List<SucursalEntity> sucursales) {
-                        // Convertir SucursalEntity a SucursalesAdapter.SucursalItem
+                    public void onSuccess(List<Sucursal> sucursales) {
+                        // Convertir Sucursal a SucursalesAdapter.SucursalItem
                         List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
-                        for (SucursalEntity entity : sucursales) {
+                        for (Sucursal entity : sucursales) {
                             items.add(new SucursalesAdapter.SucursalItem(entity, 0.0)); // Distancia ya calculada
                         }
                         adapter.submitListWithDistance(items);
@@ -420,9 +420,9 @@ public class FragmentSucursales extends Fragment {
         } else {
             // Ordenar por nombre
             sucursalesFiltradas.sort((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()));
-            // Convertir SucursalEntity a SucursalItem
+            // Convertir Sucursal a SucursalItem
             List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
-            for (SucursalEntity entity : sucursalesFiltradas) {
+            for (Sucursal entity : sucursalesFiltradas) {
                 items.add(new SucursalesAdapter.SucursalItem(entity, 0.0)); // Sin distancia
             }
             adapter.submitListWithDistance(items);
@@ -475,19 +475,19 @@ public class FragmentSucursales extends Fragment {
         }
     }
     
-    private void showSucursalDetails(SucursalEntity sucursal) {
+    private void showSucursalDetails(Sucursal sucursal) {
         String message = String.format(
             "Sucursal: %s\nDirección: %s\nHorario: %s\nEstado: %s",
             sucursal.getNombre(),
             sucursal.getDireccion(),
-            sucursal.getHorario(),
-            sucursal.getEstado().equals("activo") ? "Activa" : "Inactiva"
+            sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre(),
+            sucursal.isActiva() ? "Activa" : "Inactiva"
         );
         
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
     }
     
-    private void showSucursalOptions(SucursalEntity sucursal) {
+    private void showSucursalOptions(Sucursal sucursal) {
         // Aquí se podrían mostrar opciones como "Ver en mapa", "Llamar", etc.
         Toast.makeText(getContext(), 
             "Opciones para: " + sucursal.getNombre(), 
@@ -502,19 +502,7 @@ public class FragmentSucursales extends Fragment {
         }
     }
     
-    private SucursalEntity convertToEntity(com.example.cafefidelidaqrdemo.models.Sucursal sucursal) {
-        SucursalEntity entity = new SucursalEntity();
-        entity.setId_sucursal(sucursal.getId());
-        entity.setNombre(sucursal.getNombre());
-        entity.setDireccion(sucursal.getDireccion());
-        entity.setLat(sucursal.getLatitud());
-        entity.setLon(sucursal.getLongitud());
-        // Combinar horarios de apertura y cierre
-        String horario = sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre();
-        entity.setHorario(horario);
-        entity.setEstado(sucursal.isActiva() ? "activo" : "inactivo");
-        return entity;
-    }
+
     
     @Override
     public void onResume() {

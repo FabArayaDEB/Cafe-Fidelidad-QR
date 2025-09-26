@@ -8,10 +8,11 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ViewModel para la gestión de beneficios por administradores
@@ -22,8 +23,8 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     private final BeneficioRepository beneficioRepository;
     
     // LiveData para la UI
-    private final LiveData<List<BeneficioEntity>> allBeneficiosLiveData;
-    private final MediatorLiveData<List<BeneficioEntity>> beneficiosLiveData = new MediatorLiveData<>();
+    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Beneficio>> allBeneficiosLiveData;
+    private final MediatorLiveData<List<Beneficio>> beneficiosLiveData = new MediatorLiveData<>();
     private final MutableLiveData<OperationResult> operationResultLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> refreshTrigger = new MutableLiveData<>();
     
@@ -66,7 +67,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     // Getters para LiveData
-    public LiveData<List<BeneficioEntity>> getBeneficios() {
+    public LiveData<List<Beneficio>> getBeneficios() {
         return beneficiosLiveData;
     }
     
@@ -96,7 +97,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     // Operaciones CRUD
-    public void createBeneficio(BeneficioEntity beneficio) {
+    public void createBeneficio(Beneficio beneficio) {
         if (!validateBeneficioData(beneficio)) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "Datos del beneficio inválidos")
@@ -118,7 +119,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         });
     }
     
-    public void updateBeneficio(BeneficioEntity beneficio) {
+    public void updateBeneficio(Beneficio beneficio) {
         if (!validateBeneficioData(beneficio)) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "Datos del beneficio inválidos")
@@ -141,7 +142,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     public void deleteBeneficio(String beneficioId) {
-        beneficioRepository.deleteBeneficio(beneficioId, success -> {
+        beneficioRepository.deleteBeneficio(Integer.parseInt(beneficioId), success -> {
             if (success) {
                 operationResultLiveData.postValue(
                     new OperationResult(true, "Beneficio eliminado exitosamente")
@@ -155,10 +156,10 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         });
     }
     
-    public void toggleBeneficioActive(BeneficioEntity beneficio) {
+    public void toggleBeneficioActive(Beneficio beneficio) {
         if (beneficio.isActivo()) {
             // Desactivar beneficio
-            beneficioRepository.desactivarBeneficio(beneficio.getId_beneficio(), success -> {
+            beneficioRepository.desactivarBeneficio(beneficio.getId(), success -> {
                 if (success) {
                     operationResultLiveData.postValue(
                         new OperationResult(true, "Beneficio desactivado exitosamente")
@@ -173,7 +174,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         } else {
             // Activar beneficio (actualizar con activo = true)
             beneficio.activar();
-            // updateBeneficio(beneficio); // TODO: Implementar método para BeneficioEntity
+            // updateBeneficio(beneficio); // TODO: Implementar método para Beneficio
         }
     }
     
@@ -182,7 +183,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
         return beneficioRepository.validateReglasJson(reglasJson);
     }
     
-    public boolean validateBeneficioData(BeneficioEntity beneficio) {
+    public boolean validateBeneficioData(Beneficio beneficio) {
         if (beneficio == null) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "Datos del beneficio no válidos")
@@ -205,7 +206,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        if (beneficio.getDescuento_pct() <= 0 && beneficio.getDescuento_monto() <= 0) {
+        if (beneficio.getValorDescuentoPorcentaje() <= 0 && beneficio.getValorDescuentoFijo() <= 0) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "El beneficio debe tener un descuento válido")
             );
@@ -217,9 +218,9 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     
     // Métodos de filtrado y búsqueda
     public void filterBeneficiosByType(String tipo) {
-        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
+        List<Beneficio> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
-            List<BeneficioEntity> filtered = currentBeneficios.stream()
+            List<Beneficio> filtered = currentBeneficios.stream()
                 .filter(b -> tipo.equals(b.getTipo()))
                 .collect(java.util.stream.Collectors.toList());
             beneficiosLiveData.setValue(filtered);
@@ -227,11 +228,11 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     public void filterBeneficiosByStatus(boolean activo) {
-        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
+        List<com.example.cafefidelidaqrdemo.database.models.Beneficio> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
-            List<BeneficioEntity> filtered = currentBeneficios.stream()
+            List<Beneficio> filtered = currentBeneficios.stream()
                 .filter(b -> b.isActivo() == activo)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList()).reversed();
             beneficiosLiveData.setValue(filtered);
         }
     }
@@ -242,10 +243,10 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
             return;
         }
         
-        List<BeneficioEntity> currentBeneficios = allBeneficiosLiveData.getValue();
+        List<Beneficio> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
             String lowerQuery = query.toLowerCase();
-            List<BeneficioEntity> filtered = currentBeneficios.stream()
+            List<Beneficio> filtered = currentBeneficios.stream()
                 .filter(b -> 
                     b.getNombre().toLowerCase().contains(lowerQuery) ||
                     (b.getTipo() != null && b.getTipo().toLowerCase().contains(lowerQuery))

@@ -1,7 +1,6 @@
 package com.example.cafefidelidaqrdemo.network;
 
 import com.example.cafefidelidaqrdemo.models.*;
-import com.example.cafefidelidaqrdemo.database.entities.*;
 import com.example.cafefidelidaqrdemo.network.response.VisitaResponse;
 
 import java.util.List;
@@ -35,7 +34,7 @@ public interface ApiService {
     
     // ========== CLIENTES ==========
     @GET("clientes/{id}")
-    Call<ClienteEntity> getCliente(@Path("id") String clienteId);
+    Call<Cliente> getCliente(@Path("id") String clienteId);
     
     @GET("clientes/{id}")
     Call<Cliente> getClienteById(@Path("id") String clienteId);
@@ -44,49 +43,49 @@ public interface ApiService {
     Call<Cliente> createCliente(@Body Cliente cliente);
     
     @PUT("clientes/{id}")
-    Call<ClienteEntity> updateCliente(@Path("id") String clienteId, @Body ClienteEntity cliente);
+    Call<Cliente> updateCliente(@Path("id") String clienteId, @Body Cliente cliente);
     
     @GET("clientes/{id}/puntos")
     Call<Map<String, Object>> getPuntosCliente(@Path("id") String clienteId);
     
     // ========== PRODUCTOS ==========
     @GET("productos")
-    Call<List<ProductoEntity>> getProductos();
+    Call<List<Producto>> getProductos();
     
     @GET("productos/{id}")
-    Call<ProductoEntity> getProductoById(@Path("id") String id);
+    Call<Producto> getProductoById(@Path("id") String id);
     
     @POST("productos")
-    Call<ProductoEntity> createProducto(@Body ProductoEntity producto);
+    Call<Producto> createProducto(@Body Producto producto);
     
     @PUT("productos/{id}")
-    Call<ProductoEntity> updateProducto(@Path("id") Long id, @Body ProductoEntity producto);
+    Call<Producto> updateProducto(@Path("id") Long id, @Body Producto producto);
     
     @DELETE("productos/{id}")
     Call<Void> deleteProducto(@Path("id") Long id);
     
     // ========== BENEFICIOS ==========
     @GET("beneficios")
-    Call<List<BeneficioEntity>> getBeneficios();
+    Call<List<Beneficio>> getBeneficios();
     
     @POST("beneficios")
-    Call<BeneficioEntity> createBeneficio(@Body BeneficioEntity beneficio);
+    Call<Beneficio> createBeneficio(@Body Beneficio beneficio);
     
     @PUT("beneficios/{id}")
-    Call<BeneficioEntity> updateBeneficio(@Path("id") Long id, @Body BeneficioEntity beneficio);
+    Call<Beneficio> updateBeneficio(@Path("id") Long id, @Body Beneficio beneficio);
     
     @DELETE("beneficios/{id}")
     Call<Void> deleteBeneficio(@Path("id") Long id);
     
     // ========== SUCURSALES ==========
     @GET("sucursales")
-    Call<List<SucursalEntity>> getSucursales();
+    Call<List<Sucursal>> getSucursales();
     
     @POST("sucursales")
-    Call<SucursalEntity> createSucursal(@Body SucursalEntity sucursal);
+    Call<Sucursal> createSucursal(@Body Sucursal sucursal);
     
     @PUT("sucursales/{id}")
-    Call<SucursalEntity> updateSucursal(@Path("id") Long id, @Body SucursalEntity sucursal);
+    Call<Sucursal> updateSucursal(@Path("id") Long id, @Body Sucursal sucursal);
     
     @DELETE("sucursales/{id}")
     Call<Void> deleteSucursal(@Path("id") Long id);
@@ -96,13 +95,13 @@ public interface ApiService {
     
     // ========== CANJES ==========
     @POST("canjes")
-    Call<CanjeEntity> createCanje(@Body CanjeEntity canje);
+    Call<Canje> createCanje(@Body Canje canje);
     
     @GET("canjes/cliente/{clienteId}")
-    Call<List<CanjeEntity>> getCanjesCliente(@Path("clienteId") String clienteId);
+    Call<List<Canje>> getCanjesCliente(@Path("clienteId") String clienteId);
     
     @GET("canjes/historial")
-    Call<List<CanjeEntity>> getHistorialCanjes();
+    Call<List<Canje>> getHistorialCanjes();
     
     // ========== REPORTES ==========
     @GET("reportes/ventas")

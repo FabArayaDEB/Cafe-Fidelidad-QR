@@ -1,347 +1,537 @@
 package com.example.cafefidelidaqrdemo.repository;
 
+import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.database.dao.ProductoDao;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
-import com.example.cafefidelidaqrdemo.models.Producto;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
-import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
+import com.example.cafefidelidaqrdemo.network.RetrofitClient;
 import com.example.cafefidelidaqrdemo.repository.interfaces.IProductoRepository;
-
+import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
-import com.example.cafefidelidaqrdemo.utils.SearchManager;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * Repository para gestión de productos siguiendo arquitectura MVVM
- * Maneja cache local, sincronización y búsquedas
- * Implementa IProductoRepository
+ * Repository para manejar operaciones de Producto con SQLite
  */
-public class ProductoRepository extends BaseRepository implements IProductoRepository {
-    private final ProductoDao productoDao;
+public class ProductoRepository implements IProductoRepository {
+    
+    private static ProductoRepository instance;
+    private final CafeFidelidadDB database;
     private final ApiService apiService;
-    private final SearchManager searchManager;
+    private final ExecutorService executor;
+    private final Context context;
     
-    // LiveData específicos de productos
-    private final MutableLiveData<List<ProductoEntity>> _searchResults = new MutableLiveData<>();
+    // LiveData para observar cambios
+    private final MutableLiveData<List<Producto>> productosLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Producto>> searchResultsLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
+    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> successLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> syncStatusLiveData = new MutableLiveData<>(true);
     
-    public ProductoRepository(ProductoDao productoDao, ApiService apiService) {
-        super(2); // Pool de 2 threads para operaciones de productos
-        this.productoDao = productoDao;
-        this.apiService = apiService;
-        this.searchManager = new SearchManager();
+    public ProductoRepository(Context context) {
+        this.context = context;
+        this.database = CafeFidelidadDB.getInstance(context);
+        this.apiService = RetrofitClient.getInstance(context).getApiService();
+        this.executor = Executors.newFixedThreadPool(4);
     }
     
-    //GETTERS PARA LIVEDATA
-    
-    public LiveData<List<ProductoEntity>> getAllProductos() {
-        return productoDao.getAllProductos();
-    }
-    
-    public LiveData<List<ProductoEntity>> getProductosByCategoria(String categoria) {
-        return productoDao.getProductosByCategoria(categoria);
-    }
-    
-    public LiveData<List<ProductoEntity>> getProductosDisponibles() {
-        return productoDao.getProductosDisponibles();
-    }
-    
-    public LiveData<List<ProductoEntity>> getSearchResults() {
-        return _searchResults;
-    }
-    
-    // OPERACIONES PRINCIPALES
-    
-    /**
-     * Refresca la lista de productos desde la API
-     */
-    public void refreshProductos() {
-        refreshProductos(null);
-    }
-    
-    /**
-     * Refresca la lista de productos con callback
-     */
-    public void refreshProductos(SimpleCallback callback) {
-        if (!NetworkUtils.isNetworkAvailable()) {
-            setOffline(true);
-            if (callback != null) callback.onError("Sin conexión a internet");
-            return;
+    public static synchronized ProductoRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new ProductoRepository(context.getApplicationContext());
         }
-        
-        setLoading(true);
-        setOffline(false);
-        clearError();
-        
-        apiService.getProductos().enqueue(new Callback<List<ProductoEntity>>() {
-            @Override
-            public void onResponse(Call<List<ProductoEntity>> call, Response<List<ProductoEntity>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<ProductoEntity> productos = response.body();
-                    executeInBackground(() -> {
-                        try {
-                            // Guardar en cache local (ya son ProductoEntity)
-                            // Limpiar cache anterior y insertar nuevos datos
-                            productoDao.deleteAll();
-                            productoDao.insertAll(productos);
-                            
-                            setSuccess("Productos actualizados exitosamente");
-                            if (callback != null) callback.onSuccess();
-                        } catch (Exception e) {
-                            String error = "Error al guardar productos: " + e.getMessage();
-                            setError(error);
-                            if (callback != null) callback.onError(error);
-                        }
-                    });
-                } else {
-                    String error = "Error al cargar productos: " + response.message();
-                    setError(error);
-                    if (callback != null) callback.onError(error);
-                }
-            }
-            
-            @Override
-            public void onFailure(Call<List<ProductoEntity>> call, Throwable t) {
-                String error = "Error de conexión: " + t.getMessage();
-                setError(error);
-                setOffline(true);
-                if (callback != null) callback.onError(error);
-            }
-        });
+        return instance;
     }
     
-    /**
-     * Obtiene un producto por ID con callback
-     */
-    public void getProductoById(Long idProducto, RepositoryCallback<ProductoEntity> callback) {
-        executeInBackground(() -> {
-            try {
-                ProductoEntity entity = productoDao.getProductoById(idProducto);
-                if (entity != null) {
-                    if (callback != null) callback.onSuccess(entity);
-                } else {
-                    // Si no está en cache, buscar en API
-                    fetchProductoFromApi(idProducto, callback);
-                }
-            } catch (Exception e) {
-                String error = "Error al obtener producto: " + e.getMessage();
-                setError(error);
-                if (callback != null) callback.onError(error);
-            }
-        });
-    }
-    
-    private void fetchProductoFromApi(Long idProducto, RepositoryCallback<ProductoEntity> callback) {
-        if (!NetworkUtils.isNetworkAvailable()) {
-            setOffline(true);
-            if (callback != null) callback.onError("Sin conexión a internet");
-            return;
+    public static ProductoRepository getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("ProductoRepository must be initialized with context first");
         }
-        
-        setLoading(true);
-        apiService.getProductoById(String.valueOf(idProducto)).enqueue(new Callback<ProductoEntity>() {
-            @Override
-            public void onResponse(Call<ProductoEntity> call, Response<ProductoEntity> response) {
-                setLoading(false);
-                if (response.isSuccessful() && response.body() != null) {
-                    ProductoEntity producto = response.body();
-                    ProductoEntity entity = producto; // Ya es ProductoEntity
-                    // Guardar en cache
-                    executeInBackground(() -> {
-                        try {
-                            productoDao.insert(entity);
-                        } catch (Exception e) {
-                            // Log error but don't fail the operation
-                        }
-                    });
-                    if (callback != null) callback.onSuccess(entity);
-                } else {
-                    String error = "Producto no encontrado";
-                    setError(error);
-                    if (callback != null) callback.onError(error);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ProductoEntity> call, Throwable t) {
-                setLoading(false);
-                String error = "Error de conexión: " + t.getMessage();
-                setError(error);
-                setOffline(true);
-                if (callback != null) callback.onError(error);
-            }
-        });
+        return instance;
     }
     
-
-    
-
+    // ========== OPERACIONES CRUD ==========
     
     /**
-     * Busca productos localmente
+     * Obtiene todos los productos
      */
-    @Override
-    public void searchProductos(String query, RepositoryCallback<List<ProductoEntity>> callback) {
+    public LiveData<List<Producto>> getAllProductos() {
         executor.execute(() -> {
             try {
-                List<ProductoEntity> productos = productoDao.searchProductos(query);
-                if (callback != null) {
-                    callback.onSuccess(productos);
-                }
+                List<Producto> productos = database.obtenerTodosLosProductos();
+                productosLiveData.postValue(productos);
             } catch (Exception e) {
-                if (callback != null) {
-                    callback.onError("Error al buscar productos: " + e.getMessage());
-                }
+                errorLiveData.postValue("Error al obtener productos: " + e.getMessage());
+                productosLiveData.postValue(null);
             }
         });
+        return productosLiveData;
     }
     
     /**
-     * Busca productos por categoría
+     * Obtiene productos por categoría
      */
-    @Override
-    public void searchProductosByCategory(String query, String categoria, Boolean disponible, RepositoryCallback<List<ProductoEntity>> callback) {
+    public LiveData<List<Producto>> getProductosByCategoria(String categoria) {
+        MutableLiveData<List<Producto>> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                List<ProductoEntity> productos;
-                if (query == null || query.trim().isEmpty()) {
-                    if (categoria == null || categoria.trim().isEmpty()) {
-                        productos = productoDao.getAllProductosSync();
-                    } else {
-                        // Usar búsqueda por nombre ya que no hay método específico por categoría sync
-                        productos = productoDao.searchProductos(categoria);
-                    }
+                List<Producto> productos = database.obtenerProductosPorCategoria(categoria);
+                result.postValue(productos);
+            } catch (Exception e) {
+                errorLiveData.postValue("Error al obtener productos por categoría: " + e.getMessage());
+                result.postValue(null);
+            }
+        });
+        return result;
+    }
+    
+    /**
+     * Obtiene productos disponibles
+     */
+    public LiveData<List<Producto>> getProductosDisponibles() {
+        MutableLiveData<List<Producto>> result = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                List<Producto> productos = database.obtenerTodosLosProductos();
+                // Filtrar solo los disponibles
+                productos.removeIf(producto -> !producto.isDisponible());
+                result.postValue(productos);
+            } catch (Exception e) {
+                errorLiveData.postValue("Error al obtener productos disponibles: " + e.getMessage());
+                result.postValue(null);
+            }
+        });
+        return result;
+    }
+    
+    /**
+     * Obtiene un producto por ID
+     */
+    public LiveData<Producto> getProductoById(int productoId) {
+        MutableLiveData<Producto> result = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                Producto producto = database.obtenerProductoPorId(productoId);
+                result.postValue(producto);
+            } catch (Exception e) {
+                errorLiveData.postValue("Error al obtener producto: " + e.getMessage());
+                result.postValue(null);
+            }
+        });
+        return result;
+    }
+    
+    /**
+     * Crea un nuevo producto
+     */
+    public void createProducto(Producto producto, ProductoCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                // Validar datos del producto
+                if (!validarProducto(producto)) {
+                    callback.onError("Datos del producto inválidos");
+                    isLoadingLiveData.postValue(false);
+                    return;
+                }
+                
+                // Insertar producto
+                long id = database.insertarProducto(producto);
+                if (id > 0) {
+                    producto.setId((int) id);
+                    callback.onSuccess(producto);
+                    successLiveData.postValue("Producto creado exitosamente");
+                    // Refrescar lista de productos
+                    refreshProductosList();
                 } else {
-                    productos = productoDao.searchProductos(query);
-                    // Filtrar por categoría si se especifica
-                    if (categoria != null && !categoria.trim().isEmpty()) {
-                        final String cat = categoria.toLowerCase();
-                        productos = productos.stream()
-                                .filter(p -> p.getCategoria() != null && p.getCategoria().toLowerCase().contains(cat))
-                                .collect(java.util.stream.Collectors.toList());
-                    }
-                }
-                
-                if (disponible != null && disponible) {
-                    productos = productos.stream()
-                            .filter(p -> "disponible".equals(p.getEstado()))
-                            .collect(java.util.stream.Collectors.toList());
-                }
-                
-                if (callback != null) {
-                    callback.onSuccess(productos);
+                    callback.onError("Error al crear producto");
                 }
             } catch (Exception e) {
-                if (callback != null) {
-                    callback.onError("Error al buscar productos: " + e.getMessage());
-                }
+                callback.onError("Error al crear producto: " + e.getMessage());
+                errorLiveData.postValue("Error al crear producto: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
             }
         });
     }
     
     /**
-     * Busca productos remotamente
+     * Actualiza un producto
      */
-    public void searchProductosRemote(String query, String categoria, RepositoryCallback<List<ProductoEntity>> callback) {
-        if (!NetworkUtils.isNetworkAvailable()) {
-            setOffline(true);
-            // Fallback a búsqueda local
-            searchProductosByCategory(query, categoria, true, callback);
-            return;
-        }
-        
-        setLoading(true);
-        // Por ahora, usar búsqueda local como fallback
-        // TODO: Implementar búsqueda remota real cuando esté disponible la API
-        searchProductosByCategory(query, categoria, true, new RepositoryCallback<List<ProductoEntity>>() {
+    public void updateProducto(Producto producto, ProductoCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                if (!validarProducto(producto)) {
+                    callback.onError("Datos del producto inválidos");
+                    isLoadingLiveData.postValue(false);
+                    return;
+                }
+                
+                int rowsAffected = database.actualizarProducto(producto);
+                if (rowsAffected > 0) {
+                    callback.onSuccess(producto);
+                    successLiveData.postValue("Producto actualizado exitosamente");
+                    // Refrescar lista de productos
+                    refreshProductosList();
+                } else {
+                    callback.onError("No se pudo actualizar el producto");
+                }
+            } catch (Exception e) {
+                callback.onError("Error al actualizar producto: " + e.getMessage());
+                errorLiveData.postValue("Error al actualizar producto: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+    
+    /**
+     * Elimina un producto
+     */
+    public void eliminarProducto(int productoId, ProductoCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                int rowsAffected = database.eliminarProducto(productoId);
+                if (rowsAffected > 0) {
+                    callback.onSuccess(null);
+                    successLiveData.postValue("Producto eliminado exitosamente");
+                    // Refrescar lista de productos
+                    refreshProductosList();
+                } else {
+                    callback.onError("No se pudo eliminar el producto");
+                }
+            } catch (Exception e) {
+                callback.onError("Error al eliminar producto: " + e.getMessage());
+                errorLiveData.postValue("Error al eliminar producto: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+    
+    // ========== BÚSQUEDA ==========
+    
+    /**
+     * Busca productos por nombre o descripción (método legacy)
+     */
+    public void searchProductos(String query, ProductoListCallback callback) {
+        searchProductos(query, new BaseRepository.RepositoryCallback<List<Producto>>() {
             @Override
-            public void onSuccess(List<ProductoEntity> result) {
-                setLoading(false);
-                if (callback != null) callback.onSuccess(result);
+            public void onSuccess(List<Producto> result) {
+                callback.onSuccess(result);
             }
             
             @Override
             public void onError(String error) {
-                setLoading(false);
-                if (callback != null) callback.onError(error);
+                callback.onError(error);
             }
         });
     }
     
     /**
-     * Fuerza la sincronización de productos
+     * Busca productos por categoría y query (método legacy)
      */
-    public void forceSyncProductos() {
-        forceSyncProductos(null);
+    public void searchProductosByCategory(String query, String categoria, ProductoListCallback callback) {
+        searchProductosByCategory(query, categoria, null, new BaseRepository.RepositoryCallback<List<Producto>>() {
+            @Override
+            public void onSuccess(List<Producto> result) {
+                callback.onSuccess(result);
+            }
+            
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
     }
     
     /**
-     * Fuerza la sincronización de productos con callback
+     * Obtiene los resultados de búsqueda
      */
-    public void forceSyncProductos(SimpleCallback callback) {
-        refreshProductos(callback);
+    public LiveData<List<Producto>> getSearchResults() {
+        return searchResultsLiveData;
     }
     
     /**
      * Limpia los resultados de búsqueda
      */
     public void clearSearchResults() {
-        _searchResults.postValue(new ArrayList<>());
+        searchResultsLiveData.setValue(null);
     }
     
-    // Métodos de conversión
-    private ProductoEntity convertToEntity(Producto producto) {
-        ProductoEntity entity = new ProductoEntity();
-        entity.setId_producto(producto.getId());
-        entity.setNombre(producto.getNombre());
-        entity.setCategoria(producto.getCategoria());
-        entity.setPrecio(producto.getPrecio());
-        entity.setEstado(producto.getEstado());
-        return entity;
-    }
-    
-    private Producto convertToModel(ProductoEntity entity) {
-        Producto producto = new Producto();
-        producto.setId(entity.getId_producto());
-        producto.setNombre(entity.getNombre());
-        producto.setCategoria(entity.getCategoria());
-        producto.setPrecio(entity.getPrecio());
-        producto.setEstado(entity.getEstado());
-        return producto;
-    }
-    
-    // Los métodos de conversión ya están definidos arriba, eliminando duplicados
+    // ========== MÉTODOS SÍNCRONOS ==========
     
     /**
-     * Estado de error (implementación de IProductoRepository)
+     * Obtiene un producto por ID de forma síncrona
      */
-    @Override
-    public LiveData<String> getError() {
-        return getErrorMessage();
+    public Producto getProductoByIdSync(int productoId) {
+        try {
+            return database.obtenerProductoPorId(productoId);
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     /**
-     * Limpia cache local
+     * Obtiene todos los productos de forma síncrona
      */
-    @Override
-    public void clearCache(SimpleCallback callback) {
-        executeInBackground(() -> {
+    public List<Producto> getAllProductosSync() {
+        try {
+            return database.obtenerTodosLosProductos();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Obtiene productos por categoría de forma síncrona
+     */
+    public List<Producto> getProductosByCategoriaSync(String categoria) {
+        try {
+            return database.obtenerProductosPorCategoria(categoria);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    // ========== VALIDACIÓN ==========
+    
+    private boolean validarProducto(Producto producto) {
+        return producto != null &&
+               producto.getNombre() != null && !producto.getNombre().trim().isEmpty() &&
+               producto.getDescripcion() != null && !producto.getDescripcion().trim().isEmpty() &&
+               producto.getPrecio() > 0 &&
+               producto.getCategoria() != null && !producto.getCategoria().trim().isEmpty();
+    }
+    
+    // ========== ESTADÍSTICAS ==========
+    
+    /**
+     * Obtiene el conteo total de productos
+     */
+    public LiveData<Integer> getCountProductos() {
+        MutableLiveData<Integer> result = new MutableLiveData<>();
+        executor.execute(() -> {
             try {
-                productoDao.deleteAll();
-                _searchResults.postValue(new ArrayList<>());
-                if (callback != null) callback.onSuccess();
+                int count = database.obtenerConteoProductos();
+                result.postValue(count);
             } catch (Exception e) {
-                String error = "Error al limpiar cache: " + e.getMessage();
-                setError(error);
-                if (callback != null) callback.onError(error);
+                result.postValue(0);
             }
         });
+        return result;
+    }
+    
+    /**
+     * Obtiene el conteo de productos de forma síncrona
+     */
+    public int getCountProductosSync() {
+        try {
+            return database.obtenerConteoProductos();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+    
+    // ========== UTILIDADES PRIVADAS ==========
+    
+    /**
+     * Refresca la lista de productos internamente
+     */
+    private void refreshProductosList() {
+        try {
+            List<Producto> productos = database.obtenerTodosLosProductos();
+            productosLiveData.postValue(productos);
+        } catch (Exception e) {
+            errorLiveData.postValue("Error al refrescar productos: " + e.getMessage());
+        }
+    }
+    
+    // ========== GETTERS PARA LIVEDATA ==========
+    
+    public LiveData<Boolean> getIsLoading() {
+        return isLoadingLiveData;
+    }
+    
+    public LiveData<String> getError() {
+        return errorLiveData;
+    }
+    
+    public LiveData<String> getSuccess() {
+        return successLiveData;
+    }
+    
+    public LiveData<Boolean> getSyncStatus() {
+        return syncStatusLiveData;
+    }
+    
+    // ========== UTILIDADES ==========
+    
+    /**
+     * Limpia los mensajes de error
+     */
+    public void clearError() {
+        errorLiveData.setValue(null);
+    }
+    
+    /**
+     * Limpia los mensajes de éxito
+     */
+    public void clearSuccess() {
+        successLiveData.setValue(null);
+    }
+    
+    // ========== MÉTODOS DE LA INTERFAZ ==========
+    
+    @Override
+    public void getProductoById(Long idProducto, BaseRepository.RepositoryCallback<Producto> callback) {
+        executor.execute(() -> {
+            try {
+                Producto producto = database.obtenerProductoPorId(idProducto.intValue());
+                if (producto != null) {
+                    callback.onSuccess(producto);
+                } else {
+                    callback.onError("Producto no encontrado");
+                }
+            } catch (Exception e) {
+                callback.onError("Error al obtener producto: " + e.getMessage());
+            }
+        });
+    }
+    
+    @Override
+    public void refreshProductos() {
+        refreshProductosList();
+    }
+    
+    @Override
+    public void refreshProductos(BaseRepository.SimpleCallback callback) {
+        executor.execute(() -> {
+            try {
+                refreshProductosList();
+                callback.onSuccess();
+            } catch (Exception e) {
+                callback.onError("Error al refrescar productos: " + e.getMessage());
+            }
+        });
+    }
+    
+    @Override
+    public void forceSyncProductos() {
+        // Implementación básica - puede expandirse para sincronización con servidor
+        refreshProductos();
+    }
+    
+    @Override
+    public void forceSyncProductos(BaseRepository.SimpleCallback callback) {
+        refreshProductos(callback);
+    }
+    
+    @Override
+    public void searchProductos(String query, BaseRepository.RepositoryCallback<List<Producto>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Producto> productos = database.obtenerTodosLosProductos();
+                // Filtrar productos que contengan el query en nombre o descripción
+                productos.removeIf(producto -> 
+                    !producto.getNombre().toLowerCase().contains(query.toLowerCase()) &&
+                    !producto.getDescripcion().toLowerCase().contains(query.toLowerCase())
+                );
+                
+                searchResultsLiveData.postValue(productos);
+                callback.onSuccess(productos);
+            } catch (Exception e) {
+                callback.onError("Error en búsqueda: " + e.getMessage());
+                errorLiveData.postValue("Error en búsqueda: " + e.getMessage());
+            }
+        });
+    }
+    
+    @Override
+    public void searchProductosByCategory(String query, String categoria, Boolean disponible, 
+                                         BaseRepository.RepositoryCallback<List<Producto>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Producto> productos = database.obtenerProductosPorCategoria(categoria);
+                
+                // Filtrar por disponibilidad si se especifica
+                if (disponible != null) {
+                    productos.removeIf(producto -> producto.isDisponible() != disponible);
+                }
+                
+                // Filtrar productos que contengan el query
+                if (query != null && !query.trim().isEmpty()) {
+                    productos.removeIf(producto -> 
+                        !producto.getNombre().toLowerCase().contains(query.toLowerCase()) &&
+                        !producto.getDescripcion().toLowerCase().contains(query.toLowerCase())
+                    );
+                }
+                
+                searchResultsLiveData.postValue(productos);
+                callback.onSuccess(productos);
+            } catch (Exception e) {
+                callback.onError("Error en búsqueda por categoría: " + e.getMessage());
+                errorLiveData.postValue("Error en búsqueda por categoría: " + e.getMessage());
+            }
+        });
+    }
+    
+    @Override
+    public void searchProductosRemote(String query, String categoria, 
+                                     BaseRepository.RepositoryCallback<List<Producto>> callback) {
+        // Implementación básica - busca localmente
+        // En una implementación completa, esto haría una llamada al servidor
+        searchProductosByCategory(query, categoria, null, callback);
+    }
+    
+    @Override
+    public void clearCache(BaseRepository.SimpleCallback callback) {
+        executor.execute(() -> {
+            try {
+                // Limpiar cache en memoria
+                productosLiveData.postValue(null);
+                searchResultsLiveData.postValue(null);
+                clearError();
+                clearSuccess();
+                callback.onSuccess();
+            } catch (Exception e) {
+                callback.onError("Error al limpiar cache: " + e.getMessage());
+            }
+        });
+    }
+    
+    @Override
+    public LiveData<Boolean> getIsOffline() {
+        MutableLiveData<Boolean> result = new MutableLiveData<>();
+        result.setValue(!NetworkUtils.isNetworkAvailable(context));
+        return result;
+    }
+    
+    // ========== INTERFACES DE CALLBACK ==========
+    
+    public interface ProductoCallback {
+        void onSuccess(Producto producto);
+        void onError(String error);
+    }
+    
+    public interface ProductoListCallback {
+        void onSuccess(List<Producto> productos);
+        void onError(String error);
+    }
+    
+    // ========== LIMPIEZA ==========
+    
+    public void cleanup() {
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+        }
     }
 }

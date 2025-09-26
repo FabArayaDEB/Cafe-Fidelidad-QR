@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -25,7 +25,7 @@ import java.util.Locale;
 /**
  * Adapter unificado para productos que maneja tanto la vista de cliente como la de administrador
  */
-public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.ViewHolder> {
+public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHolder> {
     
     private static final int VIEW_TYPE_CLIENT = 0;
     private static final int VIEW_TYPE_ADMIN = 1;
@@ -64,7 +64,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.V
     
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        ProductoEntity producto = getItem(position);
+        Producto producto = getItem(position);
         
         if (holder instanceof AdminViewHolder) {
             ((AdminViewHolder) holder).bind(producto);
@@ -100,7 +100,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.V
             });
         }
         
-        public void bind(ProductoEntity producto) {
+        public void bind(Producto producto) {
             // Configurar nombre y descripción
             tvNombre.setText(producto.getNombre());
             tvDescripcion.setText(producto.getDescripcion());
@@ -184,7 +184,7 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.V
             });
         }
         
-        public void bind(ProductoEntity producto) {
+        public void bind(Producto producto) {
             // Configurar información básica
             tvNombre.setText(producto.getNombre());
             tvDescripcion.setText(producto.getDescripcion());
@@ -212,15 +212,15 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.V
     }
     
     // DiffUtil para optimizar actualizaciones
-    private static final DiffUtil.ItemCallback<ProductoEntity> DIFF_CALLBACK = 
-        new DiffUtil.ItemCallback<ProductoEntity>() {
+    private static final DiffUtil.ItemCallback<Producto> DIFF_CALLBACK = 
+        new DiffUtil.ItemCallback<Producto>() {
             @Override
-            public boolean areItemsTheSame(@NonNull ProductoEntity oldItem, @NonNull ProductoEntity newItem) {
+            public boolean areItemsTheSame(@NonNull Producto oldItem, @NonNull Producto newItem) {
                 return oldItem.getId_producto().equals(newItem.getId_producto());
             }
             
             @Override
-            public boolean areContentsTheSame(@NonNull ProductoEntity oldItem, @NonNull ProductoEntity newItem) {
+            public boolean areContentsTheSame(@NonNull Producto oldItem, @NonNull Producto newItem) {
                 return oldItem.getNombre().equals(newItem.getNombre()) &&
                        oldItem.getCategoria().equals(newItem.getCategoria()) &&
                        Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0 &&
@@ -232,15 +232,15 @@ public class ProductosAdapter extends ListAdapter<ProductoEntity, RecyclerView.V
     
     // Interfaces para callbacks
     public interface OnProductoClickListener {
-        void onProductoClick(ProductoEntity producto);
+        void onProductoClick(Producto producto);
     }
     
     public interface OnProductoAdminActionListener {
-        void onProductoClick(ProductoEntity producto);
-        void onEditarClick(ProductoEntity producto);
-        void onEliminarClick(ProductoEntity producto);
-        void onToggleActivoClick(ProductoEntity producto);
-        void onToggleDisponibilidadClick(ProductoEntity producto);
+        void onProductoClick(Producto producto);
+        void onEditarClick(Producto producto);
+        void onEliminarClick(Producto producto);
+        void onToggleActivoClick(Producto producto);
+        void onToggleDisponibilidadClick(Producto producto);
     }
     
     // Setters para listeners

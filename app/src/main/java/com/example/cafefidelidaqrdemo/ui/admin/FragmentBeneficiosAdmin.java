@@ -16,15 +16,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.BeneficiosAdminAdapter;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDialogFragment;
-import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.BeneficiosAdminViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Fragment para gestión de beneficios por administradores (CU-04.1)
@@ -150,7 +148,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
         dialog.show(getParentFragmentManager(), "CreateBeneficioDialog");
     }
     
-    private void showEditBeneficioDialog(BeneficioEntity beneficio) {
+    private void showEditBeneficioDialog(Beneficio beneficio) {
         BeneficioDialogFragment dialog = BeneficioDialogFragment.newInstance(beneficio);
         dialog.setOnBeneficioSavedListener(editedBeneficio -> {
             viewModel.updateBeneficio(editedBeneficio);
@@ -158,7 +156,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
         dialog.show(getParentFragmentManager(), "EditBeneficioDialog");
     }
     
-    private void showDeleteConfirmationDialog(BeneficioEntity beneficio) {
+    private void showDeleteConfirmationDialog(Beneficio beneficio) {
         new AlertDialog.Builder(getContext())
             .setTitle("Eliminar Beneficio")
             .setMessage("¿Está seguro que desea eliminar el beneficio '" + beneficio.getNombre() + "'?")
@@ -169,7 +167,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
             .show();
     }
     
-    private void showToggleActiveDialog(BeneficioEntity beneficio) {
+    private void showToggleActiveDialog(Beneficio beneficio) {
         String action = beneficio.isActivo() ? "desactivar" : "activar";
         String title = beneficio.isActivo() ? "Desactivar Beneficio" : "Activar Beneficio";
         
@@ -204,17 +202,17 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
     
     // Implementación de BeneficiosAdminAdapter.OnBeneficioActionListener
     @Override
-    public void onEditarBeneficio(BeneficioEntity beneficio) {
+    public void onEditarBeneficio(Beneficio beneficio) {
         showEditBeneficioDialog(beneficio);
     }
     
     @Override
-    public void onEliminarBeneficio(BeneficioEntity beneficio) {
+    public void onEliminarBeneficio(Beneficio beneficio) {
         showDeleteConfirmationDialog(beneficio);
     }
     
     @Override
-    public void onToggleActiveBeneficio(BeneficioEntity beneficio) {
+    public void onToggleActiveBeneficio(Beneficio beneficio) {
         showToggleActiveDialog(beneficio);
     }
     

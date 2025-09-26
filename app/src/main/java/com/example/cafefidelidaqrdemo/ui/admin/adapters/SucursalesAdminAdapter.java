@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -24,10 +24,10 @@ import java.util.List;
  */
 public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdminAdapter.SucursalAdminViewHolder> {
     
-    private List<SucursalEntity> sucursales;
+    private List<Sucursal> sucursales;
     private OnSucursalClickListener listener;
     
-    public SucursalesAdminAdapter(List<SucursalEntity> sucursales, OnSucursalClickListener listener) {
+    public SucursalesAdminAdapter(List<Sucursal> sucursales, OnSucursalClickListener listener) {
         this.sucursales = sucursales;
         this.listener = listener;
     }
@@ -42,7 +42,7 @@ public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdmin
     
     @Override
     public void onBindViewHolder(@NonNull SucursalAdminViewHolder holder, int position) {
-        SucursalEntity sucursal = sucursales.get(position);
+        Sucursal sucursal = sucursales.get(position);
         holder.bind(sucursal);
     }
     
@@ -51,17 +51,17 @@ public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdmin
         return sucursales != null ? sucursales.size() : 0;
     }
     
-    public void updateSucursales(List<SucursalEntity> nuevasSucursales) {
+    public void updateSucursales(List<Sucursal> nuevasSucursales) {
         this.sucursales = nuevasSucursales;
         notifyDataSetChanged();
     }
     
     public interface OnSucursalClickListener {
-        void onSucursalClick(SucursalEntity sucursal);
-        void onEditarClick(SucursalEntity sucursal);
-        void onToggleActivoClick(SucursalEntity sucursal);
-        void onVerEnMapaClick(SucursalEntity sucursal);
-        void onEliminarClick(SucursalEntity sucursal);
+        void onSucursalClick(Sucursal sucursal);
+        void onEditarClick(Sucursal sucursal);
+        void onToggleActivoClick(Sucursal sucursal);
+        void onVerEnMapaClick(Sucursal sucursal);
+        void onEliminarClick(Sucursal sucursal);
     }
     
     // Force recompilation marker
@@ -100,14 +100,14 @@ public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdmin
             buttonEliminar = itemView.findViewById(R.id.buttonEliminar);
         }
         
-        public void bind(SucursalEntity sucursal) {
+        public void bind(Sucursal sucursal) {
             // Información básica
             textViewNombre.setText(sucursal.getNombre());
             textViewDireccion.setText(sucursal.getDireccion());
             textViewCiudad.setText("Ciudad no disponible"); // Campo no disponible en entity
             textViewTelefono.setText("Teléfono no disponible"); // Campo no disponible en entity
-            String horario = sucursal.getHorario();
-        textViewHorario.setText(horario);
+            String horario = sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre();
+            textViewHorario.setText(horario);
             textViewGerente.setText("Gerente no disponible"); // Campo no disponible en entity
             
             // Estado
@@ -147,7 +147,7 @@ public class SucursalesAdminAdapter extends RecyclerView.Adapter<SucursalesAdmin
             });
         }
         
-        private void configurarEstado(SucursalEntity sucursal) {
+        private void configurarEstado(Sucursal sucursal) {
             if (sucursal.isActiva()) {
                 chipEstado.setText("Activa");
                 chipEstado.setChipBackgroundColorResource(android.R.color.holo_green_light);

@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -34,8 +34,8 @@ public class CatalogoActivity extends AppCompatActivity {
 
     private RecyclerView recyclerViewProductos;
     private ProductosAdapter productoAdapter;
-    private List<ProductoEntity> listaProductos;
-    private List<ProductoEntity> listaProductosFiltrada;
+    private List<Producto> listaProductos;
+    private List<Producto> listaProductosFiltrada;
     private EditText etBuscar;
     private Spinner spinnerCategoria, spinnerOrden;
     private ProgressDialog progressDialog;
@@ -204,7 +204,7 @@ public class CatalogoActivity extends AppCompatActivity {
         
         listaProductosFiltrada.clear();
         
-        for (ProductoEntity producto : listaProductos) {
+        for (Producto producto : listaProductos) {
             boolean coincideTexto = textoBusqueda.isEmpty() || 
                     producto.getNombre().toLowerCase().contains(textoBusqueda) ||
                     producto.getDescripcion().toLowerCase().contains(textoBusqueda);
@@ -225,36 +225,36 @@ public class CatalogoActivity extends AppCompatActivity {
         
         switch (ordenSeleccionado) {
             case "Nombre A-Z":
-                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
-                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                    public int compare(Producto p1, Producto p2) {
                         return p1.getNombre().compareToIgnoreCase(p2.getNombre());
                     }
                 });
                 break;
                 
             case "Nombre Z-A":
-                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
-                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                    public int compare(Producto p1, Producto p2) {
                         return p2.getNombre().compareToIgnoreCase(p1.getNombre());
                     }
                 });
                 break;
                 
             case "Precio Menor":
-                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
-                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                    public int compare(Producto p1, Producto p2) {
                         return Double.compare(p1.getPrecio(), p2.getPrecio());
                     }
                 });
                 break;
                 
             case "Precio Mayor":
-                Collections.sort(listaProductosFiltrada, new Comparator<ProductoEntity>() {
+                Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
-                    public int compare(ProductoEntity p1, ProductoEntity p2) {
+                    public int compare(Producto p1, Producto p2) {
                         return Double.compare(p2.getPrecio(), p1.getPrecio());
                     }
                 });
@@ -274,7 +274,7 @@ public class CatalogoActivity extends AppCompatActivity {
         productoAdapter.submitList(new ArrayList<>(listaProductosFiltrada));
     }
 
-    private void onProductoClick(ProductoEntity producto) {
+    private void onProductoClick(Producto producto) {
         Toast.makeText(this, "Producto seleccionado: " + producto.getNombre(), Toast.LENGTH_SHORT).show();
         // TODO: Implementar navegación a detalle del producto
     }

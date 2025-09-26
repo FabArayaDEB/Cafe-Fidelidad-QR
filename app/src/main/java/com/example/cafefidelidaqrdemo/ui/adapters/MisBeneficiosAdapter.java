@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
@@ -25,15 +25,15 @@ import java.util.Locale;
  */
 public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdapter.BeneficioViewHolder> {
     
-    private List<BeneficioEntity> beneficios;
+    private List<Beneficio> beneficios;
     private OnBeneficioClickListener listener;
     private SimpleDateFormat dateFormat;
     
     public interface OnBeneficioClickListener {
-        void onBeneficioClick(BeneficioEntity beneficio);
+        void onBeneficioClick(Beneficio beneficio);
     }
     
-    public MisBeneficiosAdapter(List<BeneficioEntity> beneficios, OnBeneficioClickListener listener) {
+    public MisBeneficiosAdapter(List<Beneficio> beneficios, OnBeneficioClickListener listener) {
         this.beneficios = beneficios;
         this.listener = listener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -49,7 +49,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
     
     @Override
     public void onBindViewHolder(@NonNull BeneficioViewHolder holder, int position) {
-        BeneficioEntity beneficio = beneficios.get(position);
+        Beneficio beneficio = beneficios.get(position);
         holder.bind(beneficio);
     }
     
@@ -58,7 +58,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
         return beneficios != null ? beneficios.size() : 0;
     }
     
-    public void updateBeneficios(List<BeneficioEntity> nuevosBeneficios) {
+    public void updateBeneficios(List<Beneficio> nuevosBeneficios) {
         this.beneficios = nuevosBeneficios;
         notifyDataSetChanged();
     }
@@ -87,7 +87,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             iconBeneficio = itemView.findViewById(R.id.iconBeneficio);
         }
         
-        public void bind(BeneficioEntity beneficio) {
+        public void bind(Beneficio beneficio) {
             // Nombre del beneficio
             textNombre.setText(beneficio.getNombre());
             
@@ -150,7 +150,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             }
         }
         
-        private String formatearValor(BeneficioEntity beneficio) {
+        private String formatearValor(Beneficio beneficio) {
             if (beneficio.getDescuento_pct() > 0) {
                 return beneficio.getDescuento_pct() + "% OFF";
             } else if (beneficio.getDescuento_monto() > 0) {
@@ -163,7 +163,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             return "BENEFICIO";
         }
         
-        private void configurarIcono(BeneficioEntity beneficio) {
+        private void configurarIcono(Beneficio beneficio) {
             int iconRes = R.drawable.ic_redeem; // icono por defecto
             
             if (beneficio.getTipo() != null) {
@@ -185,7 +185,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             iconBeneficio.setImageResource(iconRes);
         }
         
-        private String formatearVigencia(BeneficioEntity beneficio) {
+        private String formatearVigencia(Beneficio beneficio) {
             if (beneficio.getVigencia_fin() > 0) {
                 Date fechaFin = new Date(beneficio.getVigencia_fin());
                 Date hoy = new Date();
@@ -205,7 +205,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             return "Sin vencimiento";
         }
         
-        private void configurarEstado(BeneficioEntity beneficio) {
+        private void configurarEstado(Beneficio beneficio) {
             if (!beneficio.isActivo()) {
                 btnUsar.setEnabled(false);
                 btnUsar.setText("NO DISPONIBLE");

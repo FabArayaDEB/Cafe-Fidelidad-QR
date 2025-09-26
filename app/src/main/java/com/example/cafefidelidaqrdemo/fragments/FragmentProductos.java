@@ -20,7 +20,7 @@ import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import android.content.Intent;
 import com.example.cafefidelidaqrdemo.DetalleProductoActivity;
 // import com.example.cafefidelidaqrdemo.activities.DetalleProductoActivity; // TODO: Crear esta actividad
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.viewmodels.ProductosViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -52,7 +52,7 @@ public class FragmentProductos extends Fragment {
     private String categoriaSeleccionada = "";
     private String estadoSeleccionado = "";
     private String queryBusqueda = "";
-    private List<ProductoEntity> productosOriginales = new ArrayList<>();
+    private List<Producto> productosOriginales = new ArrayList<>();
     
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -104,10 +104,10 @@ public class FragmentProductos extends Fragment {
         // Listener para clicks en productos
         adapter.setOnProductoClickListener(new ProductosAdapter.OnProductoClickListener() {
             @Override
-            public void onProductoClick(ProductoEntity producto) {
+            public void onProductoClick(Producto producto) {
                 // Abrir detalle del producto
                 Intent intent = new Intent(getActivity(), DetalleProductoActivity.class);
-                intent.putExtra("producto_id", producto.getId_producto());
+                intent.putExtra("producto_id", producto.getId());
                 startActivity(intent);
             }
         });
@@ -287,14 +287,15 @@ public class FragmentProductos extends Fragment {
     }
     
     private void applyFilters() {
-        List<ProductoEntity> productosFiltrados = new ArrayList<>();
+        List<Producto> productosFiltrados = new ArrayList<>();
         
-        for (ProductoEntity producto : productosOriginales) {
+        for (Producto producto : productosOriginales) {
             boolean pasaFiltroCategoria = categoriaSeleccionada.isEmpty() || 
                 producto.getCategoria().equalsIgnoreCase(categoriaSeleccionada);
             
             boolean pasaFiltroEstado = estadoSeleccionado.isEmpty() || 
-                producto.getEstado().equalsIgnoreCase(estadoSeleccionado);
+                (estadoSeleccionado.equalsIgnoreCase("disponible") && producto.isDisponible()) ||
+                (estadoSeleccionado.equalsIgnoreCase("no disponible") && !producto.isDisponible());
             
             boolean pasaFiltroBusqueda = queryBusqueda.isEmpty() || 
                 producto.getNombre().toLowerCase().contains(queryBusqueda.toLowerCase()) ||
@@ -339,13 +340,13 @@ public class FragmentProductos extends Fragment {
         }
     }
     
-    private void showProductoDetails(ProductoEntity producto) {
+    private void showProductoDetails(Producto producto) {
         String message = String.format(
             "Producto: %s\nCategoría: %s\nPrecio: $%.2f\nEstado: %s",
             producto.getNombre(),
             producto.getCategoria(),
             producto.getPrecio(),
-            producto.getEstado().equals("activo") ? "Disponible" : "No disponible"
+            producto.isDisponible() ? "Disponible" : "No disponible"
         );
         
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();

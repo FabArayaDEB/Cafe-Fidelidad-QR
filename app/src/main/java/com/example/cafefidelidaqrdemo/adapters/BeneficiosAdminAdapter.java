@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,7 +11,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -29,17 +28,17 @@ import java.util.Locale;
  */
 public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdminAdapter.BeneficioViewHolder> {
     
-    private List<BeneficioEntity> beneficios;
+    private List<Beneficio> beneficios;
     private final OnBeneficioActionListener listener;
     private final SimpleDateFormat dateFormat;
     
     public interface OnBeneficioActionListener {
-        void onToggleActiveBeneficio(BeneficioEntity beneficio);
-        void onEditarBeneficio(BeneficioEntity beneficio);
-        void onEliminarBeneficio(BeneficioEntity beneficio);
+        void onToggleActiveBeneficio(Beneficio beneficio);
+        void onEditarBeneficio(Beneficio beneficio);
+        void onEliminarBeneficio(Beneficio beneficio);
     }
     
-    public BeneficiosAdminAdapter(List<BeneficioEntity> beneficios, OnBeneficioActionListener listener) {
+    public BeneficiosAdminAdapter(List<Beneficio> beneficios, OnBeneficioActionListener listener) {
         this.beneficios = beneficios;
         this.listener = listener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -55,7 +54,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
     
     @Override
     public void onBindViewHolder(@NonNull BeneficioViewHolder holder, int position) {
-        BeneficioEntity beneficio = beneficios.get(position);
+        Beneficio beneficio = beneficios.get(position);
         holder.bind(beneficio);
     }
     
@@ -64,7 +63,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         return beneficios != null ? beneficios.size() : 0;
     }
     
-    public void updateBeneficios(List<BeneficioEntity> newBeneficios) {
+    public void updateBeneficios(List<Beneficio> newBeneficios) {
         this.beneficios = newBeneficios;
         notifyDataSetChanged();
     }
@@ -96,7 +95,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             btnEliminar = itemView.findViewById(R.id.btnEliminar);
         }
         
-        public void bind(BeneficioEntity beneficio) {
+        public void bind(Beneficio beneficio) {
             Context context = itemView.getContext();
             
             // Información básica
@@ -120,12 +119,12 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             setupEstadisticas(beneficio);
         }
         
-        private void setupTipo(BeneficioEntity beneficio) {
+        private void setupTipo(Beneficio beneficio) {
             String tipoText = beneficio.getTipo();
             chipTipo.setText(tipoText);
         }
         
-        private void setupVigencia(BeneficioEntity beneficio) {
+        private void setupVigencia(Beneficio beneficio) {
             if (beneficio.getVigencia_ini() > 0 && beneficio.getVigencia_fin() > 0) {
                 Date fechaInicio = new Date(beneficio.getVigencia_ini());
                 Date fechaFin = new Date(beneficio.getVigencia_fin());
@@ -149,7 +148,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             }
         }
         
-        private void setupEstadoSwitch(BeneficioEntity beneficio) {
+        private void setupEstadoSwitch(Beneficio beneficio) {
             switchActivo.setChecked(beneficio.isActivo());
             switchActivo.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (listener != null) {
@@ -158,7 +157,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             });
         }
         
-        private void setupEstadisticas(BeneficioEntity beneficio) {
+        private void setupEstadisticas(Beneficio beneficio) {
             // Mostrar estadísticas de uso (datos no disponibles en la entidad actual)
             textUsos.setText("Usos: N/A");
             
@@ -167,7 +166,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
             textClientesBeneficiados.setVisibility(View.VISIBLE);
         }
         
-        private void setupButtons(BeneficioEntity beneficio) {
+        private void setupButtons(Beneficio beneficio) {
             btnEditar.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onEditarBeneficio(beneficio);

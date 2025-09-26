@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -35,10 +35,10 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
     private Button buttonCerrar;
     
     // Data
-    private BeneficioEntity beneficio;
+    private Beneficio beneficio;
     private SimpleDateFormat dateFormat;
     
-    public static BeneficioDetailsDialogFragment newInstance(BeneficioEntity beneficio) {
+    public static BeneficioDetailsDialogFragment newInstance(Beneficio beneficio) {
         BeneficioDetailsDialogFragment fragment = new BeneficioDetailsDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_BENEFICIO, beneficio);
@@ -52,7 +52,7 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         
         if (getArguments() != null) {
-            beneficio = (BeneficioEntity) getArguments().getSerializable(ARG_BENEFICIO);
+            beneficio = (Beneficio) getArguments().getSerializable(ARG_BENEFICIO);
         }
     }
     
@@ -93,42 +93,42 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         
         textNombre.setText(beneficio.getNombre());
 
-        textDescripcion.setText("Descripción no disponible");
+        textDescripcion.setText(beneficio.getDescripcion() != null ? beneficio.getDescripcion() : "Descripción no disponible");
         
         if (beneficio.getTipo() != null) {
-            textTipo.setText(beneficio.getTipo());
+            textTipo.setText(beneficio.getTipo().toString());
         }
         
         // Set valor based on tipo
-        if ("DESCUENTO_PORCENTAJE".equals(beneficio.getTipo()) && beneficio.getDescuento_pct() > 0) {
-            textValor.setText(String.valueOf(beneficio.getDescuento_pct()) + "%");
-        } else if (beneficio.getDescuento_monto() > 0) {
-            textValor.setText("$" + String.valueOf(beneficio.getDescuento_monto()));
+        if (beneficio.getTipo() == Beneficio.TipoBeneficio.DESCUENTO_PORCENTAJE && beneficio.getValorDescuentoPorcentaje() > 0) {
+            textValor.setText(String.valueOf(beneficio.getValorDescuentoPorcentaje()) + "%");
+        } else if (beneficio.getValorDescuentoFijo() > 0) {
+            textValor.setText("$" + String.valueOf(beneficio.getValorDescuentoFijo()));
         } else {
             textValor.setText("N/A");
         }
         
-        if (beneficio.getRequisito_visitas() > 0) {
-            textVisitasRequeridas.setText(String.valueOf(beneficio.getRequisito_visitas()));
+        if (beneficio.getVisitasRequeridas() > 0) {
+            textVisitasRequeridas.setText(String.valueOf(beneficio.getVisitasRequeridas()));
         } else {
             textVisitasRequeridas.setText("N/A");
         }
         
-        if (beneficio.getVigencia_ini() > 0) {
-            textFechaInicio.setText(dateFormat.format(new java.util.Date(beneficio.getVigencia_ini())));
+        if (beneficio.getFechaInicioVigencia() != null) {
+            textFechaInicio.setText(dateFormat.format(beneficio.getFechaInicioVigencia()));
         } else {
             textFechaInicio.setText("No especificada");
         }
         
-        if (beneficio.getVigencia_fin() > 0) {
-            textFechaFin.setText(dateFormat.format(new java.util.Date(beneficio.getVigencia_fin())));
+        if (beneficio.getFechaFinVigencia() != null) {
+            textFechaFin.setText(dateFormat.format(beneficio.getFechaFinVigencia()));
         } else {
             textFechaFin.setText("No especificada");
         }
         
         textEstado.setText(beneficio.isActivo() ? "Activo" : "Inactivo");
 
-        textVecesCanjeado.setText("0");
+        textVecesCanjeado.setText(String.valueOf(beneficio.getVecesCanjeado()));
     }
     
     @Override

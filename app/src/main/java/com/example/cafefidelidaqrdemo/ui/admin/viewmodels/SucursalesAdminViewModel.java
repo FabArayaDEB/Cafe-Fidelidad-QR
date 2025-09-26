@@ -9,7 +9,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.repository.AdminRepository;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -31,8 +31,8 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     private final MutableLiveData<String> successMessage = new MutableLiveData<>();
     
     // Datos de sucursales
-    private final LiveData<List<SucursalEntity>> allSucursales;
-    private final LiveData<List<SucursalEntity>> sucursalesActivas;
+    private final LiveData<List<Sucursal>> allSucursales;
+    private final LiveData<List<Sucursal>> sucursalesActivas;
     private final LiveData<Integer> countSucursalesActivas;
     private final LiveData<Integer> countSucursalesInactivas;
     
@@ -42,7 +42,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isDeleting = new MutableLiveData<>(false);
     
     // Sucursal seleccionada para edición
-    private final MutableLiveData<SucursalEntity> selectedSucursal = new MutableLiveData<>();
+    private final MutableLiveData<Sucursal> selectedSucursal = new MutableLiveData<>();
     
     // Ubicación actual del usuario
     private final MutableLiveData<Location> currentLocation = new MutableLiveData<>();
@@ -91,11 +91,11 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         return successMessage;
     }
     
-    public LiveData<List<SucursalEntity>> getAllSucursales() {
+    public LiveData<List<Sucursal>> getAllSucursales() {
         return allSucursales;
     }
-    
-    public LiveData<List<SucursalEntity>> getSucursalesActivas() {
+
+    public LiveData<List<Sucursal>> getSucursalesActivas() {
         return sucursalesActivas;
     }
     
@@ -119,7 +119,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         return isDeleting;
     }
     
-    public LiveData<SucursalEntity> getSelectedSucursal() {
+    public LiveData<Sucursal> getSelectedSucursal() {
         return selectedSucursal;
     }
     
@@ -130,7 +130,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     /**
      * Crea una nueva sucursal
      */
-    public void crearSucursal(SucursalEntity sucursal) {
+    public void crearSucursal(Sucursal sucursal) {
         if (!validarSucursal(sucursal)) {
             return;
         }
@@ -140,15 +140,15 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         executor.execute(() -> {
             try {
                 // Verificar si ya existe una sucursal muy cerca (radio de 100m)
-                if (adminRepository.existeSucursalCercana(sucursal.getLat(), sucursal.getLon(), 0.1)) {
+                if (adminRepository.existeSucursalCercana(sucursal.getLatitud(), sucursal.getLongitud(), 0.1)) {
                     errorMessage.postValue("Ya existe una sucursal muy cerca de esa ubicación");
                     isCreating.postValue(false);
                     return;
                 }
                 
-                adminRepository.crearSucursal(sucursal, new AdminRepository.AdminCallback<SucursalEntity>() {
+                adminRepository.crearSucursal(sucursal, new AdminRepository.AdminCallback<Sucursal>() {
                     @Override
-                    public void onSuccess(SucursalEntity result) {
+                    public void onSuccess(Sucursal result) {
                         successMessage.postValue("Sucursal creada exitosamente");
                         isCreating.postValue(false);
                     }
@@ -170,7 +170,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     /**
      * Actualiza una sucursal existente
      */
-    public void actualizarSucursal(SucursalEntity sucursal) {
+    public void actualizarSucursal(Sucursal sucursal) {
         if (!validarSucursal(sucursal)) {
             return;
         }
@@ -180,7 +180,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         executor.execute(() -> {
             try {
                 // Verificar control de versión
-                SucursalEntity sucursalActual = adminRepository.getSucursalPorId(String.valueOf(sucursal.getId_sucursal()));
+                Sucursal sucursalActual = adminRepository.getSucursalPorId(String.valueOf(sucursal.getId()));
                 if (sucursalActual == null) {
                     errorMessage.postValue("La sucursal no existe");
                     isUpdating.postValue(false);
@@ -194,7 +194,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                 }
                 
                 // Verificar nombres duplicados (excluyendo la sucursal actual)
-                if (adminRepository.existeSucursalPorNombreExcluyendoId(sucursal.getNombre(), Long.parseLong(sucursal.getId_sucursal()))) {
+                if (adminRepository.existeSucursalPorNombreExcluyendoId(sucursal.getNombre(), sucursal.getId())) {
                     errorMessage.postValue("Ya existe otra sucursal con ese nombre");
                     isUpdating.postValue(false);
                     return;
@@ -202,14 +202,14 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                 
                 // Verificar ubicaciones cercanas (excluyendo la sucursal actual)
                 // if (adminRepository.existeSucursalCercanaExcluyendoId(
-                //         sucursal.getLat(), sucursal.getLon(), 0.1, sucursal.getId_sucursal())) {
+                //         sucursal.getLatitud(), sucursal.getLongitud(), 0.1, sucursal.getId())) {
                 //     errorMessage.postValue("Ya existe otra sucursal muy cerca de esa ubicación");
                 //     return;
                 // }
                 
-                adminRepository.actualizarSucursal(sucursal, new AdminRepository.AdminCallback<SucursalEntity>() {
+                adminRepository.actualizarSucursal(sucursal, new AdminRepository.AdminCallback<Sucursal>() {
                     @Override
-                    public void onSuccess(SucursalEntity result) {
+                    public void onSuccess(Sucursal result) {
                         successMessage.postValue("Sucursal actualizada exitosamente");
                         isUpdating.postValue(false);
                     }
@@ -302,28 +302,28 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     /**
      * Busca sucursales por nombre, ciudad o dirección
      */
-    public LiveData<List<SucursalEntity>> buscarSucursales(String query) {
+    public LiveData<List<Sucursal>> buscarSucursales(String query) {
         return adminRepository.buscarSucursales(query);
     }
     
     /**
      * Obtiene sucursales por ciudad
      */
-    public LiveData<List<SucursalEntity>> getSucursalesPorCiudad(String ciudad) {
+    public LiveData<List<Sucursal>> getSucursalesPorCiudad(String ciudad) {
         return adminRepository.getSucursalesPorCiudad(ciudad);
     }
     
     /**
      * Obtiene sucursales cercanas a una ubicación
      */
-    public LiveData<List<SucursalEntity>> getSucursalesCercanas(double latitud, double longitud, double radioKm) {
+    public LiveData<List<Sucursal>> getSucursalesCercanas(double latitud, double longitud, double radioKm) {
         return adminRepository.getSucursalesCercanas(latitud, longitud, radioKm);
     }
     
     /**
      * Obtiene sucursales abiertas en un horario específico
      */
-    public LiveData<List<SucursalEntity>> getSucursalesAbiertas(String hora, String dia) {
+    public LiveData<List<Sucursal>> getSucursalesAbiertas(String hora, String dia) {
         return adminRepository.getSucursalesAbiertas(hora, dia);
     }
     
@@ -480,7 +480,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     /**
      * Selecciona una sucursal para edición
      */
-    public void seleccionarSucursal(SucursalEntity sucursal) {
+    public void seleccionarSucursal(Sucursal sucursal) {
         selectedSucursal.setValue(sucursal);
     }
     
@@ -501,7 +501,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
     /**
      * Valida los datos de una sucursal
      */
-    private boolean validarSucursal(SucursalEntity sucursal) {
+    private boolean validarSucursal(Sucursal sucursal) {
         if (sucursal == null) {
             errorMessage.setValue("Datos de sucursal inválidos");
             return false;
@@ -522,18 +522,18 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        // TODO: Campo ciudad no disponible en SucursalEntity
+        // TODO: Campo ciudad no disponible en Sucursal
         // if (sucursal.getCiudad() == null || sucursal.getCiudad().trim().isEmpty()) {
         //     errorMessage.setValue("La ciudad es obligatoria");
         //     return false;
         // }
         
-        if (!validarCoordenadas(sucursal.getLat(), sucursal.getLon())) {
+        if (!validarCoordenadas(sucursal.getLatitud(), sucursal.getLongitud())) {
             errorMessage.setValue("Las coordenadas son inválidas");
             return false;
         }
         
-        // TODO: Campo capacidadMaxima no disponible en SucursalEntity
+        // TODO: Campo capacidadMaxima no disponible en Sucursal
         // if (sucursal.getCapacidadMaxima() <= 0) {
         //     errorMessage.setValue("La capacidad debe ser mayor a 0");
         //     return false;
@@ -544,7 +544,8 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         //     return false;
         // }
         
-        String[] horarios = sucursal.getHorario().split(" - ");
+        String horarioCompleto = sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre();
+        String[] horarios = horarioCompleto.split(" - ");
         if (horarios.length != 2 || !validarHorario(horarios[0]) || !validarHorario(horarios[1])) {
             errorMessage.setValue("Formato de horario inválido (use HH:MM)");
             return false;
@@ -555,7 +556,7 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        // TODO: Campos telefono y email no disponibles en SucursalEntity
+        // TODO: Campos telefono y email no disponibles en Sucursal
         // if (sucursal.getTelefono() != null && !sucursal.getTelefono().isEmpty() && 
         //     !PHONE_PATTERN.matcher(sucursal.getTelefono()).matches()) {
         //     errorMessage.setValue("Formato de teléfono inválido");

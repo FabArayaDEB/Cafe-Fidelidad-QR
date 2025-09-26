@@ -16,10 +16,10 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.HistorialActivity;
+import com.example.cafefidelidaqrdemo.database.models.Cliente;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 
 
@@ -110,7 +110,7 @@ public class FragmentPerfil extends Fragment {
         });
     }
     
-    private void updateClienteInfo(ClienteEntity cliente) {
+    private void updateClienteInfo(Cliente cliente) {
         if (cliente != null) {
             // Configurar saludo personalizado
             SimpleDateFormat sdf = new SimpleDateFormat("HH", Locale.getDefault());
@@ -126,7 +126,7 @@ public class FragmentPerfil extends Fragment {
             binding.tvSaludo.setText(greeting);
             
             // Mostrar McID
-            binding.tvMcid.setText(cliente.getMcId());
+            binding.tvMcid.setText(cliente.getId());
             
             // Mostrar datos del usuario
             binding.tvNombres.setText(cliente.getNombre());
@@ -134,7 +134,7 @@ public class FragmentPerfil extends Fragment {
             
             // Mostrar información de fidelidad
             if (binding.tvPuntos != null) {
-                binding.tvPuntos.setText(String.valueOf(cliente.getPuntos()));
+                binding.tvPuntos.setText(String.valueOf(cliente.getPuntosAcumulados()));
             }
             if (binding.tvNivel != null) {
                 binding.tvNivel.setText(cliente.getNivel());

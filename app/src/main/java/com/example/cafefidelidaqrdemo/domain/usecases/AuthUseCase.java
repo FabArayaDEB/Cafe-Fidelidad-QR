@@ -1,8 +1,8 @@
 package com.example.cafefidelidaqrdemo.domain.usecases;
 
+import com.example.cafefidelidaqrdemo.database.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import android.content.Context;
 
 /**
@@ -26,7 +26,7 @@ public class AuthUseCase {
      * Callback para operaciones de autenticación
      */
     public interface AuthCallback {
-        void onSuccess(ClienteEntity cliente);
+        void onSuccess(Cliente cliente);
         void onError(String error);
     }
     
@@ -60,17 +60,16 @@ public class AuthUseCase {
             @Override
             public void onSuccess(String userId) {
                 // Una vez autenticado, obtener datos del cliente
-                clienteRepository.getClienteById(userId, new ClienteRepository.ClienteCallback() {
-                    @Override
-                    public void onSuccess(ClienteEntity cliente) {
+                try {
+                    Cliente cliente = clienteRepository.getClienteByIdSync(Integer.parseInt(userId));
+                    if (cliente != null) {
                         callback.onSuccess(cliente);
+                    } else {
+                        callback.onError("Usuario no encontrado");
                     }
-                    
-                    @Override
-                    public void onError(String error) {
-                        callback.onError("Error al obtener datos del usuario: " + error);
-                    }
-                });
+                } catch (Exception e) {
+                    callback.onError("Error al obtener datos del usuario: " + e.getMessage());
+                }
             }
             
             @Override
@@ -111,7 +110,7 @@ public class AuthUseCase {
         }
         
         // Crear cliente
-        ClienteEntity nuevoCliente = new ClienteEntity();
+        Cliente nuevoCliente = new Cliente();
         nuevoCliente.setEmail(email);
         nuevoCliente.setNombre(nombre);
         nuevoCliente.setTelefono(telefono);
@@ -122,12 +121,12 @@ public class AuthUseCase {
             @Override
             public void onSuccess(String userId) {
                 // Establecer ID del usuario
-                nuevoCliente.setId_cliente(userId);
+                nuevoCliente.setId(Integer.parseInt(userId));
                 
                 // Guardar datos del cliente
                 clienteRepository.createCliente(nuevoCliente, new ClienteRepository.ClienteCallback() {
                     @Override
-                    public void onSuccess(ClienteEntity cliente) {
+                    public void onSuccess(Cliente cliente) {
                         callback.onSuccess(cliente);
                     }
                     
@@ -163,9 +162,9 @@ public class AuthUseCase {
             @Override
             public void onSuccess(String userId) {
                 if (userId != null) {
-                    clienteRepository.getClienteById(userId, new ClienteRepository.ClienteCallback() {
+                    clienteRepository.get(userId, new ClienteRepository.ClienteCallback() {
                         @Override
-                        public void onSuccess(ClienteEntity cliente) {
+                        public void onSuccess(Cliente cliente) {
                             callback.onSuccess(cliente);
                         }
                         

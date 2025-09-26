@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.example.cafefidelidaqrdemo.viewmodels.ProgresoViewModel;
 import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class ProgresoFidelizacionAdapter extends RecyclerView.Adapter<ProgresoFi
         }
         
         public void bind(ProximoBeneficio proximoBeneficio) {
-            BeneficioEntity beneficio = proximoBeneficio.getBeneficio();
+            Beneficio beneficio = proximoBeneficio.getBeneficio();
             
             // Información del beneficio
             tvNombreBeneficio.setText(beneficio.getNombre());

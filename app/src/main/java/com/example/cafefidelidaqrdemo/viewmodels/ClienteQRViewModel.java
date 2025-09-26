@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.database.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import com.example.cafefidelidaqrdemo.utils.QRGenerator;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
@@ -25,8 +25,8 @@ public class ClienteQRViewModel extends AndroidViewModel {
     private final MutableLiveData<Bitmap> _qrBitmap = new MutableLiveData<>();
     public final LiveData<Bitmap> qrBitmap = _qrBitmap;
     
-    private final MutableLiveData<ClienteEntity> _clienteData = new MutableLiveData<>();
-    public final LiveData<ClienteEntity> clienteData = _clienteData;
+    private final MutableLiveData<Cliente> _clienteData = new MutableLiveData<>();
+    public final LiveData<Cliente> clienteData = _clienteData;
     
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
     public final LiveData<Boolean> isLoading = _isLoading;
@@ -75,7 +75,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
      * Genera el código QR personal del cliente
      * @param cliente Datos del cliente
      */
-    private void generateQRCode(ClienteEntity cliente) {
+    private void generateQRCode(Cliente cliente) {
         executor.execute(() -> {
             try {
                 Bitmap qrBitmap = QRGenerator.generateClientQR(
@@ -102,7 +102,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
      * @param cliente Datos del cliente
      * @return McID generado
      */
-    private String generateMcId(ClienteEntity cliente) {
+    private String generateMcId(Cliente cliente) {
         // Generar McID basado en nombre y email
         String nombre = cliente.getNombre().toUpperCase();
         String apellido = ""; // No hay apellido separado en ClienteEntity
