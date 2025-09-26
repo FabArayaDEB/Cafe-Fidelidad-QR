@@ -6,54 +6,33 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
-import com.example.cafefidelidaqrdemo.database.dao.UsuarioDao;
-import com.example.cafefidelidaqrdemo.database.dao.TransaccionDao;
 import com.example.cafefidelidaqrdemo.database.dao.ClienteDao;
 import com.example.cafefidelidaqrdemo.database.dao.SucursalDao;
 import com.example.cafefidelidaqrdemo.database.dao.ProductoDao;
 import com.example.cafefidelidaqrdemo.database.dao.BeneficioDao;
 import com.example.cafefidelidaqrdemo.database.dao.VisitaDao;
 import com.example.cafefidelidaqrdemo.database.dao.CanjeDao;
-import com.example.cafefidelidaqrdemo.database.dao.ReglaDao;
-import com.example.cafefidelidaqrdemo.database.dao.ReporteDao;
-import com.example.cafefidelidaqrdemo.database.dao.CompraDao;
-import com.example.cafefidelidaqrdemo.database.dao.UbicacionDao;
-import com.example.cafefidelidaqrdemo.database.dao.TableroDao;
 import com.example.cafefidelidaqrdemo.database.Converters;
-import com.example.cafefidelidaqrdemo.database.entities.UsuarioEntity;
-import com.example.cafefidelidaqrdemo.database.entities.TransaccionEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
 import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
 import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
 import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
-import com.example.cafefidelidaqrdemo.database.entities.ReglaEntity;
-import com.example.cafefidelidaqrdemo.database.entities.ReporteEntity;
-import com.example.cafefidelidaqrdemo.database.entities.CompraEntity;
-import com.example.cafefidelidaqrdemo.database.entities.UbicacionEntity;
-import com.example.cafefidelidaqrdemo.database.entities.TableroEntity;
 
 /**
  * Base de datos Room principal para cache offline
  */
 @Database(
     entities = {
-        UsuarioEntity.class, 
-        TransaccionEntity.class,
         ClienteEntity.class,
         SucursalEntity.class,
         ProductoEntity.class,
         BeneficioEntity.class,
         VisitaEntity.class,
-        CanjeEntity.class,
-        ReglaEntity.class,
-        ReporteEntity.class,
-        CompraEntity.class,
-        UbicacionEntity.class,
-        TableroEntity.class
+        CanjeEntity.class
     },
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @androidx.room.TypeConverters({Converters.class})
@@ -63,19 +42,12 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
     private static volatile CafeFidelidadDatabase INSTANCE;
     
     // DAOs abstractos
-    public abstract UsuarioDao usuarioDao();
-    public abstract TransaccionDao transaccionDao();
     public abstract ClienteDao clienteDao();
     public abstract SucursalDao sucursalDao();
     public abstract ProductoDao productoDao();
     public abstract BeneficioDao beneficioDao();
     public abstract VisitaDao visitaDao();
     public abstract CanjeDao canjeDao();
-    public abstract ReglaDao reglaDao();
-    public abstract ReporteDao reporteDao();
-    public abstract CompraDao compraDao();
-    public abstract UbicacionDao ubicacionDao();
-    public abstract TableroDao tableroDao();
     
     /**
      * Singleton pattern para obtener instancia de la base de datos
@@ -131,15 +103,15 @@ public abstract class CafeFidelidadDatabase extends RoomDatabase {
     @Override
     public void clearAllTables() {
         // Implementación personalizada para limpiar todas las tablas
-        usuarioDao().deleteAll();
-        transaccionDao().deleteAll();
+        // usuarioDao().deleteAll(); // Comentado - DAO no implementado
+        // transaccionDao().deleteAll(); // Comentado - DAO no implementado
         clienteDao().deleteAll();
         sucursalDao().deleteAll();
         productoDao().deleteAll();
         beneficioDao().deleteAllBeneficios();
         visitaDao().deleteAll();
         canjeDao().deleteAll();
-        reglaDao().deleteAll();
+        // reglaDao().deleteAll(); // Comentado - DAO no implementado
         // reporteDao().deleteAll(); // Comentado hasta implementar método deleteAll
     }
 }

@@ -248,15 +248,8 @@ public class FragmentAdminDashboard extends Fragment {
     }
     
     private void navegarAEstadisticas() {
-        try {
-            FragmentReportesAdmin fragment = new FragmentReportesAdmin();
-            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.fragmentFL, fragment);
-            transaction.addToBackStack("ReportesAdmin");
-            transaction.commit();
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error al navegar a estadísticas", Toast.LENGTH_SHORT).show();
-        }
+        // TODO: Implementar fragmento de estadísticas simplificado
+        Toast.makeText(getContext(), "Funcionalidad de estadísticas en desarrollo", Toast.LENGTH_SHORT).show();
     }
     
     private void navegarAConfiguracion() {

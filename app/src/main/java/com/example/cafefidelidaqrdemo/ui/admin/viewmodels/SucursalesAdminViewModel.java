@@ -68,6 +68,9 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         adminRepository = new AdminRepository(application);
         executor = Executors.newFixedThreadPool(3);
         
+        // Observar el isLoading del repositorio para evitar duplicación
+        adminRepository.getIsLoading().observeForever(value -> isLoading.setValue(value));
+        
         // Inicializar LiveData observables
         allSucursales = adminRepository.getAllSucursales();
         sucursalesActivas = adminRepository.getSucursalesActivas();
@@ -133,13 +136,13 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         }
         
         isCreating.setValue(true);
-        isLoading.setValue(true);
         
         executor.execute(() -> {
             try {
                 // Verificar si ya existe una sucursal muy cerca (radio de 100m)
                 if (adminRepository.existeSucursalCercana(sucursal.getLat(), sucursal.getLon(), 0.1)) {
                     errorMessage.postValue("Ya existe una sucursal muy cerca de esa ubicación");
+                    isCreating.postValue(false);
                     return;
                 }
                 
@@ -148,21 +151,18 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                     public void onSuccess(SucursalEntity result) {
                         successMessage.postValue("Sucursal creada exitosamente");
                         isCreating.postValue(false);
-                        isLoading.postValue(false);
                     }
                     
                     @Override
                     public void onError(String error) {
                         errorMessage.postValue("Error al crear sucursal: " + error);
                         isCreating.postValue(false);
-                        isLoading.postValue(false);
                     }
                 });
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al crear sucursal: " + e.getMessage());
                 isCreating.postValue(false);
-                isLoading.postValue(false);
             }
         });
     }
@@ -176,7 +176,6 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         }
         
         isUpdating.setValue(true);
-        isLoading.setValue(true);
         
         executor.execute(() -> {
             try {
@@ -184,17 +183,20 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                 SucursalEntity sucursalActual = adminRepository.getSucursalPorId(String.valueOf(sucursal.getId_sucursal()));
                 if (sucursalActual == null) {
                     errorMessage.postValue("La sucursal no existe");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
                 if (sucursalActual.getVersion() != sucursal.getVersion()) {
                     errorMessage.postValue("La sucursal ha sido modificada por otro usuario. Actualice y vuelva a intentar.");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
                 // Verificar nombres duplicados (excluyendo la sucursal actual)
                 if (adminRepository.existeSucursalPorNombreExcluyendoId(sucursal.getNombre(), Long.parseLong(sucursal.getId_sucursal()))) {
                     errorMessage.postValue("Ya existe otra sucursal con ese nombre");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
@@ -209,20 +211,19 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
                     @Override
                     public void onSuccess(SucursalEntity result) {
                         successMessage.postValue("Sucursal actualizada exitosamente");
+                        isUpdating.postValue(false);
                     }
                     
                     @Override
                     public void onError(String error) {
                         errorMessage.postValue("Error al actualizar sucursal: " + error);
+                        isUpdating.postValue(false);
                     }
                 });
-                successMessage.postValue("Sucursal actualizada exitosamente");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar sucursal: " + e.getMessage());
-            } finally {
                 isUpdating.postValue(false);
-                isLoading.postValue(false);
             }
         });
     }

@@ -19,8 +19,8 @@ import com.example.cafefidelidaqrdemo.HistorialActivity;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
-import com.example.cafefidelidaqrdemo.viewmodels.PerfilViewModel;
 import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 
 
 import java.text.SimpleDateFormat;
@@ -30,7 +30,7 @@ import java.util.Locale;
 public class FragmentPerfil extends Fragment {
     private FragmentPerfilBinding binding;
     private Context mContext;
-    private PerfilViewModel viewModel;
+    private AuthRepository authRepository;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -53,54 +53,32 @@ public class FragmentPerfil extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        // Inicializar ViewModel
-        viewModel = new ViewModelProvider(this).get(PerfilViewModel.class);
-        
-        // Configurar observadores
-        setupObservers();
+        // Inicializar AuthRepository
+        authRepository = AuthRepository.getInstance();
+        authRepository.setContext(mContext);
         
         // Configurar listeners
         setupClickListeners();
         
         // Cargar información del usuario
-        viewModel.loadPerfilData();
+        loadUserData();
     }
     
-    private void setupObservers() {
-        // Observar datos del cliente
-        viewModel.getClienteData().observe(getViewLifecycleOwner(), this::updateClienteInfo);
+    private void loadUserData() {
+        // Cargar datos básicos del usuario
+        AuthRepository.LocalUser currentUser = authRepository.getCurrentUser();
         
-        // Observar QR del cliente
-        viewModel.getClienteQR().observe(getViewLifecycleOwner(), qrBitmap -> {
-            if (qrBitmap != null) {
-                binding.ivQrPersonal.setImageBitmap(qrBitmap);
-                binding.ivQrPersonal.setAlpha(1.0f);
+        if (currentUser != null) {
+            // Mostrar información básica del usuario
+            if (binding.tvNombres != null) {
+                binding.tvNombres.setText(currentUser.name);
             }
-        });
+            // TODO: Implementar más campos según el layout
+        }
         
-        // Observar estado de carga
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            // Mostrar/ocultar indicador de carga si es necesario
-            if (isLoading) {
-                binding.ivQrPersonal.setAlpha(0.5f);
-            }
-        });
-        
-        // Observar errores
-        viewModel.getError().observe(getViewLifecycleOwner(), error -> {
-            if (error != null && !error.isEmpty()) {
-                Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
-                viewModel.clearError();
-            }
-        });
-        
-        // Observar mensajes de éxito
-        viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), message -> {
-            if (message != null && !message.isEmpty()) {
-                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
-                viewModel.clearSuccessMessage();
-            }
-        });
+        // TODO: Implementar carga de QR y otros datos del cliente
+        // binding.tvPuntos.setText("0 puntos");
+        // binding.tvNivel.setText("Bronce");
     }
     
     private void setupClickListeners() {
@@ -110,8 +88,8 @@ public class FragmentPerfil extends Fragment {
         });
         
         binding.btnLogout.setOnClickListener(v -> {
-            // Cerrar sesión usando ViewModel
-            viewModel.logout();
+            // Cerrar sesión usando AuthRepository
+            authRepository.logout();
             
             // Redirigir a la pantalla de login
             Intent intent = new Intent(mContext, OpcionesLoginActivity.class);
@@ -121,7 +99,8 @@ public class FragmentPerfil extends Fragment {
         
         // Configurar listener para refrescar QR
         binding.ivQrPersonal.setOnClickListener(v -> {
-            viewModel.refreshQRCode();
+            // TODO: Implementar generación de QR
+            Toast.makeText(mContext, "Funcionalidad de QR en desarrollo", Toast.LENGTH_SHORT).show();
         });
         
         // Configurar listener para Mi Cuenta

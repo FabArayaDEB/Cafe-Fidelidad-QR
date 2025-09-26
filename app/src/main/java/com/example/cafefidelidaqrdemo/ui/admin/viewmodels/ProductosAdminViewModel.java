@@ -55,9 +55,9 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         countProductosInactivos = adminRepository.getCountProductosInactivos();
         
         // Observar los LiveData del repository para sincronizar estados
-        adminRepository.getIsLoading().observeForever(isLoading::setValue);
-        adminRepository.getErrorMessage().observeForever(errorMessage::setValue);
-        adminRepository.getSuccessMessage().observeForever(successMessage::setValue);
+        adminRepository.getIsLoading().observeForever(value -> isLoading.setValue(value));
+        adminRepository.getErrorMessage().observeForever(value -> errorMessage.setValue(value));
+        adminRepository.getSuccessMessage().observeForever(value -> successMessage.setValue(value));
     }
     
     // Getters para LiveData
@@ -114,13 +114,13 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         }
         
         isCreating.setValue(true);
-        isLoading.setValue(true);
         
         executor.execute(() -> {
             try {
                 // Verificar si ya existe un producto con el mismo nombre
                 if (adminRepository.existeProductoPorNombre(producto.getNombre())) {
                     errorMessage.postValue("Ya existe un producto con ese nombre");
+                    isCreating.postValue(false);
                     return;
                 }
                 
@@ -128,6 +128,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty()) {
                     if (adminRepository.existeProductoPorCodigo(producto.getCodigoBarras())) {
                         errorMessage.postValue("Ya existe un producto con ese código");
+                        isCreating.postValue(false);
                         return;
                     }
                 }
@@ -136,19 +137,19 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     @Override
                     public void onSuccess(ProductoEntity result) {
                         successMessage.postValue("Producto creado exitosamente");
+                        isCreating.postValue(false);
                     }
                     
                     @Override
                     public void onError(String error) {
                         errorMessage.postValue("Error al crear producto: " + error);
+                        isCreating.postValue(false);
                     }
                 });
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al crear producto: " + e.getMessage());
-            } finally {
                 isCreating.postValue(false);
-                isLoading.postValue(false);
             }
         });
     }
@@ -162,7 +163,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         }
         
         isUpdating.setValue(true);
-        isLoading.setValue(true);
         
         executor.execute(() -> {
             try {
@@ -170,17 +170,20 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 ProductoEntity productoActual = adminRepository.getProductoPorId(producto.getId_producto());
                 if (productoActual == null) {
                     errorMessage.postValue("El producto no existe");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
                 if (productoActual.getVersion() != producto.getVersion()) {
                     errorMessage.postValue("El producto ha sido modificado por otro usuario. Actualice y vuelva a intentar.");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
                 // Verificar nombres duplicados (excluyendo el producto actual)
                 if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId_producto())) {
                     errorMessage.postValue("Ya existe otro producto con ese nombre");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
@@ -188,6 +191,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty() &&
                     adminRepository.existeProductoPorCodigoExcluyendoId(producto.getCodigoBarras(), producto.getId_producto())) {
                     errorMessage.postValue("Ya existe otro producto con ese código");
+                    isUpdating.postValue(false);
                     return;
                 }
                 
@@ -196,21 +200,18 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     public void onSuccess(ProductoEntity result) {
                         successMessage.postValue("Producto actualizado exitosamente");
                         isUpdating.postValue(false);
-                        isLoading.postValue(false);
                     }
                     
                     @Override
                     public void onError(String error) {
                         errorMessage.postValue("Error al actualizar producto: " + error);
                         isUpdating.postValue(false);
-                        isLoading.postValue(false);
                     }
                 });
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar producto: " + e.getMessage());
                 isUpdating.postValue(false);
-                isLoading.postValue(false);
             }
         });
     }
@@ -219,19 +220,15 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Activa un producto
      */
     public void activarProducto(long productoId) {
-        isLoading.setValue(true);
-        
         adminRepository.activarProducto(productoId, new AdminRepository.AdminCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean result) {
                 successMessage.postValue("Producto activado exitosamente");
-                isLoading.postValue(false);
             }
             
             @Override
             public void onError(String error) {
                 errorMessage.postValue("Error al activar producto: " + error);
-                isLoading.postValue(false);
             }
         });
     }
@@ -240,19 +237,15 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Desactiva un producto
      */
     public void desactivarProducto(long productoId, String motivo) {
-        isLoading.setValue(true);
-        
         adminRepository.desactivarProducto(productoId, motivo, new AdminRepository.AdminCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean result) {
                 successMessage.postValue("Producto desactivado exitosamente");
-                isLoading.postValue(false);
             }
             
             @Override
             public void onError(String error) {
                 errorMessage.postValue("Error al desactivar producto: " + error);
-                isLoading.postValue(false);
             }
         });
     }
@@ -262,13 +255,11 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      */
     public void eliminarProducto(long productoId) {
         isDeleting.setValue(true);
-        isLoading.setValue(true);
         
         // Verificar si el producto está siendo usado
         if (adminRepository.productoTieneDependencias(productoId)) {
             errorMessage.postValue("No se puede eliminar: el producto tiene dependencias. Considere desactivarlo.");
             isDeleting.postValue(false);
-            isLoading.postValue(false);
             return;
         }
         
@@ -277,14 +268,12 @@ public class ProductosAdminViewModel extends AndroidViewModel {
             public void onSuccess(Boolean result) {
                 successMessage.postValue("Producto eliminado exitosamente");
                 isDeleting.postValue(false);
-                isLoading.postValue(false);
             }
             
             @Override
             public void onError(String error) {
                 errorMessage.postValue("Error al eliminar producto: " + error);
                 isDeleting.postValue(false);
-                isLoading.postValue(false);
             }
         });
     }
@@ -314,8 +303,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Actualiza el stock de un producto
      */
     public void actualizarStock(long productoId, int nuevoStock, String motivo) {
-        isLoading.setValue(true);
-        
         executor.execute(() -> {
             try {
                 if (nuevoStock < 0) {
@@ -328,8 +315,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar stock: " + e.getMessage());
-            } finally {
-                isLoading.postValue(false);
             }
         });
     }
@@ -338,8 +323,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Actualiza el precio de un producto
      */
     public void actualizarPrecio(long productoId, double nuevoPrecio, String motivo) {
-        isLoading.setValue(true);
-        
         executor.execute(() -> {
             try {
                 if (nuevoPrecio < 0) {
@@ -352,8 +335,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar precio: " + e.getMessage());
-            } finally {
-                isLoading.postValue(false);
             }
         });
     }
@@ -362,8 +343,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Actualiza todos los productos desde el servidor
      */
     public void actualizarProductos() {
-        isLoading.setValue(true);
-        
         executor.execute(() -> {
             try {
                 adminRepository.sincronizarProductos();
@@ -371,8 +350,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar productos: " + e.getMessage());
-            } finally {
-                isLoading.postValue(false);
             }
         });
     }
@@ -381,8 +358,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Exporta la lista de productos
      */
     public void exportarProductos() {
-        isLoading.setValue(true);
-        
         executor.execute(() -> {
             try {
                 adminRepository.exportarProductos();
@@ -390,8 +365,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al exportar productos: " + e.getMessage());
-            } finally {
-                isLoading.postValue(false);
             }
         });
     }
@@ -400,8 +373,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
      * Sincroniza con el servidor
      */
     public void sincronizarConServidor() {
-        isLoading.setValue(true);
-        
         executor.execute(() -> {
             try {
                 adminRepository.sincronizarProductosConServidor();
@@ -409,8 +380,6 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error en sincronización: " + e.getMessage());
-            } finally {
-                isLoading.postValue(false);
             }
         });
     }
