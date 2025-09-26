@@ -7,13 +7,14 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.models.ProgresoGeneral;
 import com.example.cafefidelidaqrdemo.models.ProximoBeneficio;
 import com.example.cafefidelidaqrdemo.models.SyncStatus;
 import com.example.cafefidelidaqrdemo.repository.ProgresoRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 
 import java.util.Date;
@@ -36,7 +37,7 @@ public class ProgresoViewModel extends AndroidViewModel {
     
     // ==================== DATOS OBSERVABLES ====================
     private final LiveData<ProgresoGeneral> progresoGeneral;
-    private final LiveData<List<BeneficioEntity>> beneficiosDisponibles;
+    private final LiveData<List<Beneficio>> beneficiosDisponibles;
     private final LiveData<List<ProximoBeneficio>> proximosBeneficios;
     private final LiveData<SyncStatus> syncStatus;
     private final LiveData<Boolean> isLoading;
@@ -55,11 +56,8 @@ public class ProgresoViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar repositorio
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
         repository = new ProgresoRepository(
-            database.visitaDao(),
-            database.beneficioDao(),
-            database.canjeDao(),
+            application,
             ApiService.getInstance()
         );
         
@@ -153,7 +151,7 @@ public class ProgresoViewModel extends AndroidViewModel {
     /**
      * Beneficios disponibles para canjear
      */
-    public LiveData<List<BeneficioEntity>> getBeneficiosDisponibles() {
+    public LiveData<List<Beneficio>> getBeneficiosDisponibles() {
         return beneficiosDisponibles;
     }
     
@@ -411,7 +409,7 @@ public class ProgresoViewModel extends AndroidViewModel {
      * Verifica si hay beneficios disponibles
      */
     public boolean hasBeneficiosDisponibles() {
-        List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+        List<Beneficio> beneficios = beneficiosDisponibles.getValue();
         return beneficios != null && !beneficios.isEmpty();
     }
     
@@ -419,7 +417,7 @@ public class ProgresoViewModel extends AndroidViewModel {
      * Obtiene el número de beneficios disponibles
      */
     public int getBeneficiosDisponiblesCount() {
-        List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+        List<Beneficio> beneficios = beneficiosDisponibles.getValue();
         return beneficios != null ? beneficios.size() : 0;
     }
     

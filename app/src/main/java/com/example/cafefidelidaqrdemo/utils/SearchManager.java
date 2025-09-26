@@ -3,7 +3,7 @@ package com.example.cafefidelidaqrdemo.utils;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import android.location.Location;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -17,15 +17,15 @@ public class SearchManager {
      * Clase para representar sucursal con distancia
      */
     public static class SucursalWithDistance {
-        private SucursalEntity sucursal;
+        private Sucursal sucursal;
         private double distance;
         
-        public SucursalWithDistance(SucursalEntity sucursal, double distance) {
+        public SucursalWithDistance(Sucursal sucursal, double distance) {
             this.sucursal = sucursal;
             this.distance = distance;
         }
         
-        public SucursalEntity getSucursal() {
+        public Sucursal getSucursal() {
             return sucursal;
         }
         
@@ -33,7 +33,7 @@ public class SearchManager {
             return distance;
         }
         
-        public void setSucursal(SucursalEntity sucursal) {
+        public void setSucursal(Sucursal sucursal) {
             this.sucursal = sucursal;
         }
         
@@ -45,14 +45,14 @@ public class SearchManager {
     /**
      * Busca sucursales por nombre
      */
-    public List<SucursalEntity> searchByName(List<SucursalEntity> sucursales, String query) {
-        List<SucursalEntity> results = new ArrayList<>();
+    public List<Sucursal> searchByName(List<Sucursal> sucursales, String query) {
+        List<Sucursal> results = new ArrayList<>();
         if (query == null || query.trim().isEmpty()) {
             return sucursales;
         }
         
         String lowerQuery = query.toLowerCase().trim();
-        for (SucursalEntity sucursal : sucursales) {
+        for (Sucursal sucursal : sucursales) {
             if (sucursal.getNombre().toLowerCase().contains(lowerQuery) ||
                 sucursal.getDireccion().toLowerCase().contains(lowerQuery)) {
                 results.add(sucursal);
@@ -80,11 +80,11 @@ public class SearchManager {
     /**
      * Ordena sucursales por distancia
      */
-    public List<SucursalWithDistance> sortByDistance(List<SucursalEntity> sucursales, 
+    public List<SucursalWithDistance> sortByDistance(List<Sucursal> sucursales, 
                                                     double userLat, double userLon) {
         List<SucursalWithDistance> results = new ArrayList<>();
         
-        for (SucursalEntity sucursal : sucursales) {
+        for (Sucursal sucursal : sucursales) {
             double distance = calculateDistance(userLat, userLon, 
                                               sucursal.getLatitud(), sucursal.getLongitud());
             results.add(new SucursalWithDistance(sucursal, distance));
@@ -100,7 +100,7 @@ public class SearchManager {
      * Busca sucursales localmente con filtros
      */
     public LiveData<List<SucursalWithDistance>> searchSucursalesLocal(
-            List<SucursalEntity> sucursales, 
+            List<Sucursal> sucursales, 
             String query, 
             Location userLocation, 
             Boolean sortByDistance, 
@@ -109,14 +109,14 @@ public class SearchManager {
         MutableLiveData<List<SucursalWithDistance>> result = new MutableLiveData<>();
         
         // Filtrar por query si existe
-        List<SucursalEntity> filtered = sucursales;
+        List<Sucursal> filtered = sucursales;
         if (query != null && !query.trim().isEmpty()) {
             filtered = searchByName(sucursales, query);
         }
         
         // Convertir a SucursalWithDistance
         List<SucursalWithDistance> withDistance = new ArrayList<>();
-        for (SucursalEntity sucursal : filtered) {
+        for (Sucursal sucursal : filtered) {
             double distance = 0;
             if (userLocation != null) {
                 distance = calculateDistance(

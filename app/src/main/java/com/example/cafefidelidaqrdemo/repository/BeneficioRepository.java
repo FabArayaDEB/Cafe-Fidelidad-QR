@@ -3,16 +3,14 @@ package com.example.cafefidelidaqrdemo.repository;
 import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import android.util.Log;
 
-import com.example.cafefidelidaqrdemo.database.dao.BeneficioDao;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import android.util.Log;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +22,7 @@ import java.util.concurrent.Executors;
 public class BeneficioRepository {
     
     private static final String TAG = "BeneficioRepository";
-    private final BeneficioDao beneficioDao;
+    private final CafeFidelidadDB database;
     private final ExecutorService executor;
     private final Gson gson;
     
@@ -32,12 +30,14 @@ public class BeneficioRepository {
     private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> syncStatusLiveData = new MutableLiveData<>(true);
+    private final MutableLiveData<List<Beneficio>> beneficiosLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Beneficio>> beneficiosActivosLiveData = new MutableLiveData<>();
     
     public BeneficioRepository(Context context) {
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(context);
-        this.beneficioDao = database.beneficioDao();
+        this.database = new CafeFidelidadDB(context);
         this.executor = Executors.newFixedThreadPool(4);
         this.gson = new Gson();
+        loadBeneficios();
     }
     
     // Getters para LiveData
@@ -53,222 +53,206 @@ public class BeneficioRepository {
         return syncStatusLiveData;
     }
     
-    /**
-     * Obtiene el estado offline del repositorio
-     * @return LiveData con el estado offline
-     */
     public LiveData<Boolean> getIsOffline() {
-        MutableLiveData<Boolean> offlineLiveData = new MutableLiveData<>();
-        Boolean syncStatus = syncStatusLiveData.getValue();
-        offlineLiveData.setValue(syncStatus == null || !syncStatus);
+        MutableLiveData<Boolean> offlineLiveData = new MutableLiveData<>(false);
         return offlineLiveData;
     }
     
-    // Operaciones de lectura
-    public LiveData<List<BeneficioEntity>> getAllBeneficios() {
-        return beneficioDao.getAllBeneficios();
+    public LiveData<List<Beneficio>> getAllBeneficios() {
+        return beneficiosLiveData;
     }
     
-    public LiveData<List<BeneficioEntity>> getBeneficiosActivos() {
-        return beneficioDao.getBeneficiosActivos();
+    public LiveData<List<Beneficio>> getBeneficiosActivos() {
+        return beneficiosActivosLiveData;
     }
     
-    public LiveData<BeneficioEntity> getBeneficioById(String id) {
-        return beneficioDao.getBeneficioById(id);
+    public LiveData<Beneficio> getBeneficioById(int id) {
+        MutableLiveData<Beneficio> beneficioLiveData = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                Beneficio beneficio = database.obtenerBeneficioPorId(id);
+                beneficioLiveData.postValue(beneficio);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al obtener beneficio por ID", e);
+                errorLiveData.postValue("Error al obtener beneficio: " + e.getMessage());
+            }
+        });
+        return beneficioLiveData;
     }
     
-    public LiveData<List<BeneficioEntity>> getBeneficiosVigentes() {
-        return beneficioDao.getBeneficiosVigentes(System.currentTimeMillis());
+    public LiveData<List<Beneficio>> getBeneficiosVigentes() {
+        return getBeneficiosActivos();
     }
     
-    public LiveData<List<BeneficioEntity>> getBeneficiosPorSucursal(String sucursalId) {
-        return beneficioDao.getBeneficiosPorSucursal(sucursalId, System.currentTimeMillis());
+    public LiveData<List<Beneficio>> getBeneficiosPorSucursal(String sucursalId) {
+        return getBeneficiosActivos(); // Simplificado para la nueva estructura
     }
     
     public LiveData<Integer> getCountBeneficiosActivos() {
-        return beneficioDao.getCountBeneficiosActivos();
+        MutableLiveData<Integer> countLiveData = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                int count = database.obtenerConteoBeneficios();
+                countLiveData.postValue(count);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al contar beneficios", e);
+                countLiveData.postValue(0);
+            }
+        });
+        return countLiveData;
     }
     
     public LiveData<Integer> getCountBeneficiosVigentes() {
-        return beneficioDao.getCountBeneficiosVigentes(System.currentTimeMillis());
+        return getCountBeneficiosActivos();
     }
     
-    // Operaciones de escritura
-    public void insertBeneficio(BeneficioEntity beneficio, OnResultCallback<Boolean> callback) {
+    // Métodos CRUD
+    public void insertBeneficio(Beneficio beneficio, OnResultCallback<Boolean> callback) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                // Validar reglas JSON antes de insertar
-                ValidationResult validation = validateReglasJson(beneficio.getRegla());
-                if (!validation.isValid) {
-                    errorLiveData.postValue("Regla inválida: " + validation.errorMessage);
-                    isLoadingLiveData.postValue(false);
-                    if (callback != null) callback.onResult(false);
+                if (beneficio == null) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Beneficio no puede ser nulo");
                     return;
                 }
                 
-                // Verificar conflictos de vigencia
-                if (hasConflictingVigencia(beneficio)) {
-                    errorLiveData.postValue("Conflicto de vigencias detectado. Revise las fechas.");
-                    isLoadingLiveData.postValue(false);
-                    if (callback != null) callback.onResult(false);
+                if (beneficio.getNombre() == null || beneficio.getNombre().trim().isEmpty()) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("El nombre del beneficio es requerido");
                     return;
                 }
                 
-                // Generar ID si no existe
-                if (beneficio.getId_beneficio() == null || beneficio.getId_beneficio().isEmpty()) {
-                    beneficio.setId_beneficio(generateBeneficioId());
+                if (beneficio.getPuntosRequeridos() <= 0) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Los puntos requeridos deben ser mayor a 0");
+                    return;
                 }
                 
-                // Establecer fechas de auditoría
-                beneficio.setLastSync(System.currentTimeMillis());
+                long result = database.insertarBeneficio(beneficio);
+                boolean success = result != -1;
                 
-                Log.d(TAG, "Insertando beneficio: " + beneficio.getNombre() + ", ID: " + beneficio.getId_beneficio());
-                long insertId = beneficioDao.insertBeneficio(beneficio);
-                Log.d(TAG, "Beneficio insertado con ID de retorno: " + insertId);
-                
-                // Verificar que se guardó correctamente
-                BeneficioEntity verificacion = beneficioDao.getBeneficioByIdSync(beneficio.getId_beneficio());
-                if (verificacion != null) {
-                    Log.d(TAG, "✓ ÉXITO: Beneficio encontrado en BD - Nombre: " + verificacion.getNombre() + ", Estado: " + verificacion.getEstado());
+                if (success) {
+                    loadBeneficios();
+                    errorLiveData.postValue(null);
                 } else {
-                    Log.e(TAG, "✗ ERROR: Beneficio NO encontrado en BD después de insertar");
+                    errorLiveData.postValue("Error al insertar beneficio");
                 }
                 
-                isLoadingLiveData.postValue(false);
-                errorLiveData.postValue(null);
-                if (callback != null) callback.onResult(true);
-                
+                callback.onResult(success);
             } catch (Exception e) {
-                errorLiveData.postValue("Error al crear beneficio: " + e.getMessage());
+                Log.e(TAG, "Error al insertar beneficio", e);
+                errorLiveData.postValue("Error al insertar beneficio: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
                 isLoadingLiveData.postValue(false);
-                if (callback != null) callback.onResult(false);
             }
         });
     }
     
-    public void updateBeneficio(BeneficioEntity beneficio, OnResultCallback<Boolean> callback) {
+    public void updateBeneficio(Beneficio beneficio, OnResultCallback<Boolean> callback) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                // Validar reglas JSON
-                ValidationResult validation = validateReglasJson(beneficio.getRegla());
-                if (!validation.isValid) {
-                    errorLiveData.postValue("Regla inválida: " + validation.errorMessage);
-                    isLoadingLiveData.postValue(false);
-                    if (callback != null) callback.onResult(false);
+                if (beneficio == null || beneficio.getId() <= 0) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Beneficio inválido");
                     return;
                 }
                 
-                // Verificar conflictos de vigencia (excluyendo el beneficio actual)
-                if (hasConflictingVigencia(beneficio)) {
-                    errorLiveData.postValue("Conflicto de vigencias detectado. Revise las fechas.");
-                    isLoadingLiveData.postValue(false);
-                    if (callback != null) callback.onResult(false);
-                    return;
+                int result = database.actualizarBeneficio(beneficio);
+                boolean success = result > 0;
+                
+                if (success) {
+                    loadBeneficios();
+                    errorLiveData.postValue(null);
+                } else {
+                    errorLiveData.postValue("Error al actualizar beneficio");
                 }
                 
-                // Actualizar fecha de modificación
-                beneficio.setLastSync(System.currentTimeMillis());
-                
-                beneficioDao.updateBeneficio(beneficio);
-                
-                isLoadingLiveData.postValue(false);
-                errorLiveData.postValue(null);
-                if (callback != null) callback.onResult(true);
-                
+                callback.onResult(success);
             } catch (Exception e) {
+                Log.e(TAG, "Error al actualizar beneficio", e);
                 errorLiveData.postValue("Error al actualizar beneficio: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
                 isLoadingLiveData.postValue(false);
-                if (callback != null) callback.onResult(false);
             }
         });
     }
     
-    public void deleteBeneficio(String beneficioId, OnResultCallback<Boolean> callback) {
+    public void deleteBeneficio(int beneficioId, OnResultCallback<Boolean> callback) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                beneficioDao.deleteBeneficioById(beneficioId);
+                int result = database.eliminarBeneficio(beneficioId);
+                boolean success = result > 0;
                 
-                isLoadingLiveData.postValue(false);
-                errorLiveData.postValue(null);
-                if (callback != null) callback.onResult(true);
+                if (success) {
+                    loadBeneficios();
+                    errorLiveData.postValue(null);
+                } else {
+                    errorLiveData.postValue("Error al eliminar beneficio");
+                }
                 
+                callback.onResult(success);
             } catch (Exception e) {
+                Log.e(TAG, "Error al eliminar beneficio", e);
                 errorLiveData.postValue("Error al eliminar beneficio: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
                 isLoadingLiveData.postValue(false);
-                if (callback != null) callback.onResult(false);
             }
         });
     }
     
-    public void desactivarBeneficio(String beneficioId, OnResultCallback<Boolean> callback) {
-        isLoadingLiveData.postValue(true);
+    public void desactivarBeneficio(int beneficioId, OnResultCallback<Boolean> callback) {
         executor.execute(() -> {
             try {
-                beneficioDao.desactivarBeneficio(beneficioId);
-                // Actualizar fecha de sincronización se maneja en el DAO
-                
-                isLoadingLiveData.postValue(false);
-                errorLiveData.postValue(null);
-                if (callback != null) callback.onResult(true);
-                
+                Beneficio beneficio = database.obtenerBeneficioPorId(beneficioId);
+                if (beneficio != null) {
+                    beneficio.setActivo(false);
+                    updateBeneficio(beneficio, callback);
+                } else {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Beneficio no encontrado");
+                }
             } catch (Exception e) {
+                Log.e(TAG, "Error al desactivar beneficio", e);
                 errorLiveData.postValue("Error al desactivar beneficio: " + e.getMessage());
-                isLoadingLiveData.postValue(false);
-                if (callback != null) callback.onResult(false);
+                callback.onResult(false);
             }
         });
     }
     
-    // Validación simplificada de reglas JSON
+    // Métodos de validación
     public ValidationResult validateReglasJson(String reglasJson) {
-        // Permitir reglas vacías o nulas para CRUD básico
         if (reglasJson == null || reglasJson.trim().isEmpty()) {
             return new ValidationResult(true, null);
         }
         
         try {
-            // Solo validar que sea JSON válido
-            gson.fromJson(reglasJson, JsonObject.class);
+            JsonObject jsonObject = gson.fromJson(reglasJson, JsonObject.class);
             return new ValidationResult(true, null);
-            
         } catch (JsonSyntaxException e) {
             return new ValidationResult(false, "JSON inválido: " + e.getMessage());
-        } catch (Exception e) {
-            return new ValidationResult(false, "Error en validación: " + e.getMessage());
         }
     }
     
-    // Verificar conflictos de vigencia
-    private boolean hasConflictingVigencia(BeneficioEntity beneficio) {
-        // Si no hay fechas de vigencia definidas (0), no verificar conflictos
-        if (beneficio.getVigencia_ini() <= 0 || beneficio.getVigencia_fin() <= 0) {
-            return false; // Sin fechas definidas, no hay conflicto
-        }
-        
-        // Si la fecha de inicio es mayor o igual a la fecha de fin, es inválido
-        if (beneficio.getVigencia_ini() >= beneficio.getVigencia_fin()) {
-            return false; // Fechas inválidas, pero permitir la operación
-        }
-        
-        try {
-            int conflictos = beneficioDao.countBeneficiosConflictivos(
-                beneficio.getVigencia_ini(),
-                beneficio.getVigencia_fin(),
-                beneficio.getId_beneficio() != null ? beneficio.getId_beneficio() : ""
-            );
-            return conflictos > 0;
-        } catch (Exception e) {
-            // En caso de error en la consulta, permitir la operación
-            return false;
-        }
-    }
-    
-    // Generar ID único para beneficio
-    private String generateBeneficioId() {
-        return "BEN_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000);
+    // Métodos privados
+    private void loadBeneficios() {
+        executor.execute(() -> {
+            try {
+                List<Beneficio> beneficios = database.obtenerTodosLosBeneficios();
+                List<Beneficio> beneficiosActivos = database.obtenerBeneficiosActivos();
+                
+                beneficiosLiveData.postValue(beneficios);
+                beneficiosActivosLiveData.postValue(beneficiosActivos);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al cargar beneficios", e);
+                errorLiveData.postValue("Error al cargar beneficios: " + e.getMessage());
+            }
+        });
     }
     
     // Clases auxiliares
@@ -286,66 +270,18 @@ public class BeneficioRepository {
         void onResult(T result);
     }
     
-    /**
-     * Fuerza la sincronización de beneficios con el servidor
-     */
-    public void forceSyncBeneficios(com.example.cafefidelidaqrdemo.repository.base.BaseRepository.SimpleCallback callback) {
-        isLoadingLiveData.postValue(true);
-        executor.execute(() -> {
-            try {
-                // Aquí iría la lógica de sincronización con la API
-                // Por ahora simulamos una sincronización exitosa
-                Thread.sleep(1000); // Simular tiempo de red
-                
-                isLoadingLiveData.postValue(false);
-                syncStatusLiveData.postValue(true);
-                if (callback != null) {
-                    callback.onSuccess();
-                }
-                
-            } catch (Exception e) {
-                isLoadingLiveData.postValue(false);
-                syncStatusLiveData.postValue(false);
-                errorLiveData.postValue("Error al sincronizar beneficios: " + e.getMessage());
-                if (callback != null) {
-                    callback.onError("Error al sincronizar beneficios: " + e.getMessage());
-                }
-            }
-        });
-     }
-     
-     /**
-       * Obtiene beneficios disponibles activos y vigentes
-       */
-      public LiveData<List<BeneficioEntity>> getBeneficiosDisponiblesParaCliente() {
-          return beneficioDao.getBeneficiosDisponiblesParaCliente();
-      }
-      
-      /**
-       * Refresca los beneficios desde el servidor
-       */
-      public void refreshBeneficios(com.example.cafefidelidaqrdemo.repository.base.BaseRepository.SimpleCallback callback) {
-          isLoadingLiveData.postValue(true);
-          executor.execute(() -> {
-              try {
-                  // Aquí iría la lógica de sincronización con la API
-                  // Por ahora simulamos una sincronización exitosa
-                  Thread.sleep(1000); // Simular tiempo de red
-                  
-                  isLoadingLiveData.postValue(false);
-                  syncStatusLiveData.postValue(true);
-                  if (callback != null) {
-                      callback.onSuccess();
-                  }
-                  
-              } catch (Exception e) {
-                  isLoadingLiveData.postValue(false);
-                  syncStatusLiveData.postValue(false);
-                  errorLiveData.postValue("Error al refrescar beneficios: " + e.getMessage());
-                  if (callback != null) {
-                      callback.onError("Error al refrescar beneficios: " + e.getMessage());
-                  }
-              }
-          });
-      }
+    // Métodos de sincronización (simplificados)
+    public void forceSyncBeneficios(OnResultCallback<Boolean> callback) {
+        loadBeneficios();
+        callback.onResult(true);
+    }
+    
+    public LiveData<List<Beneficio>> getBeneficiosDisponiblesParaCliente() {
+        return getBeneficiosActivos();
+    }
+    
+    public void refreshBeneficios(OnResultCallback<Boolean> callback) {
+        loadBeneficios();
+        callback.onResult(true);
+    }
 }

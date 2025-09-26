@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.google.android.material.button.MaterialButton;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -31,7 +31,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
     private Toolbar toolbar;
 
     private String productoId;
-    private ProductoEntity producto;
+    private Producto producto;
     // private DatabaseReference productosRef;
 
     @Override

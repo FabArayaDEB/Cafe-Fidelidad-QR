@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -28,15 +28,15 @@ import java.util.Locale;
  */
 public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<BeneficiosDisponiblesAdapter.BeneficioViewHolder> {
     
-    private List<BeneficioEntity> beneficios;
+    private List<Beneficio> beneficios;
     private final OnBeneficioClickListener listener;
     private final SimpleDateFormat dateFormat;
     
     public interface OnBeneficioClickListener {
-        void onBeneficioClick(BeneficioEntity beneficio);
+        void onBeneficioClick(Beneficio beneficio);
     }
     
-    public BeneficiosDisponiblesAdapter(List<BeneficioEntity> beneficios, OnBeneficioClickListener listener) {
+    public BeneficiosDisponiblesAdapter(List<Beneficio> beneficios, OnBeneficioClickListener listener) {
         this.beneficios = beneficios;
         this.listener = listener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -52,7 +52,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
     
     @Override
     public void onBindViewHolder(@NonNull BeneficioViewHolder holder, int position) {
-        BeneficioEntity beneficio = beneficios.get(position);
+        Beneficio beneficio = beneficios.get(position);
         holder.bind(beneficio);
     }
     
@@ -61,7 +61,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
         return beneficios != null ? beneficios.size() : 0;
     }
     
-    public void updateBeneficios(List<BeneficioEntity> newBeneficios) {
+    public void updateBeneficios(List<Beneficio> newBeneficios) {
         this.beneficios = newBeneficios;
         notifyDataSetChanged();
     }
@@ -92,7 +92,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             indicadorDisponible = itemView.findViewById(R.id.indicadorDisponible);
         }
         
-        public void bind(BeneficioEntity beneficio) {
+        public void bind(Beneficio beneficio) {
             Context context = itemView.getContext();
             
             // Información básica
@@ -113,7 +113,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             setupClickListeners(beneficio);
         }
         
-        private void setupTipoAndValue(BeneficioEntity beneficio, Context context) {
+        private void setupTipoAndValue(Beneficio beneficio, Context context) {
             // Configurar chip de tipo
             String tipoText = getTipoDisplayName(beneficio.getTipo());
             chipTipo.setText(tipoText);
@@ -131,7 +131,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             textValor.setTextColor(ContextCompat.getColor(context, getTipoColor(beneficio.getTipo())));
         }
         
-        private void setupVigencia(BeneficioEntity beneficio, Context context) {
+        private void setupVigencia(Beneficio beneficio, Context context) {
             if (beneficio.getVigencia_fin() > 0) {
                 Date now = new Date();
                 Date fechaFin = new Date(beneficio.getVigencia_fin());
@@ -168,7 +168,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             btnUsar.setTextColor(ContextCompat.getColor(context, R.color.color_on_primary));
         }
         
-        private void setupClickListeners(BeneficioEntity beneficio) {
+        private void setupClickListeners(Beneficio beneficio) {
             // Click en toda la card
             cardView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -230,7 +230,7 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             }
         }
         
-        private String getValorDisplayText(BeneficioEntity beneficio) {
+        private String getValorDisplayText(Beneficio beneficio) {
             String tipo = beneficio.getTipo();
             if (tipo == null) return "¡Disponible!";
             switch (tipo.toUpperCase()) {

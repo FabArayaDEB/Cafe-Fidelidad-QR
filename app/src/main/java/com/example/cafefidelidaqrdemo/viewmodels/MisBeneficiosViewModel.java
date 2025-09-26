@@ -8,9 +8,9 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
-import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.database.models.Canje;
 import com.example.cafefidelidaqrdemo.network.ApiClient;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
@@ -42,8 +42,8 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _showExpired = new MutableLiveData<>(false);
     
     // Observable Data
-    private final LiveData<List<BeneficioEntity>> beneficiosDisponibles;
-    private final LiveData<List<CanjeEntity>> historialCanjes;
+    private final LiveData<List<Beneficio>> beneficiosDisponibles;
+    private final LiveData<List<Canje>> historialCanjes;
     private final LiveData<Boolean> isLoading;
     private final LiveData<String> error;
     private final LiveData<Boolean> isOffline;
@@ -66,7 +66,7 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         super(application);
         
         // Initialize dependencies
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
+        CafeFidelidadDB database = CafeFidelidadDB.getInstance(application);
         ApiService apiService = ApiClient.getApiService();
         
         this.beneficioRepository = new BeneficioRepository(application);
@@ -95,11 +95,11 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
     }
     
     // LiveData Getters
-    public LiveData<List<BeneficioEntity>> getBeneficiosDisponibles() {
+    public LiveData<List<Beneficio>> getBeneficiosDisponibles() {
         return beneficiosDisponibles;
     }
     
-    public LiveData<List<CanjeEntity>> getHistorialCanjes() {
+    public LiveData<List<Canje>> getHistorialCanjes() {
         return historialCanjes;
     }
     
@@ -269,7 +269,7 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
     }
     
     // Utility Methods
-    public boolean puedeCanjearse(BeneficioEntity beneficio) {
+    public boolean puedeCanjearse(Beneficio beneficio) {
         if (beneficio == null || !beneficio.isActivo()) {
             return false;
         }
@@ -285,7 +285,7 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         return true;
     }
     
-    public String getDescripcionBeneficio(BeneficioEntity beneficio) {
+    public String getDescripcionBeneficio(Beneficio beneficio) {
         if (beneficio == null) {
             return "";
         }
@@ -304,7 +304,7 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         return descripcion.toString();
     }
     
-    public String getVigenciaFormateada(BeneficioEntity beneficio) {
+    public String getVigenciaFormateada(Beneficio beneficio) {
         if (beneficio == null || beneficio.getVigencia_fin() <= 0) {
             return "Sin fecha de vencimiento";
         }
@@ -314,11 +314,11 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
     }
     
     // Private Helper Methods
-    private LiveData<List<BeneficioEntity>> createBeneficiosDisponiblesLiveData() {
+    private LiveData<List<Beneficio>> createBeneficiosDisponiblesLiveData() {
         return beneficioRepository.getBeneficiosDisponiblesParaCliente();
     }
     
-    private LiveData<List<CanjeEntity>> createHistorialCanjesLiveData() {
+    private LiveData<List<Canje>> createHistorialCanjesLiveData() {
         return Transformations.switchMap(_clienteId, clienteId -> {
             if (clienteId == null || clienteId.isEmpty()) {
                 return new MutableLiveData<>();
@@ -375,13 +375,13 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         MediatorLiveData<Boolean> result = new MediatorLiveData<>();
         
         result.addSource(beneficiosDisponibles, beneficios -> {
-            List<CanjeEntity> canjes = historialCanjes.getValue();
+            List<Canje> canjes = historialCanjes.getValue();
             result.setValue((beneficios != null && !beneficios.isEmpty()) ||
                           (canjes != null && !canjes.isEmpty()));
         });
         
         result.addSource(historialCanjes, canjes -> {
-            List<BeneficioEntity> beneficios = beneficiosDisponibles.getValue();
+            List<Beneficio> beneficios = beneficiosDisponibles.getValue();
             result.setValue((beneficios != null && !beneficios.isEmpty()) ||
                           (canjes != null && !canjes.isEmpty()));
         });

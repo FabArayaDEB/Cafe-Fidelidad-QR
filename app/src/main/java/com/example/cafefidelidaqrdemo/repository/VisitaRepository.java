@@ -3,171 +3,188 @@ package com.example.cafefidelidaqrdemo.repository;
 import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.dao.VisitaDao;
-import com.example.cafefidelidaqrdemo.database.entities.VisitaEntity;
-import com.example.cafefidelidaqrdemo.models.Visita;
-import com.example.cafefidelidaqrdemo.network.ApiService;
-import retrofit2.Call;
+import android.util.Log;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Visita;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Repositorio para gestión de visitas con sincronización offline/online
- */
 public class VisitaRepository {
-    private final VisitaDao visitaDao;
-    private final ApiService apiService;
+    
+    private static final String TAG = "VisitaRepository";
+    private final CafeFidelidadDB database;
     private final ExecutorService executor;
-    private final MutableLiveData<List<VisitaEntity>> visitasLiveData;
+    
+    // LiveData para observar cambios
+    private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
+    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Visita>> visitasLiveData = new MutableLiveData<>();
     
     public VisitaRepository(Context context) {
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(context);
-        this.visitaDao = database.visitaDao();
-        this.apiService = ApiService.getInstance();
-        this.executor = Executors.newFixedThreadPool(2);
-        this.visitasLiveData = new MutableLiveData<>();
+        this.database = new CafeFidelidadDB(context);
+        this.executor = Executors.newFixedThreadPool(4);
+        loadVisitas();
     }
     
-    /**
-     * Obtiene todas las visitas de un cliente
-     */
-    public LiveData<List<VisitaEntity>> getVisitasCliente(String idCliente) {
-        executor.execute(() -> {
-            List<VisitaEntity> visitas = visitaDao.getByCliente(idCliente);
-            visitasLiveData.postValue(visitas);
-        });
+    // Getters para LiveData
+    public LiveData<Boolean> getIsLoading() {
+        return isLoadingLiveData;
+    }
+    
+    public LiveData<String> getError() {
+        return errorLiveData;
+    }
+    
+    public LiveData<List<Visita>> getAllVisitas() {
         return visitasLiveData;
     }
     
-    /**
-     * Obtiene el conteo de visitas de un cliente
-     */
-    public void getCountVisitasCliente(String idCliente, CountCallback callback) {
-        executor.execute(() -> {
-            int count = visitaDao.getCountByCliente(idCliente);
-            callback.onResult(count);
-        });
-    }
-    
-    /**
-     * Obtiene visitas de un cliente en un rango de fechas
-     */
-    public void getVisitasClienteRango(String idCliente, long fechaInicio, long fechaFin, VisitasCallback callback) {
-        executor.execute(() -> {
-            List<VisitaEntity> visitas = visitaDao.getByClienteAndRangoFecha(idCliente, fechaInicio, fechaFin);
-            callback.onResult(visitas);
-        });
-    }
-    
-    /**
-     * Obtiene las últimas visitas de un cliente
-     */
-    public void getUltimasVisitasCliente(String idCliente, int limit, VisitasCallback callback) {
-        executor.execute(() -> {
-            List<VisitaEntity> visitas = visitaDao.getUltimasVisitasCliente(idCliente, limit);
-            callback.onResult(visitas);
-        });
-    }
-    
-    /**
-     * Registra una nueva visita
-     */
-    public void registrarVisita(VisitaEntity visita, OperationCallback callback) {
+    public LiveData<List<Visita>> getVisitasByCliente(int clienteId) {
+        MutableLiveData<List<Visita>> visitasClienteLiveData = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                visitaDao.insert(visita);
-                callback.onSuccess();
+                List<Visita> visitas = database.obtenerVisitasPorCliente(clienteId);
+                visitasClienteLiveData.postValue(visitas);
             } catch (Exception e) {
-                callback.onError(e.getMessage());
+                Log.e(TAG, "Error al obtener visitas por cliente", e);
+                errorLiveData.postValue("Error al obtener visitas: " + e.getMessage());
             }
         });
+        return visitasClienteLiveData;
     }
     
-    /**
-     * Sincroniza visitas con el servidor
-     */
-    public void sincronizarVisitas(SyncCallback callback) {
+    public LiveData<Visita> getVisitaById(int id) {
+        MutableLiveData<Visita> visitaLiveData = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                // Obtener visitas pendientes
-                List<VisitaEntity> pendientes = visitaDao.getPendientesSync();
-                
-                int sincronizadas = 0;
-                for (VisitaEntity visita : pendientes) {
-                    try {
-                        // Convertir a modelo para API
-                        Visita visitaModel = convertToModel(visita);
-                        
-                        // Enviar a servidor
-                        Call<Visita> call = apiService.createVisita(visitaModel);
-                        Visita resultado = call.execute().body();
-                        
-                        // Marcar como sincronizada
-                        visitaDao.markAsSynced(visita.getId_visita(), System.currentTimeMillis());
-                        sincronizadas++;
-                        
-                    } catch (Exception e) {
-                        // Marcar como error
-                        visitaDao.updateEstadoSync(visita.getId_visita(), "ERROR");
-                    }
+                Visita visita = database.obtenerVisitaPorId(id);
+                visitaLiveData.postValue(visita);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al obtener visita por ID", e);
+                errorLiveData.postValue("Error al obtener visita: " + e.getMessage());
+            }
+        });
+        return visitaLiveData;
+    }
+    
+    // Métodos CRUD
+    public void insertVisita(Visita visita, OnResultCallback<Boolean> callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                if (visita == null) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Visita no puede ser nula");
+                    return;
                 }
                 
-                callback.onSyncComplete(sincronizadas, pendientes.size() - sincronizadas);
+                if (visita.getClienteId() <= 0 || visita.getSucursalId() <= 0) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Cliente y sucursal son requeridos");
+                    return;
+                }
                 
+                long result = database.insertarVisita(visita);
+                boolean success = result != -1;
+                
+                if (success) {
+                    loadVisitas();
+                    errorLiveData.postValue(null);
+                } else {
+                    errorLiveData.postValue("Error al insertar visita");
+                }
+                
+                callback.onResult(success);
             } catch (Exception e) {
-                callback.onSyncError(e.getMessage());
+                Log.e(TAG, "Error al insertar visita", e);
+                errorLiveData.postValue("Error al insertar visita: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
+                isLoadingLiveData.postValue(false);
             }
         });
     }
     
-    /**
-     * Convierte VisitaEntity a Visita (modelo para API)
-     */
-    private Visita convertToModel(VisitaEntity entity) {
-        Visita visita = new Visita();
-        visita.setId(entity.getId_visita());
-        visita.setUserId(entity.getId_cliente());
-        visita.setSucursal(entity.getId_sucursal());
-        visita.setFechaVisita(entity.getFecha_hora());
-        visita.setQrCode(entity.getHash_qr());
-        return visita;
+    public void updateVisita(Visita visita, OnResultCallback<Boolean> callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                if (visita == null || visita.getId() <= 0) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Visita inválida");
+                    return;
+                }
+                
+                int result = database.actualizarVisita(visita);
+                boolean success = result > 0;
+                
+                if (success) {
+                    loadVisitas();
+                    errorLiveData.postValue(null);
+                } else {
+                    errorLiveData.postValue("Error al actualizar visita");
+                }
+                
+                callback.onResult(success);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al actualizar visita", e);
+                errorLiveData.postValue("Error al actualizar visita: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
     }
     
-    /**
-     * Convierte Visita a VisitaEntity
-     */
-    private VisitaEntity convertToEntity(Visita visita) {
-        VisitaEntity entity = new VisitaEntity();
-        entity.setId_visita(visita.getId());
-        entity.setId_cliente(visita.getUserId());
-        entity.setId_sucursal(visita.getSucursal());
-        entity.setFecha_hora(visita.getFechaVisita());
-        entity.setHash_qr(visita.getQrCode());
-        entity.setOrigen("API");
-        entity.setEstado_sync("ENVIADO");
-        entity.setSynced(true);
-        entity.setNeedsSync(false);
-        return entity;
+    public void deleteVisita(int visitaId, OnResultCallback<Boolean> callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                int result = database.deleteVisita(visitaId);
+                boolean success = result > 0;
+                
+                if (success) {
+                    loadVisitas();
+                    errorLiveData.postValue(null);
+                } else {
+                    errorLiveData.postValue("Error al eliminar visita");
+                }
+                
+                callback.onResult(success);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al eliminar visita", e);
+                errorLiveData.postValue("Error al eliminar visita: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
     }
     
-    // Interfaces para callbacks
-    public interface CountCallback {
-        void onResult(int count);
+    // Métodos privados
+    private void loadVisitas() {
+        executor.execute(() -> {
+            try {
+                List<Visita> visitas = database.obtenerTodasLasVisitas();
+                visitasLiveData.postValue(visitas);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al cargar visitas", e);
+                errorLiveData.postValue("Error al cargar visitas: " + e.getMessage());
+            }
+        });
     }
     
-    public interface VisitasCallback {
-        void onResult(List<VisitaEntity> visitas);
+    // Interface para callbacks
+    public interface OnResultCallback<T> {
+        void onResult(T result);
     }
     
-    public interface OperationCallback {
-        void onSuccess();
-        void onError(String error);
-    }
-    
-    public interface SyncCallback {
-        void onSyncComplete(int sincronizadas, int errores);
-        void onSyncError(String error);
+    // Métodos de sincronización (simplificados)
+    public void refreshVisitas(OnResultCallback<Boolean> callback) {
+        loadVisitas();
+        callback.onResult(true);
     }
 }

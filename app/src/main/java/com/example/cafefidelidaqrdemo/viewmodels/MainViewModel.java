@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow;
 import kotlinx.coroutines.flow.StateFlow;
 import kotlinx.coroutines.flow.StateFlowKt;
 
+import com.example.cafefidelidaqrdemo.database.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
 
 /**
  * ViewModel para MainActivity
@@ -32,8 +32,8 @@ public class MainViewModel extends AndroidViewModel {
     public StateFlow<Boolean> isAuthenticated = _isAuthenticated;
     
     // StateFlow para el cliente actual
-    private final MutableStateFlow<ClienteEntity> _currentCliente = StateFlowKt.MutableStateFlow(null);
-    public StateFlow<ClienteEntity> currentCliente = _currentCliente;
+    private final MutableStateFlow<Cliente> _currentCliente = StateFlowKt.MutableStateFlow(null);
+    public StateFlow<Cliente> currentCliente = _currentCliente;
     
     // StateFlow para errores
     private final MutableStateFlow<String> _error = StateFlowKt.MutableStateFlow(null);
@@ -45,7 +45,7 @@ public class MainViewModel extends AndroidViewModel {
     
     // MutableLiveData para compatibilidad con Data Binding
     private final MutableLiveData<String> toolbarTitleLiveData = new MutableLiveData<>();
-    private final MutableLiveData<ClienteEntity> currentClienteLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Cliente> currentClienteLiveData = new MutableLiveData<>();
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isAuthenticatedLiveData = new MutableLiveData<>();
@@ -157,9 +157,9 @@ public class MainViewModel extends AndroidViewModel {
      */
     private void loadCurrentCliente(String userId) {
         android.util.Log.d("MainViewModel", "Intentando cargar cliente con ID: " + userId);
-        clienteRepository.getClienteById(userId, new ClienteRepository.ClienteCallback() {
+        clienteRepository.get(userId, new ClienteRepository.ClienteCallback() {
             @Override
-            public void onSuccess(ClienteEntity cliente) {
+            public void onSuccess(Cliente cliente) {
                 // Ejecutar en el hilo principal
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                     if (cliente != null) {
@@ -224,7 +224,7 @@ public class MainViewModel extends AndroidViewModel {
         return isAuthenticated;
     }
     
-    public StateFlow<ClienteEntity> getCurrentCliente() {
+    public StateFlow<Cliente> getCurrentCliente() {
         return currentCliente;
     }
     
@@ -245,7 +245,7 @@ public class MainViewModel extends AndroidViewModel {
         return isAuthenticatedLiveData;
     }
     
-    public LiveData<ClienteEntity> getCurrentClienteLiveData() {
+    public LiveData<Cliente> getCurrentClienteLiveData() {
         return currentClienteLiveData;
     }
     

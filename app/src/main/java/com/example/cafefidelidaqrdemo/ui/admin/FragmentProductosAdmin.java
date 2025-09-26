@@ -20,9 +20,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 
 import com.example.cafefidelidaqrdemo.R;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.databinding.FragmentProductosAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogProductoBinding;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.ProductosAdminViewModel;
 
@@ -40,7 +40,7 @@ public class FragmentProductosAdmin extends Fragment {
     private FragmentProductosAdminBinding binding;
     private ProductosAdminViewModel viewModel;
     private ProductosAdapter adapter;
-    private List<ProductoEntity> productosList = new ArrayList<>();
+    private List<Producto> productosList = new ArrayList<>();
     private boolean mostrarSoloActivos = true;
     
     @Override
@@ -103,27 +103,27 @@ public class FragmentProductosAdmin extends Fragment {
         adapter = new ProductosAdapter(getContext(), true); // true para modo administrador
         adapter.setOnProductoAdminActionListener(new ProductosAdapter.OnProductoAdminActionListener() {
             @Override
-            public void onProductoClick(ProductoEntity producto) {
+            public void onProductoClick(Producto producto) {
                 mostrarDetalleProducto(producto);
             }
             
             @Override
-            public void onEditarClick(ProductoEntity producto) {
+            public void onEditarClick(Producto producto) {
                 mostrarDialogoEditarProducto(producto);
             }
             
             @Override
-            public void onToggleActivoClick(ProductoEntity producto) {
+            public void onToggleActivoClick(Producto producto) {
                 toggleEstadoProducto(producto);
             }
             
             @Override
-            public void onToggleDisponibilidadClick(ProductoEntity producto) {
+            public void onToggleDisponibilidadClick(Producto producto) {
                 toggleDisponibilidadProducto(producto);
             }
             
             @Override
-            public void onEliminarClick(ProductoEntity producto) {
+            public void onEliminarClick(Producto producto) {
                 confirmarEliminacionProducto(producto);
             }
         });
@@ -213,7 +213,7 @@ public class FragmentProductosAdmin extends Fragment {
         });
     }
     
-    private void actualizarListaProductos(List<ProductoEntity> productos) {
+    private void actualizarListaProductos(List<Producto> productos) {
         if (productos != null) {
             productosList.clear();
             productosList.addAll(productos);
@@ -261,7 +261,7 @@ public class FragmentProductosAdmin extends Fragment {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioProducto(dialogBinding)) {
-                    ProductoEntity nuevoProducto = crearProductoDesdeFormulario(dialogBinding);
+                    Producto nuevoProducto = crearProductoDesdeFormulario(dialogBinding);
                     viewModel.crearProducto(nuevoProducto);
                     dialog.dismiss();
                 }
@@ -274,7 +274,7 @@ public class FragmentProductosAdmin extends Fragment {
         dialog.show();
     }
     
-    private void mostrarDialogoEditarProducto(ProductoEntity producto) {
+    private void mostrarDialogoEditarProducto(Producto producto) {
         DialogProductoBinding dialogBinding = DialogProductoBinding.inflate(getLayoutInflater());
         
         AlertDialog dialog = new AlertDialog.Builder(getContext())
@@ -287,11 +287,11 @@ public class FragmentProductosAdmin extends Fragment {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioProducto(dialogBinding)) {
-                    ProductoEntity productoEditado = crearProductoDesdeFormulario(dialogBinding);
-                    productoEditado.setId_producto(producto.getId_producto());
+                    Producto productoEditado = crearProductoDesdeFormulario(dialogBinding);
+                    productoEditado.setId(producto.getId());
                     // Mantener campos del producto original
-                    productoEditado.setVersion(producto.getVersion());
-                    // productoEditado.setFechaCreacion(producto.getFechaCreacion()); // TODO: database.entities.ProductoEntity no tiene este método
+                    productoEditado.setFechaCreacion(producto.getFechaCreacion());
+                    productoEditado.setFechaActualizacion(System.currentTimeMillis());
                     viewModel.actualizarProducto(productoEditado);
                     dialog.dismiss();
                 }
@@ -304,15 +304,15 @@ public class FragmentProductosAdmin extends Fragment {
         dialog.show();
     }
     
-    private void configurarFormularioProducto(DialogProductoBinding dialogBinding, ProductoEntity producto) {
+    private void configurarFormularioProducto(DialogProductoBinding dialogBinding, Producto producto) {
         if (producto != null) {
             // Modo edición - llenar campos
             dialogBinding.editNombre.setText(producto.getNombre());
             dialogBinding.editDescripcion.setText(producto.getDescripcion());
             dialogBinding.editPrecio.setText(String.valueOf(producto.getPrecio()));
-            // dialogBinding.editPuntos.setText(String.valueOf(producto.getPuntosRequeridos())); // Campo no disponible en ProductoEntity
+            dialogBinding.editPuntos.setText(String.valueOf(producto.getPuntosRequeridos()));
             dialogBinding.editCategoria.setText(producto.getCategoria());
-            dialogBinding.switchDisponible.setChecked(producto.isActivo());
+            dialogBinding.switchDisponible.setChecked(producto.isDisponible());
         } else {
             // Modo creación - valores por defecto
             dialogBinding.switchDisponible.setChecked(true);
@@ -394,29 +394,27 @@ public class FragmentProductosAdmin extends Fragment {
         return esValido;
     }
     
-    private ProductoEntity crearProductoDesdeFormulario(DialogProductoBinding dialogBinding) {
-        ProductoEntity producto = new ProductoEntity();
+    private Producto crearProductoDesdeFormulario(DialogProductoBinding dialogBinding) {
+        Producto producto = new Producto();
         
         // Generar ID único para el producto usando solo timestamp
-        producto.setId_producto(String.valueOf(System.currentTimeMillis()));
+        producto.setId(Integer.parseInt(String.valueOf(System.currentTimeMillis())));
         
         producto.setNombre(dialogBinding.editNombre.getText().toString().trim());
         producto.setDescripcion(dialogBinding.editDescripcion.getText().toString().trim());
         producto.setPrecio(Double.parseDouble(dialogBinding.editPrecio.getText().toString().trim()));
         producto.setCategoria(dialogBinding.editCategoria.getText().toString().trim());
-        producto.setEstado(dialogBinding.switchDisponible.isChecked() ? "activo" : "inactivo");
+        producto.setDisponible(dialogBinding.switchDisponible.isChecked());
         
         // Valores por defecto para campos requeridos
-        producto.setStockDisponible(0); // Stock inicial
-        producto.setVersion(1); // Versión inicial
-        producto.setNeedsSync(true); // Necesita sincronización
-        producto.setSynced(false); // No sincronizado aún
-        producto.setLastSync(System.currentTimeMillis());
+        producto.setStock(0); // Stock inicial
+        producto.setFechaCreacion(System.currentTimeMillis());
+        producto.setFechaActualizacion(System.currentTimeMillis());
         
         return producto;
     }
     
-    private void mostrarDetalleProducto(ProductoEntity producto) {
+    private void mostrarDetalleProducto(Producto producto) {
         // Crear diálogo con información detallada del producto
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         
@@ -432,11 +430,11 @@ public class FragmentProductosAdmin extends Fragment {
                 producto.getNombre(),
                 producto.getDescripcion(),
                 NumberFormat.getCurrencyInstance(new Locale("es", "CO")).format(producto.getPrecio()),
-                "N/A", // Stock no disponible
+                producto.getStock(),
                 producto.getCategoria(),
-                producto.isActivo() ? "Activo" : "Inactivo",
-                "N/A", // Fecha creación no disponible
-                "N/A" // Fecha modificación no disponible
+                producto.isDisponible() ? "Disponible" : "No disponible",
+                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new java.util.Date(producto.getFechaCreacion())),
+                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new java.util.Date(producto.getFechaActualizacion()))
         );
         
         builder.setTitle("Detalle del Producto")
@@ -446,30 +444,28 @@ public class FragmentProductosAdmin extends Fragment {
                 .show();
     }
     
-    private void toggleEstadoProducto(ProductoEntity producto) {
-        String accion = producto.isActivo() ? "desactivar" : "activar";
+    private void toggleEstadoProducto(Producto producto) {
+        String accion = producto.isDisponible() ? "desactivar" : "activar";
         String mensaje = String.format("¿Está seguro que desea %s el producto '%s'?", accion, producto.getNombre());
         
         new AlertDialog.Builder(getContext())
                 .setTitle("Confirmar acción")
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
-                    if (producto.isActivo()) {
-                        viewModel.desactivarProducto(Long.parseLong(producto.getId_producto()), "Desactivado por administrador");
-                    } else {
-                        viewModel.activarProducto(Long.parseLong(producto.getId_producto()));
-                    }
+                    producto.setDisponible(!producto.isDisponible());
+                    producto.setFechaActualizacion(System.currentTimeMillis());
+                    viewModel.actualizarProducto(producto);
                 })
                 .setNegativeButton("No", null)
                 .show();
     }
     
-    private void confirmarEliminacionProducto(ProductoEntity producto) {
+    private void confirmarEliminacionProducto(Producto producto) {
         new AlertDialog.Builder(getContext())
                 .setTitle("Eliminar Producto")
                 .setMessage(String.format("¿Está seguro que desea eliminar el producto '%s'?\n\nEsta acción no se puede deshacer.", producto.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarProducto(Long.parseLong(producto.getId_producto()));
+                    viewModel.eliminarProducto(producto.getId());
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
@@ -490,10 +486,11 @@ public class FragmentProductosAdmin extends Fragment {
         Toast.makeText(getContext(), "Sincronizando con servidor...", Toast.LENGTH_SHORT).show();
     }
     
-    private void toggleDisponibilidadProducto(ProductoEntity producto) {
+    private void toggleDisponibilidadProducto(Producto producto) {
         // Cambiar el estado de disponibilidad del producto
-        boolean nuevoEstado = !producto.isActivo();
-        producto.setActivo(nuevoEstado);
+        boolean nuevoEstado = !producto.isDisponible();
+        producto.setDisponible(nuevoEstado);
+        producto.se(System.currentTimeMillis());
         
         // Actualizar en el ViewModel
         viewModel.actualizarProducto(producto);

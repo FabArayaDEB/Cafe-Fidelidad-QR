@@ -3,41 +3,39 @@ package com.example.cafefidelidaqrdemo.repository;
 import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.dao.ClienteDao;
-import com.example.cafefidelidaqrdemo.database.entities.ClienteEntity;
-import com.example.cafefidelidaqrdemo.models.Cliente;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Cliente;
 import com.example.cafefidelidaqrdemo.network.ApiService;
+import com.example.cafefidelidaqrdemo.network.RetrofitClient;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
-import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
-// SyncManager removido para simplificación
+
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Date;
-import retrofit2.Response;
 
 /**
- * Repository para manejar operaciones de Cliente con cache local y sincronización
+ * Repository para manejar operaciones de Cliente con SQLite
  */
 public class ClienteRepository {
     
     private static ClienteRepository instance;
-    private final ClienteDao clienteDao;
+    private final CafeFidelidadDB database;
     private final ApiService apiService;
     private final ExecutorService executor;
     private final Context context;
     
     // LiveData para observar cambios
-    private final MutableLiveData<ClienteEntity> currentClienteLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Cliente> currentClienteLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoadingLiveData = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> successLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> syncStatusLiveData = new MutableLiveData<>(true);
     
     public ClienteRepository(Context context) {
         this.context = context;
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(context);
-        this.clienteDao = database.clienteDao();
-        this.apiService = ApiService.getInstance();
+        this.database = new CafeFidelidadDB(context);
+        this.apiService = RetrofitClient.getInstance(context).getApiService();
         this.executor = Executors.newFixedThreadPool(4);
     }
     
@@ -55,27 +53,19 @@ public class ClienteRepository {
         return instance;
     }
     
+    // ========== OPERACIONES CRUD ==========
+    
     /**
-     * Obtiene el cliente actual desde cache y refresca desde API
+     * Obtiene el cliente actual por ID
      */
-    public LiveData<ClienteEntity> getCurrentCliente(String clienteId) {
+    public LiveData<Cliente> getCurrentCliente(int clienteId) {
         executor.execute(() -> {
             try {
-                // Cargar desde cache primero
-                ClienteEntity cachedCliente = clienteDao.getById(clienteId);
-                if (cachedCliente != null) {
-                    currentClienteLiveData.postValue(cachedCliente);
-                }
-                
-                // Intentar refrescar desde API si hay conexión
-                if (NetworkUtils.isNetworkAvailable(context)) {
-                    refreshFromApi(clienteId);
-                } else {
-                    syncStatusLiveData.postValue(false);
-                }
-                
+                Cliente cliente = database.obtenerClientePorId(clienteId);
+                currentClienteLiveData.postValue(cliente);
             } catch (Exception e) {
                 errorLiveData.postValue("Error al cargar cliente: " + e.getMessage());
+                currentClienteLiveData.postValue(null);
             }
         });
         
@@ -83,55 +73,73 @@ public class ClienteRepository {
     }
     
     /**
-     * Actualiza los datos del cliente
+     * Obtiene un cliente por email
      */
-    public void updateCliente(ClienteEntity cliente) {
-        updateCliente(cliente, null);
+    public LiveData<Cliente> getClienteByEmail(String email) {
+        MutableLiveData<Cliente> result = new MutableLiveData<>();
+        executor.execute(() -> {
+            try {
+                Cliente cliente = database.obtenerClientePorEmail(email);
+                result.postValue(cliente);
+            } catch (Exception e) {
+                errorLiveData.postValue("Error al buscar cliente por email: " + e.getMessage());
+                result.postValue(null);
+            }
+        });
+        return result;
     }
     
     /**
-     * Actualiza los datos del cliente con callback
+     * Obtiene todos los clientes
      */
-    public void updateCliente(ClienteEntity cliente, ClienteCallback callback) {
+    public LiveData<List<Cliente>> getAllClientes() {
+        MutableLiveData<List<Cliente>> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                isLoadingLiveData.postValue(true);
-                
-                if (NetworkUtils.isNetworkAvailable(context)) {
-                    // Intentar enviar a API primero
-                    try {
-                        Cliente clienteModel = convertToModel(cliente);
-                        Response<ClienteEntity> response = apiService.updateCliente(cliente.getId_cliente(), cliente).execute();
-                        
-                        if (response.isSuccessful() && response.body() != null) {
-                            ClienteEntity updatedEntity = response.body();
-                            // Si la API responde exitosamente, actualizar cache
-                            updatedEntity.setSynced(true);
-                            updatedEntity.setNeedsSync(false);
-                            updatedEntity.setLastSync(System.currentTimeMillis());
-                            
-                            clienteDao.update(updatedEntity);
-                            currentClienteLiveData.postValue(updatedEntity);
-                            syncStatusLiveData.postValue(true);
-                            if (callback != null) callback.onSuccess(updatedEntity);
-                        } else {
-                            // Si la respuesta no es exitosa, guardar como pendiente
-                            saveAsPending(cliente);
-                        }
-                        
-                    } catch (Exception apiException) {
-                        // Si falla la API, guardar como pendiente de sincronización
-                        saveAsPending(cliente);
-                    }
-                } else {
-                    // Sin conexión, guardar como pendiente
-                    saveAsPending(cliente);
+                List<Cliente> clientes = database.obtenerTodosLosClientes();
+                result.postValue(clientes);
+            } catch (Exception e) {
+                errorLiveData.postValue("Error al obtener clientes: " + e.getMessage());
+                result.postValue(null);
+            }
+        });
+        return result;
+    }
+    
+    /**
+     * Crea un nuevo cliente
+     */
+    public void createCliente(Cliente cliente, ClienteCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                // Validar datos del cliente
+                if (!validarCliente(cliente)) {
+                    callback.onError("Datos del cliente inválidos");
+                    isLoadingLiveData.postValue(false);
+                    return;
                 }
                 
+                // Verificar si ya existe un cliente con el mismo email
+                Cliente existente = database.obtenerClientePorEmail(cliente.getEmail());
+                if (existente != null) {
+                    callback.onError("Ya existe un cliente con ese email");
+                    isLoadingLiveData.postValue(false);
+                    return;
+                }
+                
+                // Insertar cliente
+                long id = database.insertarCliente(cliente);
+                if (id > 0) {
+                    cliente.setId((int) id);
+                    callback.onSuccess(cliente);
+                    successLiveData.postValue("Cliente creado exitosamente");
+                } else {
+                    callback.onError("Error al crear cliente");
+                }
             } catch (Exception e) {
-                String error = "Error al actualizar cliente: " + e.getMessage();
-                errorLiveData.postValue(error);
-                if (callback != null) callback.onError(error);
+                callback.onError("Error al crear cliente: " + e.getMessage());
+                errorLiveData.postValue("Error al crear cliente: " + e.getMessage());
             } finally {
                 isLoadingLiveData.postValue(false);
             }
@@ -139,153 +147,197 @@ public class ClienteRepository {
     }
     
     /**
-     * Guarda el cliente como pendiente de sincronización
+     * Actualiza los datos del cliente
      */
-    private void saveAsPending(ClienteEntity cliente) {
-        cliente.setNeedsSync(true);
-        cliente.setSynced(false);
-        clienteDao.update(cliente);
-        currentClienteLiveData.postValue(cliente);
-        syncStatusLiveData.postValue(false);
-        
-        // Programar sincronización automática
-        // SyncManager removido para simplificación
+    public void updateCliente(Cliente cliente, ClienteCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                if (!validarCliente(cliente)) {
+                    callback.onError("Datos del cliente inválidos");
+                    isLoadingLiveData.postValue(false);
+                    return;
+                }
+                
+                int rowsAffected = database.actualizarCliente(cliente);
+                if (rowsAffected > 0) {
+                    callback.onSuccess(cliente);
+                    successLiveData.postValue("Cliente actualizado exitosamente");
+                    // Actualizar el cliente actual si es el mismo
+                    currentClienteLiveData.postValue(cliente);
+                } else {
+                    callback.onError("No se pudo actualizar el cliente");
+                }
+            } catch (Exception e) {
+                callback.onError("Error al actualizar cliente: " + e.getMessage());
+                errorLiveData.postValue("Error al actualizar cliente: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
     }
     
     /**
-     * Refresca los datos desde la API
+     * Actualiza los puntos de un cliente
      */
-    private void refreshFromApi(String clienteId) {
-        try {
-            Response<Cliente> response = apiService.getClienteById(clienteId).execute();
-                if (response.isSuccessful() && response.body() != null) {
-                    Cliente clienteFromApi = response.body();
-                    ClienteEntity refreshedEntity = convertToEntity(clienteFromApi);
-                    refreshedEntity.setSynced(true);
-                    refreshedEntity.setNeedsSync(false);
-                    refreshedEntity.setLastSync(System.currentTimeMillis());
-                    
-                    clienteDao.update(refreshedEntity);
-                    currentClienteLiveData.postValue(refreshedEntity);
-                    syncStatusLiveData.postValue(true);
+    public void actualizarPuntosCliente(int clienteId, int nuevosPuntos, ClienteCallback callback) {
+        executor.execute(() -> {
+            try {
+                Cliente cliente = database.obtenerClientePorId(clienteId);
+                if (cliente != null) {
+                    cliente.setPuntosAcumulados(nuevosPuntos);
+                    int rowsAffected = database.actualizarCliente(cliente);
+                    if (rowsAffected > 0) {
+                        callback.onSuccess(cliente);
+                        successLiveData.postValue("Puntos actualizados exitosamente");
+                        // Actualizar el cliente actual si es el mismo
+                        currentClienteLiveData.postValue(cliente);
+                    } else {
+                        callback.onError("No se pudieron actualizar los puntos");
+                    }
+                } else {
+                    callback.onError("Cliente no encontrado");
                 }
-            
+            } catch (Exception e) {
+                callback.onError("Error al actualizar puntos: " + e.getMessage());
+                errorLiveData.postValue("Error al actualizar puntos: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * Elimina un cliente
+     */
+    public void eliminarCliente(int clienteId, ClienteCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                int rowsAffected = database.eliminarCliente(clienteId);
+                if (rowsAffected > 0) {
+                    callback.onSuccess(null);
+                    successLiveData.postValue("Cliente eliminado exitosamente");
+                } else {
+                    callback.onError("No se pudo eliminar el cliente");
+                }
+            } catch (Exception e) {
+                callback.onError("Error al eliminar cliente: " + e.getMessage());
+                errorLiveData.postValue("Error al eliminar cliente: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+    
+    // ========== AUTENTICACIÓN ==========
+    
+    /**
+     * Autentica un cliente con email y password
+     */
+    public void autenticarCliente(String email, String password, ClienteCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                Cliente cliente = database.obtenerClientePorEmail(email);
+                if (cliente != null && cliente.getPassword().equals(password)) {
+                    callback.onSuccess(cliente);
+                    currentClienteLiveData.postValue(cliente);
+                    successLiveData.postValue("Autenticación exitosa");
+                } else {
+                    callback.onError("Email o contraseña incorrectos");
+                }
+            } catch (Exception e) {
+                callback.onError("Error en autenticación: " + e.getMessage());
+                errorLiveData.postValue("Error en autenticación: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+    
+    /**
+     * Verifica si existe un cliente con el email dado
+     */
+    public void verificarEmailExiste(String email, EmailExistsCallback callback) {
+        executor.execute(() -> {
+            try {
+                Cliente cliente = database.obtenerClientePorEmail(email);
+                callback.onResult(cliente != null);
+            } catch (Exception e) {
+                callback.onResult(false);
+                errorLiveData.postValue("Error al verificar email: " + e.getMessage());
+            }
+        });
+    }
+    
+    // ========== MÉTODOS SÍNCRONOS ==========
+    
+    /**
+     * Obtiene un cliente por ID de forma síncrona
+     */
+    public Cliente getClienteByIdSync(int clienteId) {
+        try {
+            return database.obtenerClientePorId(clienteId);
         } catch (Exception e) {
-            // Si falla el refresh, mantener datos locales
-            syncStatusLiveData.postValue(false);
+            return null;
         }
     }
     
     /**
-     * Sincroniza todos los clientes pendientes
+     * Obtiene un cliente por email de forma síncrona
      */
-    public void syncPendingClientes() {
+    public Cliente getClienteByEmailSync(String email) {
+        try {
+            return database.obtenerClientePorEmail(email);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    // ========== VALIDACIÓN ==========
+    
+    private boolean validarCliente(Cliente cliente) {
+        return cliente != null &&
+               cliente.getNombre() != null && !cliente.getNombre().trim().isEmpty() &&
+               cliente.getEmail() != null && !cliente.getEmail().trim().isEmpty() &&
+               cliente.getPassword() != null && !cliente.getPassword().trim().isEmpty() &&
+               isValidEmail(cliente.getEmail());
+    }
+    
+    private boolean isValidEmail(String email) {
+        return email != null && email.contains("@") && email.contains(".");
+    }
+    
+    // ========== ESTADÍSTICAS ==========
+    
+    /**
+     * Obtiene el conteo total de clientes
+     */
+    public LiveData<Integer> getCountClientes() {
+        MutableLiveData<Integer> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                if (!NetworkUtils.isNetworkAvailable(context)) {
-                    return;
-                }
-                
-                // Obtener clientes pendientes de sincronización
-                var pendingClientes = clienteDao.getPendientesSync();
-                
-                for (ClienteEntity cliente : pendingClientes) {
-                    try {
-                        Cliente clienteModel = convertToModel(cliente);
-                        Response<ClienteEntity> response = apiService.updateCliente(cliente.getId_cliente(), cliente).execute();
-                        if (response.isSuccessful() && response.body() != null) {
-                            ClienteEntity syncedCliente = response.body();
-                            
-                            // Marcar como sincronizado
-                            cliente.setSynced(true);
-                            cliente.setNeedsSync(false);
-                            cliente.setLastSync(System.currentTimeMillis());
-                            
-                            clienteDao.update(cliente);
-                        }
-                        
-                    } catch (Exception e) {
-                        // Si falla un cliente específico, continuar con los demás
-                        continue;
-                    }
-                }
-                
-                syncStatusLiveData.postValue(true);
-                
+                int count = database.obtenerConteoClientes();
+                result.postValue(count);
             } catch (Exception e) {
-                errorLiveData.postValue("Error en sincronización: " + e.getMessage());
+                result.postValue(0);
             }
         });
+        return result;
     }
     
     /**
-     * Verifica si hay conflictos de versión
+     * Obtiene el conteo de clientes de forma síncrona
      */
-    public void checkForConflicts(String clienteId, BaseRepository.RepositoryCallback<Boolean> callback) {
-        executor.execute(() -> {
-            try {
-                if (!NetworkUtils.isNetworkAvailable(context)) {
-                    return;
-                }
-                
-                ClienteEntity localCliente = clienteDao.getById(clienteId);
-                Response<Cliente> response = apiService.getClienteById(clienteId).execute();
-                if (response.isSuccessful() && response.body() != null) {
-                    Cliente remoteCliente = response.body();
-                    
-                    if (localCliente != null && remoteCliente != null) {
-                        // Comparar timestamps para detectar conflictos
-                        long localTimestamp = localCliente.getLastSync();
-                        long remoteTimestamp = remoteCliente.getFechaActualizacion();
-                        
-                        if (remoteTimestamp > localTimestamp && localCliente.isNeedsSync()) {
-                            // Hay conflicto - datos modificados en ambos lados
-                            errorLiveData.postValue("CONFLICT:Los datos fueron modificados en otro dispositivo. Por favor, recarga y vuelve a intentar.");
-                            if (callback != null) callback.onSuccess(true);
-                        } else {
-                            if (callback != null) callback.onSuccess(false);
-                        }
-                    }
-                }
-                
-            } catch (Exception e) {
-                // Ignorar errores de verificación de conflictos
-                if (callback != null) callback.onError("Error verificando conflictos: " + e.getMessage());
-            }
-        });
+    public int getCountClientesSync() {
+        try {
+            return database.obtenerConteoClientes();
+        } catch (Exception e) {
+            return 0;
+        }
     }
     
-    /**
-     * Convierte ClienteEntity a Cliente (modelo)
-     */
-    private Cliente convertToModel(ClienteEntity entity) {
-        Cliente cliente = new Cliente();
-        cliente.setId(entity.getId_cliente());
-        cliente.setNombre(entity.getNombre());
-        cliente.setEmail(entity.getEmail());
-        cliente.setTelefono(entity.getTelefono());
-        cliente.setFechaNacimiento(entity.getFecha_nac());
-        cliente.setEstado(entity.getEstado());
-        cliente.setFechaCreacion(entity.getCreado_en());
-        return cliente;
-    }
+    // ========== GETTERS PARA LIVEDATA ==========
     
-    /**
-     * Convierte Cliente (modelo) a ClienteEntity
-     */
-    private ClienteEntity convertToEntity(Cliente cliente) {
-        ClienteEntity entity = new ClienteEntity();
-        entity.setId_cliente(cliente.getId());
-        entity.setNombre(cliente.getNombre());
-        entity.setEmail(cliente.getEmail());
-        entity.setTelefono(cliente.getTelefono());
-        entity.setFecha_nac(cliente.getFechaNacimiento());
-        entity.setEstado(cliente.getEstado());
-        entity.setCreado_en(cliente.getFechaCreacion());
-        return entity;
-    }
-    
-    // Getters para LiveData
     public LiveData<Boolean> getIsLoading() {
         return isLoadingLiveData;
     }
@@ -294,129 +346,61 @@ public class ClienteRepository {
         return errorLiveData;
     }
     
+    public LiveData<String> getSuccess() {
+        return successLiveData;
+    }
+    
     public LiveData<Boolean> getSyncStatus() {
         return syncStatusLiveData;
     }
     
-    /**
-     * Obtiene el estado offline del repositorio
-     */
     public LiveData<Boolean> getIsOffline() {
-        MutableLiveData<Boolean> offlineLiveData = new MutableLiveData<>();
-        Boolean syncStatus = syncStatusLiveData.getValue();
-        offlineLiveData.setValue(syncStatus == null || !syncStatus);
-        return offlineLiveData;
+        MutableLiveData<Boolean> result = new MutableLiveData<>();
+        result.setValue(!NetworkUtils.isNetworkAvailable(context));
+        return result;
     }
     
+    // ========== UTILIDADES ==========
+    
     /**
-     * Limpia el error actual
+     * Limpia los mensajes de error
      */
     public void clearError() {
-        errorLiveData.postValue(null);
+        errorLiveData.setValue(null);
     }
     
     /**
-     * Obtiene un cliente por ID de forma síncrona
+     * Limpia los mensajes de éxito
      */
-    public ClienteEntity getClienteById(String clienteId) {
-        return clienteDao.getById(clienteId);
+    public void clearSuccess() {
+        successLiveData.setValue(null);
     }
     
     /**
-     * Obtiene un cliente por email de forma síncrona
+     * Cierra la sesión del cliente actual
      */
-    public ClienteEntity getClienteByEmailSync(String email) {
-        return clienteDao.getByEmail(email);
+    public void logout() {
+        currentClienteLiveData.setValue(null);
+        clearError();
+        clearSuccess();
     }
     
-    /**
-     * Obtiene un cliente por ID con callback
-     */
-    public void getClienteById(String clienteId, ClienteCallback callback) {
-        executor.execute(() -> {
-            try {
-                ClienteEntity cliente = clienteDao.getById(clienteId);
-                if (callback != null) {
-                    callback.onSuccess(cliente);
-                }
-            } catch (Exception e) {
-                if (callback != null) {
-                    callback.onError(e.getMessage());
-                }
-            }
-        });
-    }
+    // ========== INTERFACES DE CALLBACK ==========
     
-    /**
-     * Crea un nuevo cliente
-     */
-    public void createCliente(ClienteEntity cliente, ClienteCallback callback) {
-        executor.execute(() -> {
-            try {
-                isLoadingLiveData.postValue(true);
-                
-                // Guardar en cache local
-                clienteDao.insert(cliente);
-                
-                // Sincronizar con API si hay conexión
-                if (NetworkUtils.isNetworkAvailable(context)) {
-                    try {
-                        Cliente clienteModel = convertToModel(cliente);
-                        Response<Cliente> response = apiService.createCliente(clienteModel).execute();
-                        
-                        if (response.isSuccessful() && response.body() != null) {
-                            Cliente createdCliente = response.body();
-                            ClienteEntity updatedEntity = convertToEntity(createdCliente);
-                            updatedEntity.setSynced(true);
-                            updatedEntity.setNeedsSync(false);
-                            updatedEntity.setLastSync(System.currentTimeMillis());
-                            
-                            clienteDao.update(updatedEntity);
-                            currentClienteLiveData.postValue(updatedEntity);
-                            syncStatusLiveData.postValue(true);
-                        } else {
-                            // Si la respuesta no es exitosa, marcar como pendiente
-                            cliente.setNeedsSync(true);
-                            cliente.setSynced(false);
-                            clienteDao.update(cliente);
-                            syncStatusLiveData.postValue(false);
-                        }
-                        
-                    } catch (Exception apiException) {
-                        // Si falla la API, marcar como pendiente de sincronización
-                        cliente.setNeedsSync(true);
-                        cliente.setSynced(false);
-                        clienteDao.update(cliente);
-                        syncStatusLiveData.postValue(false);
-                    }
-                } else {
-                    // Sin conexión, marcar como pendiente
-                    cliente.setNeedsSync(true);
-                    cliente.setSynced(false);
-                    clienteDao.update(cliente);
-                    syncStatusLiveData.postValue(false);
-                }
-                
-                isLoadingLiveData.postValue(false);
-                currentClienteLiveData.postValue(cliente);
-                if (callback != null) {
-                    callback.onSuccess(cliente);
-                }
-                
-            } catch (Exception e) {
-                isLoadingLiveData.postValue(false);
-                String error = "Error al crear cliente: " + e.getMessage();
-                errorLiveData.postValue(error);
-                if (callback != null) {
-                    callback.onError(error);
-                }
-            }
-        });
-    }
-    
-    // Interface para callbacks
     public interface ClienteCallback {
-        void onSuccess(ClienteEntity cliente);
+        void onSuccess(Cliente cliente);
         void onError(String error);
+    }
+    
+    public interface EmailExistsCallback {
+        void onResult(boolean exists);
+    }
+    
+    // ========== LIMPIEZA ==========
+    
+    public void cleanup() {
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+        }
     }
 }

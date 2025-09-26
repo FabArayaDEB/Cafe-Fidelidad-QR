@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 
@@ -33,15 +33,15 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     
     // Clase para encapsular sucursal con distancia
     public static class SucursalItem {
-        private final SucursalEntity sucursal;
+        private final Sucursal sucursal;
         private final Double distancia; // en kilómetros, null si no disponible
         
-        public SucursalItem(SucursalEntity sucursal, Double distancia) {
+        public SucursalItem(Sucursal sucursal, Double distancia) {
             this.sucursal = sucursal;
             this.distancia = distancia;
         }
         
-        public SucursalEntity getSucursal() {
+        public Sucursal getSucursal() {
             return sucursal;
         }
         
@@ -85,11 +85,11 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     
     // Interfaces para callbacks
     public interface OnSucursalClickListener {
-        void onSucursalClick(SucursalEntity sucursal);
+        void onSucursalClick(Sucursal sucursal);
     }
     
     public interface OnSucursalLongClickListener {
-        void onSucursalLongClick(SucursalEntity sucursal);
+        void onSucursalLongClick(Sucursal sucursal);
     }
     
     // Setters para listeners
@@ -127,15 +127,15 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
         }
         
         public void bind(SucursalItem item) {
-            SucursalEntity sucursal = item.getSucursal();
+            Sucursal sucursal = item.getSucursal();
             
             // Configurar información básica
             textViewNombre.setText(sucursal.getNombre());
             textViewDireccion.setText(sucursal.getDireccion());
-            textViewHorario.setText(sucursal.getHorario());
+            textViewHorario.setText(sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre());
             
             // Configurar estado
-            configurarEstado(sucursal.getEstado());
+            configurarEstado(sucursal.isActiva() ? "activo" : "inactivo");
             
             // Configurar distancia
             configurarDistancia(item);
@@ -192,9 +192,9 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             }
         }
         
-        private void configurarIcono(SucursalEntity sucursal) {
+        private void configurarIcono(Sucursal sucursal) {
             // Configurar icono según el estado de la sucursal
-            if ("activo".equalsIgnoreCase(sucursal.getEstado())) {
+            if (sucursal.isActiva()) {
                 imageViewIcon.setImageResource(R.drawable.ic_store);
                 imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.primary));
             } else {
@@ -203,8 +203,8 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             }
         }
         
-        private void configurarAparienciaTarjeta(SucursalEntity sucursal) {
-            if ("activo".equalsIgnoreCase(sucursal.getEstado())) {
+        private void configurarAparienciaTarjeta(Sucursal sucursal) {
+            if (sucursal.isActiva()) {
                 // Sucursal activa - tarjeta normal
                 cardView.setCardElevation(4f);
                 cardView.setAlpha(1.0f);
@@ -218,7 +218,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             }
         }
         
-        private void configurarListeners(SucursalEntity sucursal) {
+        private void configurarListeners(Sucursal sucursal) {
             // Click listener
             cardView.setOnClickListener(v -> {
                 if (onSucursalClickListener != null) {
@@ -247,20 +247,21 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             
             @Override
             public boolean areItemsTheSame(@NonNull SucursalItem oldItem, @NonNull SucursalItem newItem) {
-                return oldItem.getSucursal().getId_sucursal().equals(newItem.getSucursal().getId_sucursal());
+                return oldItem.getSucursal().getId() == newItem.getSucursal().getId();
             }
             
             @Override
             public boolean areContentsTheSame(@NonNull SucursalItem oldItem, @NonNull SucursalItem newItem) {
-                SucursalEntity oldSucursal = oldItem.getSucursal();
-                SucursalEntity newSucursal = newItem.getSucursal();
+                Sucursal oldSucursal = oldItem.getSucursal();
+                Sucursal newSucursal = newItem.getSucursal();
                 
                 boolean sucursalSame = oldSucursal.getNombre().equals(newSucursal.getNombre()) &&
                     oldSucursal.getDireccion().equals(newSucursal.getDireccion()) &&
-                    oldSucursal.getHorario().equals(newSucursal.getHorario()) &&
-                    oldSucursal.getEstado().equals(newSucursal.getEstado()) &&
-                    Double.compare(oldSucursal.getLat(), newSucursal.getLat()) == 0 &&
-                    Double.compare(oldSucursal.getLon(), newSucursal.getLon()) == 0;
+                    oldSucursal.getHorarioApertura().equals(newSucursal.getHorarioApertura()) &&
+                    oldSucursal.getHorarioCierre().equals(newSucursal.getHorarioCierre()) &&
+                    oldSucursal.isActiva() == newSucursal.isActiva() &&
+                    Double.compare(oldSucursal.getLatitud(), newSucursal.getLatitud()) == 0 &&
+                    Double.compare(oldSucursal.getLongitud(), newSucursal.getLongitud()) == 0;
                 
                 boolean distanciaSame = (oldItem.getDistancia() == null && newItem.getDistancia() == null) ||
                     (oldItem.getDistancia() != null && newItem.getDistancia() != null &&
@@ -274,14 +275,14 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     public int getSucursalPosition(int idSucursal) {
         for (int i = 0; i < getItemCount(); i++) {
             SucursalItem item = getItem(i);
-            if (item != null && item.getSucursal().getId_sucursal().equals(String.valueOf(idSucursal))) {
+            if (item != null && item.getSucursal().getId() == idSucursal) {
                 return i;
             }
         }
         return -1;
     }
     
-    public SucursalEntity getSucursalAt(int position) {
+    public Sucursal getSucursalAt(int position) {
         SucursalItem item = getItem(position);
         return item != null ? item.getSucursal() : null;
     }
@@ -294,7 +295,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
         int count = 0;
         for (int i = 0; i < getItemCount(); i++) {
             SucursalItem item = getItem(i);
-            if (item != null && "activo".equalsIgnoreCase(item.getSucursal().getEstado())) {
+            if (item != null && item.getSucursal().isActiva()) {
                 count++;
             }
         }

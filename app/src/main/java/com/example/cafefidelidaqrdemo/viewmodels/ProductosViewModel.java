@@ -8,8 +8,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.database.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.ProductoRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
@@ -31,8 +31,8 @@ public class ProductosViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
     
     // ==================== DATOS OBSERVABLES ====================
-    private final LiveData<List<ProductoEntity>> productos;
-    private final LiveData<List<ProductoEntity>> searchResults;
+    private final LiveData<List<Producto>> productos;
+    private final LiveData<List<Producto>> searchResults;
     private final LiveData<Boolean> isLoading;
     private final LiveData<String> error;
     private final LiveData<Boolean> isOffline;
@@ -46,11 +46,7 @@ public class ProductosViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar repositorio
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
-        repository = new ProductoRepository(
-            database.productoDao(),
-            ApiService.getInstance()
-        );
+        repository = new ProductoRepository(application);
         
         // Configurar observables del repositorio
         productos = repository.getAllProductos();
@@ -83,14 +79,14 @@ public class ProductosViewModel extends AndroidViewModel {
     /**
      * Lista principal de productos
      */
-    public LiveData<List<ProductoEntity>> getProductos() {
+    public LiveData<List<Producto>> getProductos() {
         return productos;
     }
     
     /**
      * Resultados de búsqueda
      */
-    public LiveData<List<ProductoEntity>> getSearchResults() {
+    public LiveData<List<Producto>> getSearchResults() {
         return searchResults;
     }
     
@@ -197,9 +193,9 @@ public class ProductosViewModel extends AndroidViewModel {
     public void searchProductos(String query) {
         _searchQuery.setValue(query);
         if (query != null && !query.trim().isEmpty()) {
-            repository.searchProductos(query, new ProductoRepository.RepositoryCallback<List<ProductoEntity>>() {
+            repository.searchProductos(query, new BaseRepository.RepositoryCallback<List<Producto>>() {
                 @Override
-                public void onSuccess(List<ProductoEntity> result) {
+                public void onSuccess(List<Producto> result) {
                     // Los resultados se manejan a través del repositorio
                 }
                 
@@ -228,9 +224,9 @@ public class ProductosViewModel extends AndroidViewModel {
      * Obtiene un producto específico por ID
      */
     public void getProductoById(Long idProducto, ProductoCallback callback) {
-        repository.getProductoById(idProducto, new BaseRepository.RepositoryCallback<ProductoEntity>() {
+        repository.getProductoById(idProducto, new BaseRepository.RepositoryCallback<Producto>() {
             @Override
-            public void onSuccess(ProductoEntity result) {
+            public void onSuccess(Producto result) {
                 if (callback != null) callback.onSuccess(result);
             }
             
@@ -278,7 +274,7 @@ public class ProductosViewModel extends AndroidViewModel {
      * Verifica si los datos están vacíos
      */
     public boolean isDataEmpty() {
-        List<ProductoEntity> currentData = productos.getValue();
+        List<Producto> currentData = productos.getValue();
         return currentData == null || currentData.isEmpty();
     }
     
@@ -286,7 +282,7 @@ public class ProductosViewModel extends AndroidViewModel {
      * Obtiene el conteo de productos
      */
     public int getProductosCount() {
-        List<ProductoEntity> currentData = productos.getValue();
+        List<Producto> currentData = productos.getValue();
         return currentData != null ? currentData.size() : 0;
     }
     
@@ -296,7 +292,7 @@ public class ProductosViewModel extends AndroidViewModel {
      * Callback para operaciones con productos individuales
      */
     public interface ProductoCallback {
-        void onSuccess(ProductoEntity producto);
+        void onSuccess(Producto producto);
         void onError(String error);
     }
     

@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.repository.AdminRepository;
-import com.example.cafefidelidaqrdemo.database.entities.ProductoEntity;
+import com.example.cafefidelidaqrdemo.models.Producto;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -29,8 +29,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     private final MutableLiveData<String> successMessage = new MutableLiveData<>();
     
     // Datos de productos
-    private final LiveData<List<ProductoEntity>> allProductos;
-    private final LiveData<List<ProductoEntity>> productosActivos;
+    private final LiveData<List<Producto>> allProductos;
+    private final LiveData<List<Producto>> productosActivos;
     private final LiveData<Integer> countProductosActivos;
     private final LiveData<Integer> countProductosInactivos;
     
@@ -40,7 +40,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isDeleting = new MutableLiveData<>(false);
     
     // Producto seleccionado para edición
-    private final MutableLiveData<ProductoEntity> selectedProducto = new MutableLiveData<>();
+    private final MutableLiveData<Producto> selectedProducto = new MutableLiveData<>();
     
     public ProductosAdminViewModel(@NonNull Application application) {
         super(application);
@@ -73,11 +73,11 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         return successMessage;
     }
     
-    public LiveData<List<ProductoEntity>> getAllProductos() {
+    public LiveData<List<Producto>> getAllProductos() {
         return allProductos;
     }
     
-    public LiveData<List<ProductoEntity>> getProductosActivos() {
+    public LiveData<List<Producto>> getProductosActivos() {
         return productosActivos;
     }
     
@@ -101,14 +101,14 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         return isDeleting;
     }
     
-    public LiveData<ProductoEntity> getSelectedProducto() {
+    public LiveData<Producto> getSelectedProducto() {
         return selectedProducto;
     }
     
     /**
      * Crea un nuevo producto
      */
-    public void crearProducto(ProductoEntity producto) {
+    public void crearProducto(Producto producto) {
         if (!validarProducto(producto)) {
             return;
         }
@@ -133,9 +133,9 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     }
                 }
                 
-                adminRepository.crearProducto(producto, new AdminRepository.AdminCallback<ProductoEntity>() {
+                adminRepository.crearProducto(producto, new AdminRepository.AdminCallback<Producto>() {
                     @Override
-                    public void onSuccess(ProductoEntity result) {
+                    public void onSuccess(Producto result) {
                         successMessage.postValue("Producto creado exitosamente");
                         isCreating.postValue(false);
                     }
@@ -157,7 +157,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     /**
      * Actualiza un producto existente
      */
-    public void actualizarProducto(ProductoEntity producto) {
+    public void actualizarProducto(Producto producto) {
         if (!validarProducto(producto)) {
             return;
         }
@@ -166,38 +166,26 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         
         executor.execute(() -> {
             try {
-                // Verificar control de versión
-                ProductoEntity productoActual = adminRepository.getProductoPorId(producto.getId_producto());
-                if (productoActual == null) {
-                    errorMessage.postValue("El producto no existe");
-                    isUpdating.postValue(false);
-                    return;
-                }
-                
-                if (productoActual.getVersion() != producto.getVersion()) {
-                    errorMessage.postValue("El producto ha sido modificado por otro usuario. Actualice y vuelva a intentar.");
+                // Verificar que el producto existe
+                if (producto.getId() == null || producto.getId().isEmpty()) {
+                    errorMessage.postValue("El producto no tiene un ID válido");
                     isUpdating.postValue(false);
                     return;
                 }
                 
                 // Verificar nombres duplicados (excluyendo el producto actual)
-                if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId_producto())) {
+                if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId())) {
                     errorMessage.postValue("Ya existe otro producto con ese nombre");
                     isUpdating.postValue(false);
                     return;
                 }
                 
-                // Verificar códigos duplicados (excluyendo el producto actual)
-                if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty() &&
-                    adminRepository.existeProductoPorCodigoExcluyendoId(producto.getCodigoBarras(), producto.getId_producto())) {
-                    errorMessage.postValue("Ya existe otro producto con ese código");
-                    isUpdating.postValue(false);
-                    return;
-                }
+                // Actualizar fecha de modificación
+                producto.setFechaActualizacion(System.currentTimeMillis());
                 
-                adminRepository.actualizarProducto(producto, new AdminRepository.AdminCallback<ProductoEntity>() {
+                adminRepository.actualizarProducto(producto, new AdminRepository.AdminCallback<Producto>() {
                     @Override
-                    public void onSuccess(ProductoEntity result) {
+                    public void onSuccess(Producto result) {
                         successMessage.postValue("Producto actualizado exitosamente");
                         isUpdating.postValue(false);
                     }
@@ -281,21 +269,21 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     /**
      * Busca productos por nombre o código
      */
-    public LiveData<List<ProductoEntity>> buscarProductos(String query) {
+    public LiveData<List<Producto>> buscarProductos(String query) {
         return adminRepository.buscarProductos(query);
     }
     
     /**
      * Obtiene productos por categoría
      */
-    public LiveData<List<ProductoEntity>> getProductosPorCategoria(String categoria) {
+    public LiveData<List<Producto>> getProductosPorCategoria(String categoria) {
         return adminRepository.getProductosPorCategoria(categoria);
     }
     
     /**
      * Obtiene productos con stock bajo
      */
-    public LiveData<List<ProductoEntity>> getProductosStockBajo(int umbral) {
+    public LiveData<List<Producto>> getProductosStockBajo(int umbral) {
         return adminRepository.getProductosStockBajo(umbral);
     }
     
@@ -387,7 +375,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     /**
      * Selecciona un producto para edición
      */
-    public void seleccionarProducto(ProductoEntity producto) {
+    public void seleccionarProducto(Producto producto) {
         selectedProducto.setValue(producto);
     }
     
@@ -401,7 +389,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     /**
      * Valida los datos de un producto
      */
-    private boolean validarProducto(ProductoEntity producto) {
+    private boolean validarProducto(Producto producto) {
         if (producto == null) {
             errorMessage.setValue("Datos de producto inválidos");
             return false;
@@ -422,13 +410,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        if (producto.getStockDisponible() < 0) {
+        if (producto.getStock() < 0) {
             errorMessage.setValue("El stock no puede ser negativo");
-            return false;
-        }
-        
-        if (producto.getCodigoBarras() != null && producto.getCodigoBarras().length() > 50) {
-            errorMessage.setValue("El código del producto no puede exceder 50 caracteres");
             return false;
         }
         

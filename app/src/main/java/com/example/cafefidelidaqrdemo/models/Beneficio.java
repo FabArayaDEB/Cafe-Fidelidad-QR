@@ -166,7 +166,7 @@ public class Beneficio {
     }
     
     // Getters y Setters
-    public String getId() { return id; }
+    public int getId() { return id; }
     public void setId(String id) { this.id = id; }
     
     public String getNombre() { return nombre; }

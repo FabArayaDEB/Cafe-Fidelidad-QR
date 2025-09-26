@@ -1,7 +1,7 @@
 package com.example.cafefidelidaqrdemo.models;
 
 import java.util.Date;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 
 /**
  * Modelo para representar un próximo beneficio a desbloquear
@@ -22,7 +22,7 @@ public class ProximoBeneficio {
     private int prioridad;
     private int visitasRequeridas;
     private int visitasFaltantes;
-    private BeneficioEntity beneficio;
+    private Beneficio beneficio;
     private double progreso;
     
     // Constructor vacío
@@ -118,11 +118,11 @@ public class ProximoBeneficio {
     }
     
     // Métodos adicionales requeridos por el adapter
-    public BeneficioEntity getBeneficio() {
+    public Beneficio getBeneficio() {
         if (beneficio == null) {
             // Crear un BeneficioEntity temporal con los datos disponibles
-            beneficio = new BeneficioEntity();
-            beneficio.setId_beneficio(beneficioId);
+            beneficio = new Beneficio();
+            beneficio.setId(Integer.parseInt(beneficioId));
             beneficio.setNombre(nombre);
             // BeneficioEntity no tiene setDescripcion, setValor, setCategoria, setImagenUrl, setActivo
             // Estos métodos no están disponibles en la entidad de database
@@ -130,10 +130,10 @@ public class ProximoBeneficio {
         return beneficio;
     }
     
-    public void setBeneficio(BeneficioEntity beneficio) {
+    public void setBeneficio(Beneficio beneficio) {
         this.beneficio = beneficio;
         if (beneficio != null) {
-            this.beneficioId = beneficio.getId_beneficio();
+            this.beneficioId = String.valueOf(beneficio.getId());
             this.nombre = beneficio.getNombre();
             // Los métodos getDescripcion, getValor, getCategoria, getImagenUrl no están disponibles
             // en BeneficioEntity de database.entities

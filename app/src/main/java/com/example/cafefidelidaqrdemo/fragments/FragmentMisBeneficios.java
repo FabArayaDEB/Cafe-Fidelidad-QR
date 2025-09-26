@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.BeneficioEntity;
+import com.example.cafefidelidaqrdemo.database.models.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.adapters.MisBeneficiosAdapter;
 import com.example.cafefidelidaqrdemo.viewmodels.MisBeneficiosViewModel;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
@@ -25,7 +25,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Fragment para mostrar los beneficios disponibles del cliente
@@ -53,7 +52,7 @@ public class FragmentMisBeneficios extends Fragment {
     private SessionManager sessionManager;
     private String clienteId;
     private CountDownTimer countDownTimer;
-    private BeneficioEntity beneficioSeleccionado;
+    private Beneficio beneficioSeleccionado;
     
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -186,12 +185,12 @@ public class FragmentMisBeneficios extends Fragment {
         */
     }
     
-    private void onBeneficioClick(BeneficioEntity beneficio) {
+    private void onBeneficioClick(Beneficio beneficio) {
         beneficioSeleccionado = beneficio;
         mostrarDialogoConfirmacionCanje(beneficio);
     }
     
-    private void mostrarDialogoConfirmacionCanje(BeneficioEntity beneficio) {
+    private void mostrarDialogoConfirmacionCanje(Beneficio beneficio) {
         new MaterialAlertDialogBuilder(requireContext())
             .setTitle("Canjear Beneficio")
             .setMessage("¿Deseas canjear el beneficio \"" + beneficio.getNombre() + "\"?\n\n" +
@@ -203,7 +202,7 @@ public class FragmentMisBeneficios extends Fragment {
             .show();
     }
     
-    private void solicitarOtp(BeneficioEntity beneficio) {
+    private void solicitarOtp(Beneficio beneficio) {
         // TODO: Implementar getSucursalId() en SessionManager
         // String sucursalId = sessionManager.getSucursalId(); // Obtener sucursal actual
         // textViewBeneficioSeleccionado.setText(beneficio.getNombre()); // TODO: Implementar cuando se agregue la vista

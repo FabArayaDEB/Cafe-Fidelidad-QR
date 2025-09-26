@@ -30,7 +30,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.databinding.FragmentSucursalesAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogSucursalBinding;
-import com.example.cafefidelidaqrdemo.database.entities.SucursalEntity;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.SucursalesAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.SucursalesAdminViewModel;
 
@@ -62,7 +62,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     private FragmentSucursalesAdminBinding binding;
     private SucursalesAdminViewModel viewModel;
     private SucursalesAdminAdapter adapter;
-    private List<SucursalEntity> sucursalesList = new ArrayList<>();
+    private List<Sucursal> sucursalesList = new ArrayList<>();
     private boolean mostrarSoloActivas = true;
     // private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
@@ -137,23 +137,23 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     
     private void setupRecyclerView() {
         SucursalesAdminAdapter.OnSucursalClickListener listener = new SucursalesAdminAdapter.OnSucursalClickListener() {
-            public void onSucursalClick(SucursalEntity sucursal) {
+            public void onSucursalClick(Sucursal sucursal) {
                 mostrarDetalleSucursal(sucursal);
             }
             
-            public void onEditarClick(SucursalEntity sucursal) {
+            public void onEditarClick(Sucursal sucursal) {
                 mostrarDialogoEditarSucursal(sucursal);
             }
             
-            public void onToggleActivoClick(SucursalEntity sucursal) {
+            public void onToggleActivoClick(Sucursal sucursal) {
                 toggleEstadoSucursal(sucursal);
             }
             
-            public void onVerEnMapaClick(SucursalEntity sucursal) {
+            public void onVerEnMapaClick(Sucursal sucursal) {
                 mostrarSucursalEnMapa(sucursal);
             }
             
-            public void onEliminarClick(SucursalEntity sucursal) {
+            public void onEliminarClick(Sucursal sucursal) {
                 // Implementación temporal
                 Toast.makeText(getContext(), "Eliminar: " + sucursal.getNombre(), Toast.LENGTH_SHORT).show();
             }
@@ -288,7 +288,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     }
     */
     
-    private void actualizarListaSucursales(List<SucursalEntity> sucursales) {
+    private void actualizarListaSucursales(List<Sucursal> sucursales) {
         if (sucursales != null) {
             sucursalesList.clear();
             sucursalesList.addAll(sucursales);
@@ -312,9 +312,9 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         if (mMap != null) {
             mMap.clear();
             
-            for (SucursalEntity sucursal : sucursalesList) {
-                if (sucursal.getLat() != 0 && sucursal.getLon() != 0) {
-                LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
+            for (Sucursal sucursal : sucursalesList) {
+                if (sucursal.getLatitud() != 0 && sucursal.getLongitud() != 0) {
+                LatLng posicion = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
                     
                     MarkerOptions markerOptions = new MarkerOptions()
                             .position(posicion)
@@ -370,7 +370,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioSucursal(dialogBinding)) {
-                    SucursalEntity nuevaSucursal = crearSucursalDesdeFormulario(dialogBinding);
+                    Sucursal nuevaSucursal = crearSucursalDesdeFormulario(dialogBinding);
                     viewModel.crearSucursal(nuevaSucursal);
                     dialog.dismiss();
                 }
@@ -381,7 +381,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         dialog.show();
     }
     
-    private void mostrarDialogoEditarSucursal(SucursalEntity sucursal) {
+    private void mostrarDialogoEditarSucursal(Sucursal sucursal) {
         DialogSucursalBinding dialogBinding = DialogSucursalBinding.inflate(getLayoutInflater());
         
         AlertDialog dialog = new AlertDialog.Builder(getContext())
@@ -394,10 +394,8 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 if (validarFormularioSucursal(dialogBinding)) {
-                    SucursalEntity sucursalEditada = crearSucursalDesdeFormulario(dialogBinding);
-                    sucursalEditada.setId_sucursal(sucursal.getId_sucursal());
-                    sucursalEditada.setVersion(sucursal.getVersion());
-                    sucursalEditada.setFechaCreacion(sucursal.getFechaCreacion());
+                    Sucursal sucursalEditada = crearSucursalDesdeFormulario(dialogBinding);
+                    sucursalEditada.setId(sucursal.getId());
                     viewModel.actualizarSucursal(sucursalEditada);
                     dialog.dismiss();
                 }
@@ -408,7 +406,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         dialog.show();
     }
     
-    private void configurarFormularioSucursal(DialogSucursalBinding dialogBinding, SucursalEntity sucursal) {
+    private void configurarFormularioSucursal(DialogSucursalBinding dialogBinding, Sucursal sucursal) {
         // Configurar spinner de días
         String[] diasSemana = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
         ArrayAdapter<String> adapterDias = new ArrayAdapter<>(getContext(), 
@@ -621,52 +619,48 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         return esValido;
     }
     
-    private SucursalEntity crearSucursalDesdeFormulario(DialogSucursalBinding dialogBinding) {
-        SucursalEntity sucursal = new SucursalEntity();
+    private Sucursal crearSucursalDesdeFormulario(DialogSucursalBinding dialogBinding) {
+        Sucursal sucursal = new Sucursal();
         
         // Generar ID único para la sucursal
-        String sucursalId = "SUC_" + System.currentTimeMillis();
-        sucursal.setId_sucursal(sucursalId);
+        int sucursalId = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
+        sucursal.setId(sucursalId);
         
         sucursal.setNombre(dialogBinding.editTextNombre.getText().toString().trim());
         sucursal.setDireccion(dialogBinding.editTextDireccion.getText().toString().trim());
         // Campos ciudad, telefono y email no disponibles en database.entities.SucursalEntity
-        sucursal.setLat(latitudSeleccionada);
-        sucursal.setLon(longitudSeleccionada);
-        // Usar horario combinado en database.entities
-        sucursal.setHorario(horarioAperturaSeleccionado + " - " + horarioCierreSeleccionado);
+        sucursal.setLatitud(latitudSeleccionada);
+        sucursal.setLongitud(longitudSeleccionada);
+        // Usar horarios separados en models.Sucursal
+        sucursal.setHorarioApertura(horarioAperturaSeleccionado);
+        sucursal.setHorarioCierre(horarioCierreSeleccionado);
         // Campo diasOperacion no disponible en database.entities.SucursalEntity
         // if (!diasSeleccionados.isEmpty()) {
         //     sucursal.setDiasOperacion(String.join(",", diasSeleccionados));
         // }
         // Campo gerente no disponible en database.entities.SucursalEntity
         // Establecer estado activo por defecto
-        sucursal.setEstado("activo");
+        sucursal.setActiva(true);
         
         // Campo capacidadMaxima no disponible en database.entities.SucursalEntity
-        
-        long currentTime = System.currentTimeMillis();
-        sucursal.setFechaCreacion(currentTime);
-        sucursal.setFechaModificacion(currentTime);
-        // Campos creadoPor y modificadoPor no disponibles en database.entities.SucursalEntity
-        sucursal.setVersion(1);
         
         return sucursal;
     }
     
-    private void mostrarDetalleSucursal(SucursalEntity sucursal) {
+    private void mostrarDetalleSucursal(Sucursal sucursal) {
         String detalles = String.format(
                 "Nombre: %s\n" +
                 "Dirección: %s\n" +
-                "Horario: %s\n" +
+                "Horario: %s - %s\n" +
                 "Estado: %s\n" +
                 "Coordenadas: %.6f, %.6f",
                 sucursal.getNombre(),
                 sucursal.getDireccion(),
-                sucursal.getHorario(),
+                sucursal.getHorarioApertura(),
+                sucursal.getHorarioCierre(),
                 sucursal.isActiva() ? "Activa" : "Inactiva",
-                sucursal.getLat(),
-                sucursal.getLon()
+                sucursal.getLatitud(),
+                sucursal.getLongitud()
         );
         
         new AlertDialog.Builder(getContext())
@@ -678,9 +672,9 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
                 .show();
     }
     
-    private void mostrarSucursalEnMapa(SucursalEntity sucursal) {
+    private void mostrarSucursalEnMapa(Sucursal sucursal) {
         // if (mMap != null) {
-        //     LatLng posicion = new LatLng(sucursal.getLat(), sucursal.getLon());
+        //     LatLng posicion = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
         //     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(posicion, 15));
         //     
         //     // Cambiar a vista de mapa no implementado
@@ -690,7 +684,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         // Método deshabilitado - Google Maps removido
     }
     
-    private void toggleEstadoSucursal(SucursalEntity sucursal) {
+    private void toggleEstadoSucursal(Sucursal sucursal) {
         String accion = sucursal.isActiva() ? "desactivar" : "activar";
         String mensaje = String.format("¿Está seguro que desea %s la sucursal '%s'?", accion, sucursal.getNombre());
         
@@ -698,27 +692,23 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
                 .setTitle("Confirmar acción")
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
-                    try {
-                        long sucursalId = Long.parseLong(sucursal.getId_sucursal());
-            if (sucursal.isActiva()) {
-                            viewModel.desactivarSucursal(sucursalId, "Desactivada por administrador");
-                        } else {
-                            viewModel.activarSucursal(sucursalId);
-                        }
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(getContext(), "Error: ID de sucursal inválido", Toast.LENGTH_SHORT).show();
+                    long sucursalId = sucursal.getId();
+                    if (sucursal.isActiva()) {
+                        viewModel.desactivarSucursal(sucursalId, "Desactivada por administrador");
+                    } else {
+                        viewModel.activarSucursal(sucursalId);
                     }
                 })
                 .setNegativeButton("No", null)
                 .show();
     }
     
-    private void confirmarEliminacionSucursal(SucursalEntity sucursal) {
+    private void confirmarEliminacionSucursal(Sucursal sucursal) {
         new AlertDialog.Builder(getContext())
                 .setTitle("Eliminar Sucursal")
                 .setMessage(String.format("¿Está seguro que desea eliminar la sucursal '%s'?\n\nEsta acción no se puede deshacer.", sucursal.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarSucursal(Long.parseLong(sucursal.getId_sucursal()));
+                    viewModel.eliminarSucursal(sucursal.getId());
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();

@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.entities.CanjeEntity;
+import com.example.cafefidelidaqrdemo.database.models.Canje;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 
@@ -23,15 +23,15 @@ import java.util.Locale;
  */
 public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientesAdapter.CanjeViewHolder> {
     
-    private List<CanjeEntity> canjes;
+    private List<Canje> canjes;
     private OnCanjeClickListener listener;
     private SimpleDateFormat dateFormat;
     
     public interface OnCanjeClickListener {
-        void onCanjeClick(CanjeEntity canje);
+        void onCanjeClick(Canje canje);
     }
     
-    public CanjesRecientesAdapter(List<CanjeEntity> canjes, OnCanjeClickListener listener) {
+    public CanjesRecientesAdapter(List<Canje> canjes, OnCanjeClickListener listener) {
         this.canjes = canjes;
         this.listener = listener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
@@ -47,7 +47,7 @@ public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientes
     
     @Override
     public void onBindViewHolder(@NonNull CanjeViewHolder holder, int position) {
-        CanjeEntity canje = canjes.get(position);
+        Canje canje = canjes.get(position);
         holder.bind(canje);
     }
     
@@ -56,7 +56,7 @@ public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientes
         return canjes != null ? canjes.size() : 0;
     }
     
-    public void updateCanjes(List<CanjeEntity> nuevosCanjes) {
+    public void updateCanjes(List<Canje> nuevosCanjes) {
         this.canjes = nuevosCanjes;
         notifyDataSetChanged();
     }
@@ -88,9 +88,9 @@ public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientes
             });
         }
         
-        public void bind(CanjeEntity canje) {
-            textBeneficio.setText(canje.getId_beneficio() != null ? 
-                canje.getId_beneficio() : "Beneficio");
+        public void bind(Canje canje) {
+            textBeneficio.setText(canje.getBeneficioId() != null ?
+                canje.getId() : "Beneficio");
             
             if (canje.getFecha_solicitud() > 0) {
                 textFecha.setText(dateFormat.format(new Date(canje.getFecha_solicitud())));
@@ -100,7 +100,7 @@ public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientes
             
             textEstado.setText(canje.getEstado() != null ? canje.getEstado() : "Pendiente");
             
-            // Ocultar chip de tipo ya que CanjeEntity no tiene este campo
+            // Ocultar chip de tipo ya que Canje no tiene este campo
             chipTipo.setVisibility(View.GONE);
         }
     }

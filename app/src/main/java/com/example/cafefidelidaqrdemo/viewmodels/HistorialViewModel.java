@@ -7,10 +7,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
+
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
 import com.example.cafefidelidaqrdemo.models.HistorialItem;
 import com.example.cafefidelidaqrdemo.repository.HistorialRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
-import com.example.cafefidelidaqrdemo.database.CafeFidelidadDatabase;
 import com.example.cafefidelidaqrdemo.network.ApiClient;
 
 import java.util.Date;
@@ -90,10 +91,8 @@ public class HistorialViewModel extends AndroidViewModel {
         super(application);
         
         // Inicializar repositorio
-        CafeFidelidadDatabase database = CafeFidelidadDatabase.getInstance(application);
         repository = new HistorialRepository(
-            database.visitaDao(),
-            database.canjeDao(),
+            application,
             ApiClient.getApiService()
         );
         
