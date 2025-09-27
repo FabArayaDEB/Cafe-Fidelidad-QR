@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.adapters.MisBeneficiosAdapter;
 import com.example.cafefidelidaqrdemo.viewmodels.MisBeneficiosViewModel;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
@@ -25,6 +25,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Fragment para mostrar los beneficios disponibles del cliente

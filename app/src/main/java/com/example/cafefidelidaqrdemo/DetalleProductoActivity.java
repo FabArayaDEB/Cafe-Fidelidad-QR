@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.google.android.material.button.MaterialButton;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -129,17 +129,17 @@ public class DetalleProductoActivity extends AppCompatActivity {
         tvCategoria.setText("Categoría: " + producto.getCategoria());
 
         // Configurar precios - ProductoEntity no tiene descuentos
-        tvPrecio.setText(producto.getPrecioFormateado());
+        tvPrecio.setText(String.format("$%.2f", producto.getPrecio()));
         tvPrecioOriginal.setVisibility(View.GONE);
         tvDescuento.setVisibility(View.GONE);
 
-        // Configurar stock
-        if (producto.getStockDisponible() > 0) {
-            tvStock.setText(String.format("Stock disponible: %d unidades", producto.getStockDisponible()));
+        // Configurar stock - usando disponibilidad
+        if (producto.isDisponible()) {
+            tvStock.setText("Disponible");
             tvStock.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
             btnAgregarCarrito.setEnabled(true);
         } else {
-            tvStock.setText("Sin stock");
+            tvStock.setText("No disponible");
             tvStock.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             btnAgregarCarrito.setEnabled(false);
         }
@@ -159,13 +159,8 @@ public class DetalleProductoActivity extends AppCompatActivity {
         // Configurar indicador de popularidad - No disponible en ProductoEntity
         ivPopular.setVisibility(View.GONE);
 
-        // Configurar puntos requeridos
-        if (producto.getPuntosRequeridos() > 0) {
-            tvPuntosRequeridos.setText(String.format("Puntos requeridos: %d", producto.getPuntosRequeridos()));
-            tvPuntosRequeridos.setVisibility(View.VISIBLE);
-        } else {
-            tvPuntosRequeridos.setVisibility(View.GONE);
-        }
+        // Configurar puntos requeridos - ocultar por ahora ya que no está en el modelo
+        tvPuntosRequeridos.setVisibility(View.GONE);
 
         // Configurar botón de agregar al carrito
         btnAgregarCarrito.setOnClickListener(new View.OnClickListener() {
@@ -177,11 +172,11 @@ public class DetalleProductoActivity extends AppCompatActivity {
     }
 
     private void agregarAlCarrito() {
-        if (producto != null && producto.getStockDisponible() > 0) {
+        if (producto != null && producto.isDisponible()) {
             // TODO: Implementar lógica de carrito de compras
             Toast.makeText(this, "Producto agregado al carrito", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "Producto sin stock", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Producto no disponible", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -216,7 +216,7 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
         new DiffUtil.ItemCallback<Producto>() {
             @Override
             public boolean areItemsTheSame(@NonNull Producto oldItem, @NonNull Producto newItem) {
-                return oldItem.getId_producto().equals(newItem.getId_producto());
+                return oldItem.getId().equals(newItem.getId());
             }
             
             @Override

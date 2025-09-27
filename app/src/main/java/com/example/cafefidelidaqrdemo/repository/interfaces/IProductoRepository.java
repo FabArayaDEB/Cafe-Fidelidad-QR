@@ -1,7 +1,7 @@
 package com.example.cafefidelidaqrdemo.repository.interfaces;
 
 import androidx.lifecycle.LiveData;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 
 import java.util.List;

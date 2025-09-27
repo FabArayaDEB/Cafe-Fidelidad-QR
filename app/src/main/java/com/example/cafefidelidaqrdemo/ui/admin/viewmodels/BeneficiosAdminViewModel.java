@@ -12,7 +12,6 @@ import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * ViewModel para la gestión de beneficios por administradores
@@ -23,7 +22,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     private final BeneficioRepository beneficioRepository;
     
     // LiveData para la UI
-    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Beneficio>> allBeneficiosLiveData;
+    private final LiveData<List<Beneficio>> allBeneficiosLiveData;
     private final MediatorLiveData<List<Beneficio>> beneficiosLiveData = new MediatorLiveData<>();
     private final MutableLiveData<OperationResult> operationResultLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> refreshTrigger = new MutableLiveData<>();
@@ -159,7 +158,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     public void toggleBeneficioActive(Beneficio beneficio) {
         if (beneficio.isActivo()) {
             // Desactivar beneficio
-            beneficioRepository.desactivarBeneficio(beneficio.getId(), success -> {
+            beneficioRepository.desactivarBeneficio(Integer.parseInt(beneficio.getId()), success -> {
                 if (success) {
                     operationResultLiveData.postValue(
                         new OperationResult(true, "Beneficio desactivado exitosamente")
@@ -172,9 +171,19 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
                 }
             });
         } else {
-            // Activar beneficio (actualizar con activo = true)
-            beneficio.activar();
-            // updateBeneficio(beneficio); // TODO: Implementar método para Beneficio
+            // Activar beneficio
+            beneficioRepository.activarBeneficio(Integer.parseInt(beneficio.getId()), success -> {
+                if (success) {
+                    operationResultLiveData.postValue(
+                        new OperationResult(true, "Beneficio activado exitosamente")
+                    );
+                    refreshBeneficios();
+                } else {
+                    operationResultLiveData.postValue(
+                        new OperationResult(false, "Error al activar el beneficio")
+                    );
+                }
+            });
         }
     }
     
@@ -206,7 +215,7 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        if (beneficio.getValorDescuentoPorcentaje() <= 0 && beneficio.getValorDescuentoFijo() <= 0) {
+        if (beneficio.getValorDescuento() <= 0) {
             operationResultLiveData.postValue(
                 new OperationResult(false, "El beneficio debe tener un descuento válido")
             );
@@ -228,11 +237,11 @@ public class BeneficiosAdminViewModel extends AndroidViewModel {
     }
     
     public void filterBeneficiosByStatus(boolean activo) {
-        List<com.example.cafefidelidaqrdemo.database.models.Beneficio> currentBeneficios = allBeneficiosLiveData.getValue();
+        List<Beneficio> currentBeneficios = allBeneficiosLiveData.getValue();
         if (currentBeneficios != null) {
             List<Beneficio> filtered = currentBeneficios.stream()
                 .filter(b -> b.isActivo() == activo)
-                .collect(Collectors.toList()).reversed();
+                .collect(java.util.stream.Collectors.toList());
             beneficiosLiveData.setValue(filtered);
         }
     }

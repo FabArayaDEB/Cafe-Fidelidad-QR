@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.databinding.FragmentProductosAdminBinding;
 import com.example.cafefidelidaqrdemo.databinding.DialogProductoBinding;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
@@ -290,8 +290,7 @@ public class FragmentProductosAdmin extends Fragment {
                     Producto productoEditado = crearProductoDesdeFormulario(dialogBinding);
                     productoEditado.setId(producto.getId());
                     // Mantener campos del producto original
-                    productoEditado.setFechaCreacion(producto.getFechaCreacion());
-                    productoEditado.setFechaActualizacion(System.currentTimeMillis());
+                    // Note: fechaCreacion y fechaActualizacion no están disponibles en database.models.Producto
                     viewModel.actualizarProducto(productoEditado);
                     dialog.dismiss();
                 }
@@ -310,8 +309,9 @@ public class FragmentProductosAdmin extends Fragment {
             dialogBinding.editNombre.setText(producto.getNombre());
             dialogBinding.editDescripcion.setText(producto.getDescripcion());
             dialogBinding.editPrecio.setText(String.valueOf(producto.getPrecio()));
-            dialogBinding.editPuntos.setText(String.valueOf(producto.getPuntosRequeridos()));
+            // dialogBinding.editPuntos.setText("0"); // Producto no tiene puntos requeridos
             dialogBinding.editCategoria.setText(producto.getCategoria());
+            dialogBinding.editImagenUrl.setText(producto.getImagenUrl() != null ? producto.getImagenUrl() : "");
             dialogBinding.switchDisponible.setChecked(producto.isDisponible());
         } else {
             // Modo creación - valores por defecto
@@ -398,18 +398,17 @@ public class FragmentProductosAdmin extends Fragment {
         Producto producto = new Producto();
         
         // Generar ID único para el producto usando solo timestamp
-        producto.setId(Integer.parseInt(String.valueOf(System.currentTimeMillis())));
+        producto.setId(String.valueOf(System.currentTimeMillis()));
         
         producto.setNombre(dialogBinding.editNombre.getText().toString().trim());
         producto.setDescripcion(dialogBinding.editDescripcion.getText().toString().trim());
         producto.setPrecio(Double.parseDouble(dialogBinding.editPrecio.getText().toString().trim()));
         producto.setCategoria(dialogBinding.editCategoria.getText().toString().trim());
+        producto.setImagenUrl(dialogBinding.editImagenUrl.getText().toString().trim());
         producto.setDisponible(dialogBinding.switchDisponible.isChecked());
         
         // Valores por defecto para campos requeridos
-        producto.setStock(0); // Stock inicial
-        producto.setFechaCreacion(System.currentTimeMillis());
-        producto.setFechaActualizacion(System.currentTimeMillis());
+        // Note: Stock, fechaCreacion y fechaActualizacion no están disponibles en database.models.Producto
         
         return producto;
     }
@@ -422,19 +421,15 @@ public class FragmentProductosAdmin extends Fragment {
                 "Nombre: %s\n" +
                 "Descripción: %s\n" +
                 "Precio: %s\n" +
-                "Stock: %d\n" +
                 "Categoría: %s\n" +
-                "Estado: %s\n" +
-                "Creado: %s\n" +
-                "Modificado: %s",
+                "URL de imagen: %s\n" +
+                "Estado: %s",
                 producto.getNombre(),
                 producto.getDescripcion(),
                 NumberFormat.getCurrencyInstance(new Locale("es", "CO")).format(producto.getPrecio()),
-                producto.getStock(),
                 producto.getCategoria(),
-                producto.isDisponible() ? "Disponible" : "No disponible",
-                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new java.util.Date(producto.getFechaCreacion())),
-                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new java.util.Date(producto.getFechaActualizacion()))
+                producto.getImagenUrl() != null && !producto.getImagenUrl().isEmpty() ? producto.getImagenUrl() : "No especificada",
+                producto.isDisponible() ? "Disponible" : "No disponible"
         );
         
         builder.setTitle("Detalle del Producto")
@@ -453,7 +448,6 @@ public class FragmentProductosAdmin extends Fragment {
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
                     producto.setDisponible(!producto.isDisponible());
-                    producto.setFechaActualizacion(System.currentTimeMillis());
                     viewModel.actualizarProducto(producto);
                 })
                 .setNegativeButton("No", null)
@@ -465,7 +459,7 @@ public class FragmentProductosAdmin extends Fragment {
                 .setTitle("Eliminar Producto")
                 .setMessage(String.format("¿Está seguro que desea eliminar el producto '%s'?\n\nEsta acción no se puede deshacer.", producto.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarProducto(producto.getId());
+                    viewModel.eliminarProducto(Long.parseLong(producto.getId()));
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
@@ -490,7 +484,6 @@ public class FragmentProductosAdmin extends Fragment {
         // Cambiar el estado de disponibilidad del producto
         boolean nuevoEstado = !producto.isDisponible();
         producto.setDisponible(nuevoEstado);
-        producto.se(System.currentTimeMillis());
         
         // Actualizar en el ViewModel
         viewModel.actualizarProducto(producto);

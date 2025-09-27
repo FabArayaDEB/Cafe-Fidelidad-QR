@@ -7,12 +7,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
-import com.example.cafefidelidaqrdemo.database.models.Canje;
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
-import com.example.cafefidelidaqrdemo.database.models.Sucursal;
-import com.example.cafefidelidaqrdemo.database.models.Visita;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Canje;
+import com.example.cafefidelidaqrdemo.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
+import com.example.cafefidelidaqrdemo.models.Visita;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     
     // Información de la base de datos
     private static final String DATABASE_NAME = "cafe_fidelidad.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     
     // Nombres de las tablas
     private static final String TABLE_CLIENTES = "clientes";
@@ -41,6 +41,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String COLUMN_CLIENTE_TELEFONO = "telefono";
     private static final String COLUMN_CLIENTE_PASSWORD = "password";
     private static final String COLUMN_CLIENTE_PUNTOS = "puntos_acumulados";
+    private static final String COLUMN_CLIENTE_ACTIVO = "activo";
     
     // Columnas tabla productos
     private static final String COLUMN_PRODUCTO_NOMBRE = "nombre";
@@ -59,6 +60,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String COLUMN_SUCURSAL_LATITUD = "latitud";
     private static final String COLUMN_SUCURSAL_LONGITUD = "longitud";
     private static final String COLUMN_SUCURSAL_ESTADO = "estado";
+    private static final String COLUMN_SUCURSAL_ACTIVA = "activa";
     
     // Columnas tabla beneficios
     private static final String COLUMN_BENEFICIO_NOMBRE = "nombre";
@@ -87,7 +89,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             COLUMN_CLIENTE_EMAIL + " TEXT UNIQUE NOT NULL, " +
             COLUMN_CLIENTE_TELEFONO + " TEXT, " +
             COLUMN_CLIENTE_PASSWORD + " TEXT NOT NULL, " +
-            COLUMN_CLIENTE_PUNTOS + " INTEGER DEFAULT 0" +
+            COLUMN_CLIENTE_PUNTOS + " INTEGER DEFAULT 0, " +
+            COLUMN_CLIENTE_ACTIVO + " INTEGER DEFAULT 1" +
             ");";
     
     private static final String CREATE_TABLE_PRODUCTOS = "CREATE TABLE " + TABLE_PRODUCTOS + " (" +
@@ -176,14 +179,23 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d(TAG, "Actualizando base de datos de versión " + oldVersion + " a " + newVersion);
         
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CANJES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_VISITAS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_BENEFICIOS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUCURSALES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTOS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CLIENTES);
-        
-        onCreate(db);
+        if (oldVersion < 2) {
+            // Agregar campo activo a la tabla clientes
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_CLIENTES + " ADD COLUMN " + COLUMN_CLIENTE_ACTIVO + " INTEGER DEFAULT 1");
+                Log.d(TAG, "Campo 'activo' agregado a la tabla clientes");
+            } catch (Exception e) {
+                Log.e(TAG, "Error al agregar campo activo: " + e.getMessage());
+                // Si falla, recrear la tabla
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_CANJES);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_VISITAS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_BENEFICIOS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUCURSALES);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTOS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_CLIENTES);
+                onCreate(db);
+            }
+        }
     }
     
     private void insertarDatosEjemplo(SQLiteDatabase db) {
@@ -196,6 +208,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         clienteValues.put(COLUMN_CLIENTE_TELEFONO, "123456789");
         clienteValues.put(COLUMN_CLIENTE_PASSWORD, "123456");
         clienteValues.put(COLUMN_CLIENTE_PUNTOS, 100);
+        clienteValues.put(COLUMN_CLIENTE_ACTIVO, 1);
         db.insert(TABLE_CLIENTES, null, clienteValues);
         
         // Insertar productos de ejemplo
@@ -231,9 +244,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         Log.d(TAG, "Datos de ejemplo insertados");
     }
     
-    // ==================== MÉTODOS CRUD PARA CLIENTES ====================
+    // MÉTODOS CRUD PARA CLIENTES
     
     public long insertarCliente(Cliente cliente) {
+        Log.d(TAG, "Iniciando inserción de cliente: " + cliente.getNombre());
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         
@@ -242,11 +256,25 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_CLIENTE_TELEFONO, cliente.getTelefono());
         values.put(COLUMN_CLIENTE_PASSWORD, cliente.getPassword());
         values.put(COLUMN_CLIENTE_PUNTOS, cliente.getPuntosAcumulados());
+        values.put(COLUMN_CLIENTE_ACTIVO, cliente.isActivo() ? 1 : 0);
+        
+        Log.d(TAG, "Datos del cliente a insertar:");
+        Log.d(TAG, "Nombre: " + cliente.getNombre());
+        Log.d(TAG, "Email: " + cliente.getEmail());
+        Log.d(TAG, "Teléfono: " + cliente.getTelefono());
+        Log.d(TAG, "Puntos: " + cliente.getPuntosAcumulados());
+        Log.d(TAG, "Activo: " + cliente.isActivo());
         
         long id = db.insert(TABLE_CLIENTES, null, values);
+        
+        if (id == -1) {
+            Log.e(TAG, "Error al insertar cliente en la base de datos");
+        } else {
+            Log.d(TAG, "Cliente insertado exitosamente con ID: " + id);
+        }
+        
         db.close();
         
-        Log.d(TAG, "Cliente insertado con ID: " + id);
         return id;
     }
     
@@ -259,12 +287,13 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             cliente = new Cliente();
-            cliente.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            cliente.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             cliente.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_NOMBRE)));
             cliente.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_EMAIL)));
             cliente.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_TELEFONO)));
             cliente.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PASSWORD)));
             cliente.setPuntosAcumulados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PUNTOS)));
+            cliente.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_ACTIVO)) == 1);
             cursor.close();
         }
         
@@ -281,12 +310,13 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             cliente = new Cliente();
-            cliente.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            cliente.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             cliente.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_NOMBRE)));
             cliente.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_EMAIL)));
             cliente.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_TELEFONO)));
             cliente.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PASSWORD)));
             cliente.setPuntosAcumulados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PUNTOS)));
+            cliente.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_ACTIVO)) == 1);
             cursor.close();
         }
         
@@ -303,12 +333,13 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Cliente cliente = new Cliente();
-                cliente.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                cliente.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 cliente.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_NOMBRE)));
                 cliente.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_EMAIL)));
                 cliente.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_TELEFONO)));
                 cliente.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PASSWORD)));
                 cliente.setPuntosAcumulados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PUNTOS)));
+                cliente.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_ACTIVO)) == 1);
                 clientes.add(cliente);
             } while (cursor.moveToNext());
             cursor.close();
@@ -317,7 +348,33 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         db.close();
         return clientes;
     }
-    
+
+    public List<Cliente> obtenerClientesActivos() {
+        List<Cliente> clientes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        Cursor cursor = db.query(TABLE_CLIENTES, null, COLUMN_CLIENTE_ACTIVO + "=?", 
+                new String[]{"1"}, null, null, COLUMN_CLIENTE_NOMBRE);
+        
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Cliente cliente = new Cliente();
+                cliente.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
+                cliente.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_NOMBRE)));
+                cliente.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_EMAIL)));
+                cliente.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_TELEFONO)));
+                cliente.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PASSWORD)));
+                cliente.setPuntosAcumulados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_PUNTOS)));
+                cliente.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CLIENTE_ACTIVO)) == 1);
+                clientes.add(cliente);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        
+        db.close();
+        return clientes;
+    }
+
     public int actualizarCliente(Cliente cliente) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -327,6 +384,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_CLIENTE_TELEFONO, cliente.getTelefono());
         values.put(COLUMN_CLIENTE_PASSWORD, cliente.getPassword());
         values.put(COLUMN_CLIENTE_PUNTOS, cliente.getPuntosAcumulados());
+        values.put(COLUMN_CLIENTE_ACTIVO, cliente.isActivo() ? 1 : 0);
         
         int rowsAffected = db.update(TABLE_CLIENTES, values, COLUMN_ID + "=?", 
                 new String[]{String.valueOf(cliente.getId())});
@@ -358,7 +416,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         return count;
     }
     
-    // ==================== MÉTODOS CRUD PARA BENEFICIOS ====================
+    //  MÉTODOS CRUD PARA BENEFICIOS
     
     public long insertarBeneficio(Beneficio beneficio) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -366,7 +424,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         values.put(COLUMN_BENEFICIO_NOMBRE, beneficio.getNombre());
         values.put(COLUMN_BENEFICIO_DESCRIPCION, beneficio.getDescripcion());
-        values.put(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS, beneficio.getPuntosRequeridos());
+        values.put(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS, beneficio.getVisitasRequeridas());
         values.put(COLUMN_BENEFICIO_TIPO, beneficio.getTipo());
         values.put(COLUMN_BENEFICIO_ACTIVO, beneficio.isActivo() ? 1 : 0);
         
@@ -386,10 +444,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             beneficio = new Beneficio();
-            beneficio.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            beneficio.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             beneficio.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_NOMBRE)));
             beneficio.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_DESCRIPCION)));
-            beneficio.setPuntosRequeridos(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
+            beneficio.setVisitasRequeridas(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
             beneficio.setTipo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_TIPO)));
             beneficio.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_ACTIVO)) == 1);
             cursor.close();
@@ -408,10 +466,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Beneficio beneficio = new Beneficio();
-                beneficio.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                beneficio.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 beneficio.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_NOMBRE)));
                 beneficio.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_DESCRIPCION)));
-                beneficio.setPuntosRequeridos(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
+                beneficio.setVisitasRequeridas(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
                 beneficio.setTipo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_TIPO)));
                 beneficio.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_ACTIVO)) == 1);
                 beneficios.add(beneficio);
@@ -433,10 +491,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Beneficio beneficio = new Beneficio();
-                beneficio.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                beneficio.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 beneficio.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_NOMBRE)));
                 beneficio.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_DESCRIPCION)));
-                beneficio.setPuntosRequeridos(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
+                beneficio.setVisitasRequeridas(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS)));
                 beneficio.setTipo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_TIPO)));
                 beneficio.setActivo(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BENEFICIO_ACTIVO)) == 1);
                 beneficios.add(beneficio);
@@ -454,7 +512,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         values.put(COLUMN_BENEFICIO_NOMBRE, beneficio.getNombre());
         values.put(COLUMN_BENEFICIO_DESCRIPCION, beneficio.getDescripcion());
-        values.put(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS, beneficio.getPuntosRequeridos());
+        values.put(COLUMN_BENEFICIO_PUNTOS_REQUERIDOS, beneficio.getVisitasRequeridas());
         values.put(COLUMN_BENEFICIO_TIPO, beneficio.getTipo());
         values.put(COLUMN_BENEFICIO_ACTIVO, beneficio.isActivo() ? 1 : 0);
         
@@ -488,14 +546,14 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         return count;
     }
     
-    // ==================== MÉTODOS CRUD PARA VISITAS ====================
+    // MÉTODOS CRUD PARA VISITAS
     
     public long insertarVisita(Visita visita) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         
-        values.put(COLUMN_VISITA_CLIENTE_ID, visita.getClienteId());
-        values.put(COLUMN_VISITA_SUCURSAL_ID, visita.getSucursalId());
+        values.put(COLUMN_VISITA_CLIENTE_ID, visita.getUserId());
+        values.put(COLUMN_VISITA_SUCURSAL_ID, visita.getSucursal());
         values.put(COLUMN_VISITA_FECHA, visita.getFechaVisita());
         values.put(COLUMN_VISITA_PUNTOS_GANADOS, visita.getPuntosGanados());
         
@@ -515,10 +573,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             visita = new Visita();
-            visita.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
-            visita.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
-            visita.setSucursalId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
-            visita.setFechaVisita(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
+            visita.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
+            visita.setUserId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
+            visita.setSucursal(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
+            visita.setFechaVisita(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
             visita.setPuntosGanados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_PUNTOS_GANADOS)));
             cursor.close();
         }
@@ -536,10 +594,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Visita visita = new Visita();
-                visita.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
-                visita.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
-                visita.setSucursalId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
-                visita.setFechaVisita(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
+                visita.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
+                visita.setUserId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
+                visita.setSucursal(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
+                visita.setFechaVisita(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
                 visita.setPuntosGanados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_PUNTOS_GANADOS)));
                 visitas.add(visita);
             } while (cursor.moveToNext());
@@ -560,10 +618,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Visita visita = new Visita();
-                visita.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
-                visita.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
-                visita.setSucursalId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
-                visita.setFechaVisita(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
+                visita.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
+                visita.setUserId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_CLIENTE_ID)));
+                visita.setSucursal(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VISITA_SUCURSAL_ID)));
+                visita.setFechaVisita(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_VISITA_FECHA)));
                 visita.setPuntosGanados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VISITA_PUNTOS_GANADOS)));
                 visitas.add(visita);
             } while (cursor.moveToNext());
@@ -578,8 +636,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         
-        values.put(COLUMN_VISITA_CLIENTE_ID, visita.getClienteId());
-        values.put(COLUMN_VISITA_SUCURSAL_ID, visita.getSucursalId());
+        values.put(COLUMN_VISITA_CLIENTE_ID, visita.getUserId());
+        values.put(COLUMN_VISITA_SUCURSAL_ID, visita.getSucursal());
         values.put(COLUMN_VISITA_FECHA, visita.getFechaVisita());
         values.put(COLUMN_VISITA_PUNTOS_GANADOS, visita.getPuntosGanados());
         
@@ -613,7 +671,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         return count;
     }
     
-    // ==================== MÉTODOS CRUD PARA CANJES ====================
+    // MÉTODOS CRUD PARA CANJES
     
     public long insertarCanje(Canje canje) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -641,10 +699,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             canje = new Canje();
-            canje.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            canje.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             canje.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_CLIENTE_ID)));
             canje.setBeneficioId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_BENEFICIO_ID)));
-            canje.setFechaCanje(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
+            canje.setFechaCanje(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
             canje.setPuntosUtilizados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_PUNTOS_UTILIZADOS)));
             canje.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_ESTADO)));
             cursor.close();
@@ -663,10 +721,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Canje canje = new Canje();
-                canje.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                canje.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 canje.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_CLIENTE_ID)));
                 canje.setBeneficioId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_BENEFICIO_ID)));
-                canje.setFechaCanje(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
+                canje.setFechaCanje(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
                 canje.setPuntosUtilizados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_PUNTOS_UTILIZADOS)));
                 canje.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_ESTADO)));
                 canjes.add(canje);
@@ -688,10 +746,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Canje canje = new Canje();
-                canje.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                canje.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 canje.setClienteId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_CLIENTE_ID)));
                 canje.setBeneficioId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_BENEFICIO_ID)));
-                canje.setFechaCanje(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
+                canje.setFechaCanje(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_CANJE_FECHA)));
                 canje.setPuntosUtilizados(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CANJE_PUNTOS_UTILIZADOS)));
                 canje.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CANJE_ESTADO)));
                 canjes.add(canje);
@@ -743,7 +801,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         return count;
     }
     
-    // ==================== MÉTODOS CRUD PARA SUCURSALES ====================
+    // MÉTODOS CRUD PARA SUCURSALES
     
     public long insertarSucursal(Sucursal sucursal) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -773,7 +831,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             sucursal = new Sucursal();
-            sucursal.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            sucursal.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             sucursal.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_NOMBRE)));
             sucursal.setDireccion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_DIRECCION)));
             sucursal.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_TELEFONO)));
@@ -797,7 +855,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Sucursal sucursal = new Sucursal();
-                sucursal.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                sucursal.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 sucursal.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_NOMBRE)));
                 sucursal.setDireccion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_DIRECCION)));
                 sucursal.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_TELEFONO)));
@@ -826,7 +884,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Sucursal sucursal = new Sucursal();
-                sucursal.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                sucursal.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 sucursal.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_NOMBRE)));
                 sucursal.setDireccion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_DIRECCION)));
                 sucursal.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_TELEFONO)));
@@ -886,7 +944,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         return count;
     }
     
-    // ==================== MÉTODOS CRUD PARA PRODUCTOS ====================
+    // MÉTODOS CRUD PARA PRODUCTOS
     
     public long insertarProducto(Producto producto) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -915,7 +973,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         if (cursor != null && cursor.moveToFirst()) {
             producto = new Producto();
-            producto.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            producto.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
             producto.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_NOMBRE)));
             producto.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_DESCRIPCION)));
             producto.setPrecio(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_PRECIO)));
@@ -938,7 +996,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Producto producto = new Producto();
-                producto.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                producto.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 producto.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_NOMBRE)));
                 producto.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_DESCRIPCION)));
                 producto.setPrecio(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_PRECIO)));
@@ -966,7 +1024,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Producto producto = new Producto();
-                producto.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                producto.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 producto.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_NOMBRE)));
                 producto.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_DESCRIPCION)));
                 producto.setPrecio(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_PRECIO)));
@@ -992,7 +1050,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 Producto producto = new Producto();
-                producto.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                producto.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))));
                 producto.setNombre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_NOMBRE)));
                 producto.setDescripcion(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_DESCRIPCION)));
                 producto.setPrecio(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_PRODUCTO_PRECIO)));

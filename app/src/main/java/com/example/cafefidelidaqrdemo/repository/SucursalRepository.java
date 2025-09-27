@@ -6,7 +6,9 @@ import androidx.lifecycle.MutableLiveData;
 import android.util.Log;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Sucursal;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
+
+import java.util.ArrayList;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +26,7 @@ public class SucursalRepository {
     private final MutableLiveData<List<Sucursal>> sucursalesLiveData = new MutableLiveData<>();
     
     public SucursalRepository(Context context) {
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.executor = Executors.newFixedThreadPool(4);
         loadSucursales();
     }
@@ -73,7 +75,7 @@ public class SucursalRepository {
                     return;
                 }
                 
-                long result = database.insertSucursal(sucursal);
+                long result = database.insertarSucursal(sucursal);
                 boolean success = result != -1;
                 
                 if (success) {
@@ -98,9 +100,23 @@ public class SucursalRepository {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                if (sucursal == null || sucursal.getId() <= 0) {
+                if (sucursal == null || sucursal.getId() == null || sucursal.getId().isEmpty()) {
                     callback.onResult(false);
                     errorLiveData.postValue("Sucursal inválida");
+                    return;
+                }
+                
+                // Validar que el ID sea un número válido
+                try {
+                    int idValue = Integer.parseInt(sucursal.getId());
+                    if (idValue <= 0) {
+                        callback.onResult(false);
+                        errorLiveData.postValue("ID de sucursal inválido");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("ID de sucursal debe ser un número válido");
                     return;
                 }
                 
@@ -150,6 +166,25 @@ public class SucursalRepository {
         });
     }
     
+    public void getSucursalById(long id, SucursalCallback callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                Sucursal sucursal = database.obtenerSucursalPorId((int) id);
+                if (sucursal != null) {
+                    callback.onSuccess(sucursal);
+                } else {
+                    callback.onError("Sucursal no encontrada");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error al obtener sucursal por ID", e);
+                callback.onError("Error al obtener sucursal: " + e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+    
     // Métodos privados
     private void loadSucursales() {
         executor.execute(() -> {
@@ -168,9 +203,44 @@ public class SucursalRepository {
         void onResult(T result);
     }
     
+    public interface SucursalCallback {
+        void onSuccess(Sucursal sucursal);
+        void onError(String error);
+    }
+    
     // Métodos de sincronización (simplificados)
     public void refreshSucursales(OnResultCallback<Boolean> callback) {
         loadSucursales();
         callback.onResult(true);
     }
+    
+    public void forceSyncSucursales() {
+        loadSucursales();
+    }
+    
+    public void clearError() {
+        errorLiveData.postValue(null);
+    }
+    
+    /**
+     * Clase para representar sucursal con distancia
+     */
+    public static class SucursalWithDistance {
+        private Sucursal sucursal;
+        private double distance;
+        
+        public SucursalWithDistance(Sucursal sucursal, double distance) {
+            this.sucursal = sucursal;
+            this.distance = distance;
+        }
+        
+        public Sucursal getSucursal() {
+            return sucursal;
+        }
+        
+        public double getDistance() {
+            return distance;
+        }
+    }
+
 }

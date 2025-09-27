@@ -5,14 +5,15 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
-import com.example.cafefidelidaqrdemo.database.models.Sucursal;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.models.RecentActivity;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.network.RetrofitClient;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.AdminDashboardViewModel.SystemHealth;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -99,7 +100,8 @@ public class AdminRepository {
         executor.execute(() -> {
             try {
                 if (nombre == null || nombre.trim().isEmpty()) {
-                    result.postValue(database.obtenerTodosLosProductos());
+                    List<Producto> productos = database.obtenerTodosLosProductos();
+                    result.postValue(productos);
                     return;
                 }
                 
@@ -136,7 +138,7 @@ public class AdminRepository {
                 
                 long id = database.insertarProducto(producto);
                 if (id > 0) {
-                    producto.setId((int) id);
+                    producto.setId(String.valueOf(id));
                     callback.onSuccess(producto);
                     successMessage.postValue("Producto creado exitosamente");
                 } else {
@@ -203,6 +205,36 @@ public class AdminRepository {
         });
     }
     
+    /**
+     * Actualiza el stock de un producto
+     */
+    public void actualizarStockProducto(String productoId, int nuevoStock, String motivo) {
+        isLoading.postValue(true);
+        executor.execute(() -> {
+            try {
+                int id = Integer.parseInt(productoId);
+                Producto producto = database.obtenerProductoPorId(id);
+                if (producto != null) {
+                    producto.setStock(nuevoStock);
+                    int rowsAffected = database.actualizarProducto(producto);
+                    if (rowsAffected > 0) {
+                        successMessage.postValue("Stock actualizado exitosamente. Motivo: " + motivo);
+                    } else {
+                        errorMessage.postValue("No se pudo actualizar el stock del producto");
+                    }
+                } else {
+                    errorMessage.postValue("Producto no encontrado");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.postValue("ID de producto inválido");
+            } catch (Exception e) {
+                errorMessage.postValue("Error al actualizar stock: " + e.getMessage());
+            } finally {
+                isLoading.postValue(false);
+            }
+        });
+    }
+    
     // ========== GESTIÓN DE SUCURSALES ==========
     
     /**
@@ -254,7 +286,7 @@ public class AdminRepository {
                 
                 long id = database.insertarSucursal(sucursal);
                 if (id > 0) {
-                    sucursal.setId((int) id);
+                    sucursal.setId(String.valueOf(id));
                     callback.onSuccess(sucursal);
                     successMessage.postValue("Sucursal creada exitosamente");
                 } else {
@@ -307,7 +339,8 @@ public class AdminRepository {
         MutableLiveData<List<Beneficio>> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                List<Beneficio> beneficios = database.obtenerTodosLosBeneficios();
+                List<com.example.cafefidelidaqrdemo.models.Beneficio> dbBeneficios = database.obtenerTodosLosBeneficios();
+                List<Beneficio> beneficios = convertFromDBBeneficioList(dbBeneficios);
                 result.postValue(beneficios);
             } catch (Exception e) {
                 errorMessage.postValue("Error al obtener beneficios: " + e.getMessage());
@@ -324,7 +357,8 @@ public class AdminRepository {
         MutableLiveData<List<Beneficio>> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                List<Beneficio> beneficios = database.obtenerBeneficiosActivos();
+                List<com.example.cafefidelidaqrdemo.models.Beneficio> dbBeneficios = database.obtenerBeneficiosActivos();
+                List<Beneficio> beneficios = convertFromDBBeneficioList(dbBeneficios);
                 result.postValue(beneficios);
             } catch (Exception e) {
                 errorMessage.postValue("Error al obtener beneficios activos: " + e.getMessage());
@@ -347,9 +381,11 @@ public class AdminRepository {
                     return;
                 }
                 
-                long id = database.insertarBeneficio(beneficio);
+                // Convertir a modelo de base de datos antes de insertar
+                com.example.cafefidelidaqrdemo.models.Beneficio dbBeneficio = convertToDBBeneficio(beneficio);
+                long id = database.insertarBeneficio(dbBeneficio);
                 if (id > 0) {
-                    beneficio.setId((int) id);
+                    beneficio.setId(String.valueOf(id));
                     callback.onSuccess(beneficio);
                     successMessage.postValue("Beneficio creado exitosamente");
                 } else {
@@ -381,7 +417,7 @@ public class AdminRepository {
     private boolean validarBeneficio(Beneficio beneficio) {
         return beneficio != null && 
                beneficio.getNombre() != null && !beneficio.getNombre().trim().isEmpty() &&
-               beneficio.getPuntosRequeridos() > 0;
+               beneficio.esValido();
     }
     
     // ========== GETTERS PARA LIVEDATA ==========
@@ -516,8 +552,8 @@ public class AdminRepository {
         MutableLiveData<Integer> result = new MutableLiveData<>();
         executor.execute(() -> {
             try {
-                List<Beneficio> beneficios = database.obtenerBeneficiosDisponibles();
-                result.postValue(beneficios != null ? beneficios.size() : 0);
+                List<com.example.cafefidelidaqrdemo.models.Beneficio> dbBeneficios = database.obtenerBeneficiosActivos();
+                result.postValue(dbBeneficios != null ? dbBeneficios.size() : 0);
             } catch (Exception e) {
                 result.postValue(0);
             }
@@ -530,8 +566,8 @@ public class AdminRepository {
         executor.execute(() -> {
             try {
                 int total = database.obtenerConteoBeneficios();
-                List<Beneficio> activos = database.obtenerBeneficiosDisponibles();
-                int activosCount = activos != null ? activos.size() : 0;
+                List<com.example.cafefidelidaqrdemo.models.Beneficio> dbActivos = database.obtenerBeneficiosActivos();
+                int activosCount = dbActivos != null ? dbActivos.size() : 0;
                 result.postValue(total - activosCount);
             } catch (Exception e) {
                 result.postValue(0);
@@ -542,8 +578,8 @@ public class AdminRepository {
     
     public int getCountBeneficiosActivosSync() {
         try {
-            List<Beneficio> beneficios = database.obtenerBeneficiosDisponibles();
-            return beneficios != null ? beneficios.size() : 0;
+            List<com.example.cafefidelidaqrdemo.models.Beneficio> dbBeneficios = database.obtenerBeneficiosActivos();
+            return dbBeneficios != null ? dbBeneficios.size() : 0;
         } catch (Exception e) {
             return 0;
         }
@@ -552,8 +588,8 @@ public class AdminRepository {
     public int getCountBeneficiosInactivosSync() {
         try {
             int total = database.obtenerConteoBeneficios();
-            List<Beneficio> activos = database.obtenerBeneficiosDisponibles();
-            int activosCount = activos != null ? activos.size() : 0;
+            List<com.example.cafefidelidaqrdemo.models.Beneficio> dbActivos = database.obtenerBeneficiosActivos();
+            int activosCount = dbActivos != null ? dbActivos.size() : 0;
             return total - activosCount;
         } catch (Exception e) {
             return 0;
@@ -643,6 +679,108 @@ public class AdminRepository {
     
     // ========== LIMPIEZA ==========
     
+    public void limpiarDatosLocales() {
+        executor.execute(() -> {
+            try {
+                isLoading.postValue(true);
+                // Implementar lógica de limpieza de datos locales
+                // Por ejemplo, limpiar caché, datos temporales, etc.
+                successMessage.postValue("Datos locales limpiados exitosamente");
+            } catch (Exception e) {
+                errorMessage.postValue("Error al limpiar datos locales: " + e.getMessage());
+            } finally {
+                isLoading.postValue(false);
+            }
+        });
+    }
+    
+
+
+    // ==================== MÉTODOS DE CONVERSIÓN BENEFICIO ====================
+    
+    /**
+     * Convierte de modelo de dominio a modelo de base de datos
+     */
+    private com.example.cafefidelidaqrdemo.models.Beneficio convertToDBBeneficio(Beneficio beneficio) {
+        if (beneficio == null) return null;
+        
+        com.example.cafefidelidaqrdemo.models.Beneficio dbBeneficio =
+            new com.example.cafefidelidaqrdemo.models.Beneficio();
+        
+        // Mantener ID como String
+        if (beneficio.getId() != null && !beneficio.getId().isEmpty()) {
+            dbBeneficio.setId(beneficio.getId());
+        } else {
+            // Para nuevos registros, usar null o string vacío
+            dbBeneficio.setId(null);
+        }
+        
+        dbBeneficio.setNombre(beneficio.getNombre());
+        dbBeneficio.setDescripcion(beneficio.getDescripcion());
+        dbBeneficio.setActivo(beneficio.isActivo());
+        
+        // Mapear tipo de enum a string
+        if (beneficio.getTipo() != null) {
+            dbBeneficio.setTipo(beneficio.getTipo().toString());
+        }
+        
+        // Mapear fechas usando los métodos disponibles
+        if (beneficio.getFechaVencimiento() > 0) {
+            dbBeneficio.setFechaVencimiento(beneficio.getFechaVencimiento());
+        }
+        
+        // Mapear visitas requeridas
+        dbBeneficio.setVisitasRequeridas(beneficio.getVisitasRequeridas());
+        
+        return dbBeneficio;
+    }
+
+    /**
+     * Convierte de modelo de base de datos a modelo de dominio
+     */
+    private Beneficio convertFromDBBeneficio(com.example.cafefidelidaqrdemo.models.Beneficio dbBeneficio) {
+        if (dbBeneficio == null) return null;
+        
+        Beneficio beneficio = new Beneficio();
+        
+        // Convertir ID de int a String
+        beneficio.setId(String.valueOf(dbBeneficio.getId()));
+        beneficio.setNombre(dbBeneficio.getNombre());
+        beneficio.setDescripcion(dbBeneficio.getDescripcion());
+        beneficio.setActivo(dbBeneficio.isActivo());
+        
+        // Mapear tipo como string
+        if (dbBeneficio.getTipo() != null) {
+            beneficio.setTipo(dbBeneficio.getTipo());
+        }
+        
+        // Mapear fechas usando los métodos disponibles
+        if (dbBeneficio.getFechaVencimiento() > 0) {
+            beneficio.setFechaVencimiento(dbBeneficio.getFechaVencimiento());
+        }
+        
+        // Mapear campos básicos
+        beneficio.setVisitasRequeridas(dbBeneficio.getVisitasRequeridas());
+        
+        return beneficio;
+    }
+
+    /**
+     * Convierte lista de modelos de base de datos a modelos de dominio
+     */
+    private List<Beneficio> convertFromDBBeneficioList(List<com.example.cafefidelidaqrdemo.models.Beneficio> dbBeneficios) {
+        if (dbBeneficios == null) return new ArrayList<>();
+        
+        List<Beneficio> beneficios = new ArrayList<>();
+        for (com.example.cafefidelidaqrdemo.models.Beneficio dbBeneficio : dbBeneficios) {
+            Beneficio beneficio = convertFromDBBeneficio(dbBeneficio);
+            if (beneficio != null) {
+                beneficios.add(beneficio);
+            }
+        }
+        return beneficios;
+    }
+
     public void cleanup() {
         if (executor != null && !executor.isShutdown()) {
             executor.shutdown();

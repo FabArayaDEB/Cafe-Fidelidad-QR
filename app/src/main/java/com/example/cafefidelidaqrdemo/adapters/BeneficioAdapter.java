@@ -1,15 +1,6 @@
 package com.example.cafefidelidaqrdemo.adapters;
 
-import static com.example.cafefidelidaqrdemo.models.Beneficio.EstadoBeneficio.BLOQUEADO;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.EstadoBeneficio.DISPONIBLE;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.EstadoBeneficio.EXPIRADO;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.EstadoBeneficio.PENDIENTE_ACTIVACION;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.EstadoBeneficio.USADO;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.TipoBeneficio.DESCUENTO_FIJO;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.TipoBeneficio.ENVIO_GRATIS;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.TipoBeneficio.PRODUCTO_GRATIS;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.TipoBeneficio.PUNTOS_EXTRA;
-import static com.example.cafefidelidaqrdemo.models.Beneficio.TipoBeneficio.UPGRADE_PRODUCTO;
+
 
 import android.content.Context;
 import android.graphics.Color;
@@ -96,28 +87,13 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
         });
     }
     
-    private void configurarIconoBeneficio(ImageView iconView, Beneficio.TipoBeneficio tipo) {
+    private void configurarIconoBeneficio(ImageView iconView, String tipo) {
         int iconResource;
         switch (tipo) {
-            case DESCUENTO_PORCENTAJE:
+            case "descuento":
                 iconResource = R.drawable.ic_coffee_placeholder;
                 break;
-            case DESCUENTO_FIJO:
-                iconResource = R.drawable.ic_coffee_placeholder;
-                break;
-            case PRODUCTO_GRATIS:
-                iconResource = R.drawable.ic_coffee_placeholder;
-                break;
-            case DOS_POR_UNO:
-                iconResource = R.drawable.ic_coffee_placeholder;
-                break;
-            case PUNTOS_EXTRA:
-                iconResource = R.drawable.ic_coffee_placeholder;
-                break;
-            case ENVIO_GRATIS:
-                iconResource = R.drawable.ic_coffee_placeholder;
-                break;
-            case UPGRADE_PRODUCTO:
+            case "dos_por_uno":
                 iconResource = R.drawable.ic_coffee_placeholder;
                 break;
             default:
@@ -130,26 +106,11 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
     private void configurarValorBeneficio(TextView valorView, Beneficio beneficio) {
         String valor = "";
         switch (beneficio.getTipo()) {
-            case DESCUENTO_PORCENTAJE:
-                valor = "Descuento %";
-                break;
-            case DESCUENTO_FIJO:
+            case "descuento":
                 valor = "Descuento $";
                 break;
-            case PRODUCTO_GRATIS:
-                valor = "Producto Gratis";
-                break;
-            case DOS_POR_UNO:
+            case "dos_por_uno":
                 valor = "2x1";
-                break;
-            case PUNTOS_EXTRA:
-                valor = "Puntos Extra";
-                break;
-            case ENVIO_GRATIS:
-                valor = "Envío Gratis";
-                break;
-            case UPGRADE_PRODUCTO:
-                valor = "Upgrade";
                 break;
             default:
                 valor = "Beneficio";
@@ -183,7 +144,7 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
     }
 
     private void configurarEstadoVisual(BeneficioViewHolder holder, Beneficio beneficio) {
-        if (beneficio.getEstado() == DISPONIBLE) {
+        if ("disponible".equals(beneficio.getEstado())) {
             // if (beneficio.isVigente()) { // Método no existe en models.Beneficio
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.card_background));
             holder.tvEstado.setVisibility(View.GONE);
@@ -195,7 +156,7 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
             //     holder.tvEstado.setVisibility(View.VISIBLE);
             //     holder.cardView.setAlpha(0.6f);
             // }
-        } else if (beneficio.getEstado() == USADO) {
+        } else if ("usado".equals(beneficio.getEstado())) {
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.card_background));
             holder.tvEstado.setText("Usado");
             holder.tvEstado.setTextColor(ContextCompat.getColor(context, R.color.success_green));
@@ -207,19 +168,19 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
             holder.tvVencimiento.setText("Usado");
             holder.tvVencimiento.setTextColor(ContextCompat.getColor(context, R.color.success_green));
             holder.tvVencimiento.setVisibility(View.VISIBLE);
-        } else if (beneficio.getEstado() == EXPIRADO) {
+        } else if ("expirado".equals(beneficio.getEstado())) {
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.card_background));
             holder.tvEstado.setText("Expirado");
             holder.tvEstado.setTextColor(ContextCompat.getColor(context, R.color.error_red));
             holder.tvEstado.setVisibility(View.VISIBLE);
             holder.cardView.setAlpha(0.5f);
-        } else if (beneficio.getEstado() == BLOQUEADO) {
+        } else if ("bloqueado".equals(beneficio.getEstado())) {
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.card_background));
             holder.tvEstado.setText("Bloqueado");
             holder.tvEstado.setTextColor(ContextCompat.getColor(context, R.color.error_red));
             holder.tvEstado.setVisibility(View.VISIBLE);
             holder.cardView.setAlpha(0.5f);
-        } else if (beneficio.getEstado() == PENDIENTE_ACTIVACION) {
+        } else if ("pendiente_activacion".equals(beneficio.getEstado())) {
             holder.cardView.setCardBackgroundColor(ContextCompat.getColor(context, R.color.card_background));
             holder.tvEstado.setText("Pendiente");
             holder.tvEstado.setTextColor(ContextCompat.getColor(context, R.color.warm_orange));
@@ -230,7 +191,7 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
 
     private void configurarBotones(BeneficioViewHolder holder, Beneficio beneficio) {
         switch (beneficio.getEstado()) {
-            case DISPONIBLE:
+            case "disponible":
                 // if (beneficio.isVigente()) { // Método no existe
                 holder.btnUsar.setVisibility(View.VISIBLE);
                 holder.btnUsar.setText(context.getString(R.string.usar_beneficio));
@@ -240,12 +201,12 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
                 //     holder.btnUsar.setVisibility(View.GONE);
                 // }
                 break;
-            case USADO:
-            case EXPIRADO:
-            case BLOQUEADO:
+            case "usado":
+            case "expirado":
+            case "bloqueado":
                 holder.btnUsar.setVisibility(View.GONE);
                 break;
-            case PENDIENTE_ACTIVACION:
+            case "pendiente_activacion":
                 holder.btnUsar.setVisibility(View.VISIBLE);
                 holder.btnUsar.setText("Pendiente");
                 holder.btnUsar.setBackgroundColor(ContextCompat.getColor(context, R.color.warm_orange));

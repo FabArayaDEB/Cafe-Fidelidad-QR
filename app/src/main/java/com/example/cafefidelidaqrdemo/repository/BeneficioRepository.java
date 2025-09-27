@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import android.util.Log;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -34,7 +34,7 @@ public class BeneficioRepository {
     private final MutableLiveData<List<Beneficio>> beneficiosActivosLiveData = new MutableLiveData<>();
     
     public BeneficioRepository(Context context) {
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.executor = Executors.newFixedThreadPool(4);
         this.gson = new Gson();
         loadBeneficios();
@@ -123,13 +123,13 @@ public class BeneficioRepository {
                     return;
                 }
                 
-                if (beneficio.getPuntosRequeridos() <= 0) {
+                if (beneficio.getVisitasRequeridas() <= 0) {
                     callback.onResult(false);
-                    errorLiveData.postValue("Los puntos requeridos deben ser mayor a 0");
+                    errorLiveData.postValue("Las visitas requeridas deben ser mayor a 0");
                     return;
                 }
                 
-                long result = database.insertarBeneficio(beneficio);
+                long result = database.insertarBeneficio(convertToDBBeneficio(beneficio));
                 boolean success = result != -1;
                 
                 if (success) {
@@ -154,13 +154,13 @@ public class BeneficioRepository {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                if (beneficio == null || beneficio.getId() <= 0) {
+                if (beneficio == null || beneficio.getId() == null || beneficio.getId().isEmpty()) {
                     callback.onResult(false);
                     errorLiveData.postValue("Beneficio inválido");
                     return;
                 }
                 
-                int result = database.actualizarBeneficio(beneficio);
+                int result = database.actualizarBeneficio(convertToDBBeneficio(beneficio));
                 boolean success = result > 0;
                 
                 if (success) {
@@ -225,6 +225,25 @@ public class BeneficioRepository {
         });
     }
     
+    public void activarBeneficio(int beneficioId, OnResultCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                Beneficio beneficio = database.obtenerBeneficioPorId(beneficioId);
+                if (beneficio != null) {
+                    beneficio.setActivo(true);
+                    updateBeneficio(beneficio, callback);
+                } else {
+                    callback.onResult(false);
+                    errorLiveData.postValue("Beneficio no encontrado");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error al activar beneficio", e);
+                errorLiveData.postValue("Error al activar beneficio: " + e.getMessage());
+                callback.onResult(false);
+            }
+        });
+    }
+    
     // Métodos de validación
     public ValidationResult validateReglasJson(String reglasJson) {
         if (reglasJson == null || reglasJson.trim().isEmpty()) {
@@ -284,4 +303,13 @@ public class BeneficioRepository {
         loadBeneficios();
         callback.onResult(true);
     }
+    
+    /**
+     * Convierte de modelo de dominio a modelo de base de datos
+     */
+    private com.example.cafefidelidaqrdemo.models.Beneficio convertToDBBeneficio(Beneficio beneficio) {
+        // Como ambos modelos son la misma clase, simplemente retornamos el objeto
+        return beneficio;
+    }
+
 }

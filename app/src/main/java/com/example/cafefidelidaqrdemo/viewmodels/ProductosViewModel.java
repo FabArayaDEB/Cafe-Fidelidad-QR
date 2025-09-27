@@ -9,7 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.ProductoRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
@@ -52,7 +52,7 @@ public class ProductosViewModel extends AndroidViewModel {
         productos = repository.getAllProductos();
         searchResults = repository.getSearchResults();
         isLoading = repository.getIsLoading();
-        error = repository.getErrorMessage();
+        error = repository.getError();
         isOffline = repository.getIsOffline();
         
         // Configurar datos derivados para la UI

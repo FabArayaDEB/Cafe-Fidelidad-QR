@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import com.example.cafefidelidaqrdemo.utils.QRGenerator;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
@@ -53,16 +53,22 @@ public class ClienteQRViewModel extends AndroidViewModel {
             try {
                 String clienteId = sessionManager.getUserId();
                 if (clienteId != null) {
-                    ClienteEntity cliente = clienteRepository.getClienteById(clienteId);
-                    if (cliente != null) {
-                        _clienteData.postValue(cliente);
-                        generateQRCode(cliente);
-                    } else {
-                        _error.postValue("No se encontraron datos del cliente");
-                    }
+                    // Convertir String a int para el ID del cliente
+                    int id = Integer.parseInt(clienteId);
+                    // Usar LiveData para obtener el cliente
+                    clienteRepository.getClienteById(id).observeForever(cliente -> {
+                        if (cliente != null) {
+                            _clienteData.postValue(cliente);
+                            generateQRCode(cliente);
+                        } else {
+                            _error.postValue("No se encontraron datos del cliente");
+                        }
+                    });
                 } else {
                     _error.postValue("Sesión no válida");
                 }
+            } catch (NumberFormatException e) {
+                _error.postValue("ID de cliente inválido");
             } catch (Exception e) {
                 _error.postValue("Error al cargar datos: " + e.getMessage());
             } finally {
@@ -79,11 +85,11 @@ public class ClienteQRViewModel extends AndroidViewModel {
         executor.execute(() -> {
             try {
                 Bitmap qrBitmap = QRGenerator.generateClientQR(
-                    cliente.getId_cliente(),
+                    String.valueOf(cliente.getId()),
                     cliente.getNombre(),
                     cliente.getEmail(),
                     generateMcId(cliente),
-                    0 // Puntos por defecto
+                    cliente.getPuntosAcumulados()
                 );
                 
                 if (qrBitmap != null) {
@@ -134,7 +140,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
      * @return Saludo personalizado
      */
     public String getPersonalizedGreeting() {
-        ClienteEntity cliente = _clienteData.getValue();
+        Cliente cliente = _clienteData.getValue();
         if (cliente != null) {
             return "Hola " + cliente.getNombre();
         }
@@ -146,7 +152,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
      * @return McID del cliente
      */
     public String getClienteMcId() {
-        ClienteEntity cliente = _clienteData.getValue();
+        Cliente cliente = _clienteData.getValue();
         if (cliente != null) {
             return "McID: " + generateMcId(cliente);
         }

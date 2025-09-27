@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow;
 import kotlinx.coroutines.flow.StateFlow;
 import kotlinx.coroutines.flow.StateFlowKt;
 
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 
@@ -152,45 +152,10 @@ public class MainViewModel extends AndroidViewModel {
         }
     }
     
-    /**
-     * Carga los datos del cliente actual
-     */
-    private void loadCurrentCliente(String userId) {
-        android.util.Log.d("MainViewModel", "Intentando cargar cliente con ID: " + userId);
-        clienteRepository.get(userId, new ClienteRepository.ClienteCallback() {
-            @Override
-            public void onSuccess(Cliente cliente) {
-                // Ejecutar en el hilo principal
-                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                    if (cliente != null) {
-                        android.util.Log.d("MainViewModel", "Cliente encontrado: " + cliente.getNombre());
-                        _currentCliente.setValue(cliente);
-                        currentClienteLiveData.setValue(cliente);
-                    } else {
-                        android.util.Log.d("MainViewModel", "Cliente no encontrado para ID: " + userId);
-                        _currentCliente.setValue(null);
-                        currentClienteLiveData.setValue(null);
-                    }
-                    _isLoading.setValue(false);
-                    isLoadingLiveData.setValue(false);
-                });
-            }
-            
-            @Override
-            public void onError(String error) {
-                // Ejecutar en el hilo principal
-                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                    android.util.Log.e("MainViewModel", "Error al cargar cliente: " + error);
-                    // No establecer error si simplemente no se encuentra el cliente
-                    // Solo log del error, no crash de la aplicación
-                    _currentCliente.setValue(null);
-                    currentClienteLiveData.setValue(null);
-                    _isLoading.setValue(false);
-                    isLoadingLiveData.setValue(false);
-                });
-            }
-        });
-    }
+private void loadCurrentCliente(String userId) {
+         android.util.Log.d("MainViewModel", "Intentando cargar cliente con ID: " + userId);
+         clienteRepository.getClienteById(Integer.parseInt(userId));
+     }
     
     /**
      * Actualiza el título de la toolbar

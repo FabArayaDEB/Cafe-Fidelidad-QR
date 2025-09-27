@@ -12,6 +12,12 @@ public class Canje {
     private String codigoVerificacion;
     private boolean usado;
     private long fechaExpiracion;
+    
+    // Campos adicionales para compatibilidad con base de datos
+    private int clienteId;
+    private int beneficioId;
+    private int puntosUtilizados;
+    private String estado;
 
     public Canje() {
         // Constructor vacío requerido para Firebase
@@ -66,4 +72,20 @@ public class Canje {
 
     public long getFechaExpiracion() { return fechaExpiracion; }
     public void setFechaExpiracion(long fechaExpiracion) { this.fechaExpiracion = fechaExpiracion; }
+    
+    // Getters y Setters para campos adicionales de base de datos
+    public int getClienteId() { return clienteId; }
+    public void setClienteId(int clienteId) { this.clienteId = clienteId; }
+    
+    public int getBeneficioId() { return beneficioId; }
+    public void setBeneficioId(int beneficioId) { this.beneficioId = beneficioId; }
+    
+    public int getPuntosUtilizados() { return puntosUtilizados; }
+    public void setPuntosUtilizados(int puntosUtilizados) { this.puntosUtilizados = puntosUtilizados; }
+    
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+    
+    // Método de compatibilidad para getPuntosUsados (usado en HistorialAdapter)
+    public int getPuntosUsados() { return puntosUtilizados; }
 }
