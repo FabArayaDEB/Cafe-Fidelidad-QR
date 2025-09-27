@@ -17,6 +17,7 @@ import com.example.cafefidelidaqrdemo.databinding.FragmentAdminDashboardBinding;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.AdminDashboardViewModel;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentProductosAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentBeneficiosAdmin;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentClientesAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentSucursalesAdmin;
 
 /**
@@ -59,6 +60,7 @@ public class FragmentAdminDashboard extends Fragment {
         // Configurar iconos y textos de las tarjetas
         setupCardProductos();
         setupCardBeneficios();
+        setupCardClientes();
         setupCardSucursales();
         setupCardEstadisticas();
         setupCardConfiguracion();
@@ -76,6 +78,13 @@ public class FragmentAdminDashboard extends Fragment {
         binding.iconBeneficios.setImageResource(R.drawable.ic_gift);
         binding.textTituloBeneficios.setText("Beneficios");
         binding.textDescripcionBeneficios.setText("Administrar promociones y ofertas");
+    }
+    
+    private void setupCardClientes() {
+        binding.cardClientes.setOnClickListener(v -> navegarAClientes());
+        binding.iconClientes.setImageResource(R.drawable.ic_people);
+        binding.textTituloClientes.setText("Clientes");
+        binding.textDescripcionClientes.setText("Administrar usuarios y fidelización");
     }
     
     private void setupCardSucursales() {
@@ -232,6 +241,18 @@ public class FragmentAdminDashboard extends Fragment {
             transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a beneficios", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void navegarAClientes() {
+        try {
+            FragmentClientesAdmin fragment = new FragmentClientesAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("ClientesAdmin");
+            transaction.commit();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error al navegar a clientes", Toast.LENGTH_SHORT).show();
         }
     }
     

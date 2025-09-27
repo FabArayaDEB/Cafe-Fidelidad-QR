@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import android.util.Log;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Visita;
+import com.example.cafefidelidaqrdemo.models.Visita;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +24,7 @@ public class VisitaRepository {
     private final MutableLiveData<List<Visita>> visitasLiveData = new MutableLiveData<>();
     
     public VisitaRepository(Context context) {
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.executor = Executors.newFixedThreadPool(4);
         loadVisitas();
     }
@@ -81,7 +81,8 @@ public class VisitaRepository {
                     return;
                 }
                 
-                if (visita.getClienteId() <= 0 || visita.getSucursalId() <= 0) {
+                if (visita.getUserId() == null || visita.getUserId().isEmpty() || 
+                    visita.getSucursal() == null || visita.getSucursal().isEmpty()) {
                     callback.onResult(false);
                     errorLiveData.postValue("Cliente y sucursal son requeridos");
                     return;
@@ -112,7 +113,7 @@ public class VisitaRepository {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                if (visita == null || visita.getId() <= 0) {
+                if (visita == null || visita.getId() == null || visita.getId().isEmpty()) {
                     callback.onResult(false);
                     errorLiveData.postValue("Visita inválida");
                     return;
@@ -143,7 +144,7 @@ public class VisitaRepository {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                int result = database.deleteVisita(visitaId);
+                int result = database.eliminarVisita(visitaId);
                 boolean success = result > 0;
                 
                 if (success) {

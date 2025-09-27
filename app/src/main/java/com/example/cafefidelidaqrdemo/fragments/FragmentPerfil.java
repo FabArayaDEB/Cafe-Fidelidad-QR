@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.HistorialActivity;
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;

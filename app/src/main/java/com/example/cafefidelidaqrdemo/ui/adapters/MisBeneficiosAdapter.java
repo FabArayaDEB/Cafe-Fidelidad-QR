@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
@@ -94,9 +94,9 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
             // Tipo de beneficio
             chipTipo.setText(formatearTipo(beneficio.getTipo()));
             
-            // Descripción - usar regla como descripción
-            if (beneficio.getRegla() != null && !beneficio.getRegla().isEmpty()) {
-                textDescripcion.setText(beneficio.getRegla());
+            // Descripción
+            if (beneficio.getDescripcion() != null && !beneficio.getDescripcion().isEmpty()) {
+                textDescripcion.setText(beneficio.getDescripcion());
                 textDescripcion.setVisibility(View.VISIBLE);
             } else {
                 textDescripcion.setVisibility(View.GONE);
@@ -151,10 +151,12 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
         }
         
         private String formatearValor(Beneficio beneficio) {
-            if (beneficio.getDescuento_pct() > 0) {
-                return beneficio.getDescuento_pct() + "% OFF";
-            } else if (beneficio.getDescuento_monto() > 0) {
-                return "$" + String.format("%.0f", beneficio.getDescuento_monto()) + " OFF";
+            if (beneficio.getValorDescuento() > 0) {
+                if ("DESCUENTO_PORCENTAJE".equals(beneficio.getTipo())) {
+                    return String.format("%.0f", beneficio.getValorDescuento()) + "% OFF";
+                } else {
+                    return "$" + String.format("%.0f", beneficio.getValorDescuento()) + " OFF";
+                }
             } else if ("2X1".equals(beneficio.getTipo())) {
                 return "2x1";
             } else if ("PREMIO".equals(beneficio.getTipo()) || "PRODUCTO_GRATIS".equals(beneficio.getTipo())) {
@@ -186,11 +188,11 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
         }
         
         private String formatearVigencia(Beneficio beneficio) {
-            if (beneficio.getVigencia_fin() > 0) {
-                Date fechaFin = new Date(beneficio.getVigencia_fin());
+            if (beneficio.getFechaVencimiento() != 0) {
+                Date fechaFin = new Date(beneficio.getFechaVencimiento());
                 Date hoy = new Date();
                 
-                long diasRestantes = (beneficio.getVigencia_fin() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24);
+                long diasRestantes = (beneficio.getFechaVencimiento() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24);
                 
                 if (diasRestantes < 0) {
                     return "Expirado";
@@ -211,7 +213,7 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
                 btnUsar.setText("NO DISPONIBLE");
                 btnUsar.setBackgroundTintList(itemView.getContext().getColorStateList(android.R.color.darker_gray));
                 cardView.setAlpha(0.6f);
-            } else if (beneficio.getVigencia_fin() > 0 && beneficio.getVigencia_fin() < System.currentTimeMillis()) {
+            } else if (beneficio.getFechaVencimiento() != 0 && beneficio.getFechaVencimiento() < System.currentTimeMillis()) {
                 btnUsar.setEnabled(false);
                 btnUsar.setText("EXPIRADO");
                 btnUsar.setBackgroundTintList(itemView.getContext().getColorStateList(android.R.color.holo_red_dark));
@@ -224,8 +226,8 @@ public class MisBeneficiosAdapter extends RecyclerView.Adapter<MisBeneficiosAdap
                 cardView.setAlpha(1.0f);
                 
                 // Verificar si está próximo a vencer
-                if (beneficio.getVigencia_fin() > 0) {
-                    long diasRestantes = (beneficio.getVigencia_fin() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24);
+                if (beneficio.getFechaVencimiento() != 0) {
+                    long diasRestantes = (beneficio.getFechaVencimiento() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24);
                     if (diasRestantes <= 3) {
                         // Cambiar color a warning si está próximo a vencer
                         btnUsar.setBackgroundTintList(itemView.getContext().getColorStateList(R.color.color_warning));

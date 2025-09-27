@@ -273,14 +273,14 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     
     // Métodos de utilidad
     public int getSucursalPosition(int idSucursal) {
-        for (int i = 0; i < getItemCount(); i++) {
-            SucursalItem item = getItem(i);
-            if (item != null && item.getSucursal().getId() == idSucursal) {
-                return i;
+                for (int i = 0; i < getItemCount(); i++) {
+                    SucursalItem item = getItem(i);
+                    if (item != null && Integer.parseInt(item.getSucursal().getId()) == idSucursal) {
+                        return i;
+                    }
+                }
+                return -1;
             }
-        }
-        return -1;
-    }
     
     public Sucursal getSucursalAt(int position) {
         SucursalItem item = getItem(position);

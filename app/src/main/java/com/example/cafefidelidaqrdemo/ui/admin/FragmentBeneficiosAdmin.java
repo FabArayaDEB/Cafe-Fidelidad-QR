@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.BeneficiosAdminAdapter;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDialogFragment;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.BeneficiosAdminViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -161,7 +161,7 @@ public class FragmentBeneficiosAdmin extends Fragment implements BeneficiosAdmin
             .setTitle("Eliminar Beneficio")
             .setMessage("¿Está seguro que desea eliminar el beneficio '" + beneficio.getNombre() + "'?")
             .setPositiveButton("Eliminar", (dialog, which) -> {
-                viewModel.deleteBeneficio(beneficio.getId_beneficio());
+                viewModel.deleteBeneficio(beneficio.getId());
             })
             .setNegativeButton("Cancelar", null)
             .show();

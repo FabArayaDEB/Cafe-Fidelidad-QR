@@ -5,13 +5,14 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.network.RetrofitClient;
 import com.example.cafefidelidaqrdemo.repository.interfaces.IProductoRepository;
 import com.example.cafefidelidaqrdemo.repository.base.BaseRepository;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -144,7 +145,7 @@ public class ProductoRepository implements IProductoRepository {
                 // Insertar producto
                 long id = database.insertarProducto(producto);
                 if (id > 0) {
-                    producto.setId((int) id);
+                    producto.setId(String.valueOf(id));
                     callback.onSuccess(producto);
                     successLiveData.postValue("Producto creado exitosamente");
                     // Refrescar lista de productos
@@ -526,6 +527,9 @@ public class ProductoRepository implements IProductoRepository {
         void onSuccess(List<Producto> productos);
         void onError(String error);
     }
+    
+    // ========== MÉTODOS DE CONVERSIÓN ELIMINADOS ==========
+    // Los métodos de conversión ya no son necesarios porque usamos directamente los modelos de dominio
     
     // ========== LIMPIEZA ==========
     

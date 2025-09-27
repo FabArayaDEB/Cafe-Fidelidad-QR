@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.models.Canje;
+import com.example.cafefidelidaqrdemo.models.Canje;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 
@@ -89,19 +89,20 @@ public class CanjesRecientesAdapter extends RecyclerView.Adapter<CanjesRecientes
         }
         
         public void bind(Canje canje) {
-            textBeneficio.setText(canje.getBeneficioId() != null ?
-                canje.getId() : "Beneficio");
+            textBeneficio.setText(canje.getDescripcion() != null ? 
+                canje.getDescripcion() : "Beneficio");
             
-            if (canje.getFecha_solicitud() > 0) {
-                textFecha.setText(dateFormat.format(new Date(canje.getFecha_solicitud())));
+            if (canje.getFechaCanje() > 0) {
+                textFecha.setText(dateFormat.format(new Date(canje.getFechaCanje())));
             } else {
                 textFecha.setText("Fecha no disponible");
             }
             
-            textEstado.setText(canje.getEstado() != null ? canje.getEstado() : "Pendiente");
+            textEstado.setText(canje.isUsado() ? "Usado" : "Disponible");
             
-            // Ocultar chip de tipo ya que Canje no tiene este campo
-            chipTipo.setVisibility(View.GONE);
+            // Mostrar chip de tipo
+            chipTipo.setText(canje.getTipo() != null ? canje.getTipo() : "Descuento");
+            chipTipo.setVisibility(View.VISIBLE);
         }
     }
 }

@@ -420,10 +420,10 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
             // editTextCiudad, editTextTelefono, editTextEmail, editTextGerente,
             // editTextCapacidad, editTextDescripcion y switchActivo no están disponibles en el layout
             
-            latitudSeleccionada = sucursal.getLat();
-            longitudSeleccionada = sucursal.getLon();
-            horarioAperturaSeleccionado = sucursal.getHorario().split(" - ")[0];
-            horarioCierreSeleccionado = sucursal.getHorario().split(" - ")[1];
+            latitudSeleccionada = sucursal.getLatitud();
+            longitudSeleccionada = sucursal.getLongitud();
+            horarioAperturaSeleccionado = sucursal.getHorarioApertura();
+            horarioCierreSeleccionado = sucursal.getHorarioCierre();
             
             // textViewUbicacion no está disponible en el layout
         } else {
@@ -624,7 +624,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         
         // Generar ID único para la sucursal
         int sucursalId = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-        sucursal.setId(sucursalId);
+        sucursal.setId(String.valueOf(sucursalId));
         
         sucursal.setNombre(dialogBinding.editTextNombre.getText().toString().trim());
         sucursal.setDireccion(dialogBinding.editTextDireccion.getText().toString().trim());
@@ -692,7 +692,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
                 .setTitle("Confirmar acción")
                 .setMessage(mensaje)
                 .setPositiveButton("Sí", (dialog, which) -> {
-                    long sucursalId = sucursal.getId();
+                    long sucursalId = Long.parseLong(sucursal.getId());
                     if (sucursal.isActiva()) {
                         viewModel.desactivarSucursal(sucursalId, "Desactivada por administrador");
                     } else {
@@ -708,7 +708,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
                 .setTitle("Eliminar Sucursal")
                 .setMessage(String.format("¿Está seguro que desea eliminar la sucursal '%s'?\n\nEsta acción no se puede deshacer.", sucursal.getNombre()))
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.eliminarSucursal(sucursal.getId());
+                    viewModel.eliminarSucursal(Long.parseLong(sucursal.getId()));
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();

@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import android.util.Log;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Canje;
+import com.example.cafefidelidaqrdemo.models.Canje;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +24,7 @@ public class CanjeRepository {
     private final MutableLiveData<List<Canje>> canjesLiveData = new MutableLiveData<>();
     
     public CanjeRepository(Context context) {
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.executor = Executors.newFixedThreadPool(4);
         loadCanjes();
     }
@@ -105,9 +105,9 @@ public class CanjeRepository {
                     return;
                 }
                 
-                if (canje.getClienteId() <= 0 || canje.getBeneficioId() <= 0) {
+                if (canje.getUserId() == null || canje.getUserId().isEmpty()) {
                     callback.onResult(false);
-                    errorLiveData.postValue("Cliente y beneficio son requeridos");
+                    errorLiveData.postValue("Usuario es requerido");
                     return;
                 }
                 
@@ -136,7 +136,7 @@ public class CanjeRepository {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                if (canje == null || canje.getId() <= 0) {
+                if (canje == null || canje.getId() == null || canje.getId().isEmpty()) {
                     callback.onResult(false);
                     errorLiveData.postValue("Canje inválido");
                     return;
@@ -163,11 +163,26 @@ public class CanjeRepository {
         });
     }
     
-    public void deleteCanje(int canjeId, OnResultCallback<Boolean> callback) {
+    public void deleteCanje(String canjeId, OnResultCallback<Boolean> callback) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
             try {
-                int result = database.deleteCanje(canjeId);
+                if (canjeId == null || canjeId.isEmpty()) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("ID de canje inválido");
+                    return;
+                }
+                
+                int id;
+                try {
+                    id = Integer.parseInt(canjeId);
+                } catch (NumberFormatException e) {
+                    callback.onResult(false);
+                    errorLiveData.postValue("ID de canje debe ser numérico");
+                    return;
+                }
+                
+                int result = database.eliminarCanje(id);
                 boolean success = result > 0;
                 
                 if (success) {
@@ -204,6 +219,13 @@ public class CanjeRepository {
     // Interface para callbacks
     public interface OnResultCallback<T> {
         void onResult(T result);
+    }
+    
+    // Método para solicitar OTP
+    public void solicitarOtp(String clienteId, String beneficioId, String sucursalId) {
+        // Implementación simplificada - en una aplicación real esto haría una llamada a la API
+        Log.d(TAG, "Solicitando OTP para cliente: " + clienteId + ", beneficio: " + beneficioId + ", sucursal: " + sucursalId);
+        // Aquí iría la lógica para solicitar el OTP al servidor
     }
     
     // Métodos de sincronización (simplificados)

@@ -316,6 +316,70 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Card Clientes -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardClientes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/iconClientes"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_people" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/textTituloClientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Clientes"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/color_primary" />
+
+                        <TextView
+                            android:id="@+id/textDescripcionClientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Administrar usuarios y fidelización"
+                            android:textSize="14sp"
+                            android:textColor="@color/color_on_surface_variant" />
+
+                        <TextView
+                            android:id="@+id/textContadorClientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/color_primary"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Card Sucursales -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardSucursales"

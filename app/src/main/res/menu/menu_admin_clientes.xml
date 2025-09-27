@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_toggle_filtro"
+        android:title="Filtrar activos"
+        android:icon="@drawable/ic_toggle"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_exportar"
+        android:title="Exportar"
+        android:icon="@drawable/ic_export"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_importar"
+        android:title="Importar"
+        android:icon="@drawable/ic_import"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sincronizar"
+        android:title="Sincronizar"
+        android:icon="@drawable/ic_sync"
+        app:showAsAction="never" />
+
+</menu>

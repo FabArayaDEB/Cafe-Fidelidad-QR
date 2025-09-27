@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;

@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -125,9 +125,9 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
         }
         
         private void setupVigencia(Beneficio beneficio) {
-            if (beneficio.getVigencia_ini() > 0 && beneficio.getVigencia_fin() > 0) {
-                Date fechaInicio = new Date(beneficio.getVigencia_ini());
-                Date fechaFin = new Date(beneficio.getVigencia_fin());
+            if (beneficio.getFechaInicioVigencia() != null && beneficio.getFechaFinVigencia() != null) {
+                Date fechaInicio = beneficio.getFechaInicioVigencia();
+                Date fechaFin = beneficio.getFechaFinVigencia();
                 String vigenciaText = String.format("Vigencia: %s - %s",
                     dateFormat.format(fechaInicio),
                     dateFormat.format(fechaFin));
@@ -136,7 +136,7 @@ public class BeneficiosAdminAdapter extends RecyclerView.Adapter<BeneficiosAdmin
                 
                 // Verificar si está vigente
                 long now = System.currentTimeMillis();
-                if (now < beneficio.getVigencia_ini() || now > beneficio.getVigencia_fin()) {
+                if (now < beneficio.getFechaInicioVigencia().getTime() || now > beneficio.getFechaFinVigencia().getTime()) {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_error));
                 } else {
                     textVigencia.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.color_success));

@@ -177,17 +177,17 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
         
         for (Beneficio beneficio : todosBeneficios) {
             switch (beneficio.getEstado()) {
-                case DISPONIBLE:
+                case "disponible":
                     if (beneficio.esValido()) {
                         beneficiosDisponibles.add(beneficio);
                     } else {
                         beneficiosExpirados.add(beneficio);
                     }
                     break;
-                case USADO:
+                case "usado":
                     beneficiosUsados.add(beneficio);
                     break;
-                case EXPIRADO:
+                case "expirado":
                     beneficiosExpirados.add(beneficio);
                     break;
                 default:
@@ -274,7 +274,7 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
     }
     
     public void onUsarBeneficioClick(Beneficio beneficio) {
-        if (beneficio.getEstado() == Beneficio.EstadoBeneficio.DISPONIBLE && beneficio.esValido()) {
+        if ("disponible".equals(beneficio.getEstado()) && beneficio.esValido()) {
             // TODO: Implementar CanjeBeneficioActivity
             Toast.makeText(this, "Usando beneficio: " + beneficio.getNombre(), Toast.LENGTH_SHORT).show();
         } else {

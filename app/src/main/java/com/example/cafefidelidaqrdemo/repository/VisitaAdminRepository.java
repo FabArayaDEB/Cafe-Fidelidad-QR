@@ -5,7 +5,7 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Visita;
+import com.example.cafefidelidaqrdemo.models.Visita;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.network.response.VisitaResponse;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
@@ -13,9 +13,11 @@ import com.example.cafefidelidaqrdemo.utils.QRValidator;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -46,7 +48,7 @@ public class VisitaAdminRepository {
     private final MutableLiveData<Integer> contadorHoyLiveData = new MutableLiveData<>();
     
     public VisitaAdminRepository(Context context, ApiService apiService) {
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.apiService = apiService;
         this.context = context;
         this.executor = Executors.newFixedThreadPool(2);
@@ -61,7 +63,7 @@ public class VisitaAdminRepository {
     public LiveData<List<Visita>> obtenerTodas() {
         executor.execute(() -> {
             try {
-                List<Visita> visitas = database.getTodasLasVisitas();
+                List<Visita> visitas = database.obtenerTodasLasVisitas();
                 visitasLiveData.postValue(visitas);
             } catch (Exception e) {
                 Log.e(TAG, "Error obteniendo todas las visitas", e);
@@ -75,7 +77,7 @@ public class VisitaAdminRepository {
     public LiveData<List<Visita>> obtenerPendientes() {
         executor.execute(() -> {
             try {
-                List<Visita> todasLasVisitas = database.getTodasLasVisitas();
+                List<Visita> todasLasVisitas = database.obtenerTodasLasVisitas();
                 List<Visita> pendientes = new ArrayList<>();
                 
                 // Filtrar visitas pendientes (asumiendo que tienen un campo estado)
@@ -98,7 +100,7 @@ public class VisitaAdminRepository {
     public LiveData<Integer> contarPendientes() {
         executor.execute(() -> {
             try {
-                int count = database.contarVisitas();
+                int count = database.obtenerConteoVisitas();
                 contadorPendientesLiveData.postValue(count);
             } catch (Exception e) {
                 Log.e(TAG, "Error contando visitas pendientes", e);
@@ -112,12 +114,14 @@ public class VisitaAdminRepository {
         executor.execute(() -> {
             try {
                 // Obtener visitas de hoy (simplificado)
-                List<Visita> todasLasVisitas = database.getTodasLasVisitas();
-                long hoyInicio = System.currentTimeMillis() - (24 * 60 * 60 * 1000); // Últimas 24 horas
+                List<Visita> todasLasVisitas = database.obtenerTodasLasVisitas();
+                String fechaHoy = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
                 
                 int count = 0;
                 for (Visita visita : todasLasVisitas) {
-                    if (visita.getFechaVisita().getTime() >= hoyInicio) {
+                    // Convertir timestamp a fecha string para comparar
+                    String fechaVisita = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(visita.getFechaVisita()));
+                    if (fechaVisita.equals(fechaHoy)) {
                         count++;
                     }
                 }
@@ -163,10 +167,10 @@ public class VisitaAdminRepository {
                 
                 // Crear nueva visita
                 Visita nuevaVisita = new Visita();
-                nuevaVisita.setId(UUID.randomUUID().toString());
-                nuevaVisita.setClienteId("cliente_default"); // Asignar cliente por defecto o desde QR
-                nuevaVisita.setSucursalId(qrData.sucursalId);
-                nuevaVisita.setFechaVisita(new Date());
+                // No establecer ID aquí, se auto-genera en la base de datos
+                nuevaVisita.setUserId("1"); // Cliente por defecto (ID 1)
+                nuevaVisita.setSucursal(qrData.sucursalId); // Usar sucursal como String
+                nuevaVisita.setFechaVisita(System.currentTimeMillis()); // Usar timestamp actual
                 // Nota: Visita no tiene campos tipo, estado, qrHash en la implementación actual
                 // Estos campos podrían agregarse si son necesarios
                 
@@ -314,7 +318,7 @@ public class VisitaAdminRepository {
         }
         
         executor.execute(() -> {
-            List<Visita> pendientes = database.getTodasLasVisitas();
+            List<Visita> pendientes = database.obtenerTodasLasVisitas();
             
             if (pendientes.isEmpty()) {
                 _mensajeEstado.postValue("No hay visitas pendientes");

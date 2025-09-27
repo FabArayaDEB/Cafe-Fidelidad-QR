@@ -6,6 +6,7 @@ import com.example.cafefidelidaqrdemo.models.Visita;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Gestor de beneficios que maneja la lógica de activación automática
@@ -144,7 +145,7 @@ public class BeneficioManager {
         
         try {
             for (Beneficio beneficio : beneficiosDisponibles) {
-                if (!beneficio.isActivo() || beneficio.getEstado() == Beneficio.EstadoBeneficio.EXPIRADO) {
+                if (!beneficio.isActivo() || "expirado".equals(beneficio.getEstado())) {
                     continue;
                 }
                 
@@ -152,11 +153,11 @@ public class BeneficioManager {
                 
                 // Aplicar según el tipo de beneficio
                 switch (beneficio.getTipo()) {
-                    case DESCUENTO_PORCENTAJE:
-                        descuento = montoCompra * (beneficio.getValorDescuentoPorcentaje() / 100.0);
+                    case "descuento_porcentaje":
+                        descuento = montoCompra * (beneficio.getValorDescuento() / 100.0);
                         break;
-                    case DESCUENTO_FIJO:
-                        descuento = Math.min(beneficio.getValorDescuentoFijo(), montoCompra);
+                    case "descuento_fijo":
+                        descuento = Math.min(beneficio.getValorDescuento(), montoCompra);
                         break;
                     // Otros tipos se manejan de forma diferente
                 }
@@ -164,15 +165,9 @@ public class BeneficioManager {
                 if (descuento > 0) {
                     descuentoTotal += descuento;
                     
-                    // Actualizar uso del beneficio
-                    beneficio.setCantidadUsosActuales(beneficio.getCantidadUsosActuales() + 1);
-                    beneficio.setMontoTotalAhorrado(beneficio.getMontoTotalAhorrado() + descuento);
-                    
-                    // Si alcanzó el máximo de usos, desactivar
-                    if (beneficio.getCantidadMaximaUsos() > 0 && 
-                        beneficio.getCantidadUsosActuales() >= beneficio.getCantidadMaximaUsos()) {
-                        beneficio.setActivo(false);
-                    }
+                    // Marcar beneficio como usado
+                    beneficio.marcarComoUsado();
+                    beneficio.setActivo(false);
                     
                     // Si no es acumulable, solo aplicar uno
                     if (!acumularBeneficios) {
@@ -199,13 +194,13 @@ public class BeneficioManager {
                 .collect(Collectors.toList());
             
             // Filtrar beneficios expirados
-            Date ahora = new Date();
-            beneficiosCliente.removeIf(b -> b.getFechaFinVigencia() != null && b.getFechaFinVigencia().before(ahora));
+            long ahora = System.currentTimeMillis();
+            beneficiosCliente.removeIf(b -> b.getFechaVencimiento() > 0 && b.getFechaVencimiento() < ahora);
             
             // Marcar como expirados
             for (Beneficio beneficio : beneficiosCliente) {
-                if (beneficio.getFechaFinVigencia() != null && beneficio.getFechaFinVigencia().before(ahora)) {
-                    beneficio.expirar();
+                if (beneficio.estaVencido()) {
+                    beneficio.setEstado("expirado");
                 }
             }
             
@@ -219,53 +214,31 @@ public class BeneficioManager {
     
     // Métodos auxiliares para crear beneficios
     private Beneficio crearBeneficioDescuentoPorcentaje(String nombre, String descripcion, double porcentaje, String clienteId, int diasValidez) {
-        Beneficio beneficio = new Beneficio(nombre, descripcion, Beneficio.TipoBeneficio.DESCUENTO_PORCENTAJE, 0);
-        beneficio.setId(UUID.randomUUID().toString());
+        Beneficio beneficio = new Beneficio(UUID.randomUUID().toString(), nombre, descripcion, "descuento_porcentaje", 0, porcentaje);
         beneficio.setClienteId(clienteId);
-        beneficio.setValorDescuentoPorcentaje(porcentaje);
-        beneficio.setFechaInicioVigencia(new Date());
-        beneficio.setFechaFinVigencia(agregarDias(new Date(), diasValidez));
-        beneficio.setCantidadMaximaUsos(1);
-        beneficio.setEsPersonalizado(true);
-        beneficio.activar();
+        beneficio.setFechaVencimiento(System.currentTimeMillis() + (diasValidez * 24L * 60L * 60L * 1000L));
         return beneficio;
     }
     
     private Beneficio crearBeneficioDescuentoFijo(String nombre, String descripcion, double monto, String clienteId, int diasValidez) {
-        Beneficio beneficio = new Beneficio(nombre, descripcion, Beneficio.TipoBeneficio.DESCUENTO_FIJO, 0);
-        beneficio.setId(UUID.randomUUID().toString());
+        Beneficio beneficio = new Beneficio(UUID.randomUUID().toString(), nombre, descripcion, "descuento_fijo", 0, monto);
         beneficio.setClienteId(clienteId);
-        beneficio.setValorDescuentoFijo(monto);
-        beneficio.setFechaInicioVigencia(new Date());
-        beneficio.setFechaFinVigencia(agregarDias(new Date(), diasValidez));
-        beneficio.setCantidadMaximaUsos(1);
-        beneficio.setEsPersonalizado(true);
-        beneficio.activar();
+        beneficio.setFechaVencimiento(System.currentTimeMillis() + (diasValidez * 24L * 60L * 60L * 1000L));
         return beneficio;
     }
     
     private Beneficio crearBeneficioProductoGratis(String nombre, String descripcion, String productoId, String clienteId, int diasValidez) {
-        Beneficio beneficio = new Beneficio(nombre, descripcion, Beneficio.TipoBeneficio.PRODUCTO_GRATIS, 0);
-        beneficio.setId(UUID.randomUUID().toString());
+        Beneficio beneficio = new Beneficio(UUID.randomUUID().toString(), nombre, descripcion, "producto_gratis", 0, 0.0);
         beneficio.setClienteId(clienteId);
-        beneficio.setProductoGratisId(productoId);
-        beneficio.setFechaInicioVigencia(new Date());
-        beneficio.setFechaFinVigencia(agregarDias(new Date(), diasValidez));
-        beneficio.setCantidadMaximaUsos(1);
-        beneficio.setEsPersonalizado(true);
-        beneficio.activar();
+        beneficio.setProductoId(productoId);
+        beneficio.setFechaVencimiento(System.currentTimeMillis() + (diasValidez * 24L * 60L * 60L * 1000L));
         return beneficio;
     }
     
     private Beneficio crearBeneficioDosxUno(String nombre, String descripcion, String clienteId, int diasValidez) {
-        Beneficio beneficio = new Beneficio(nombre, descripcion, Beneficio.TipoBeneficio.DOS_POR_UNO, 0);
-        beneficio.setId(UUID.randomUUID().toString());
+        Beneficio beneficio = new Beneficio(UUID.randomUUID().toString(), nombre, descripcion, "dos_por_uno", 0, 0.0);
         beneficio.setClienteId(clienteId);
-        beneficio.setFechaInicioVigencia(new Date());
-        beneficio.setFechaFinVigencia(agregarDias(new Date(), diasValidez));
-        beneficio.setCantidadMaximaUsos(1);
-        beneficio.setEsPersonalizado(true);
-        beneficio.activar();
+        beneficio.setFechaVencimiento(System.currentTimeMillis() + (diasValidez * 24L * 60L * 60L * 1000L));
         return beneficio;
     }
     

@@ -5,7 +5,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Cliente;
+
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.network.RetrofitClient;
 import com.example.cafefidelidaqrdemo.utils.NetworkUtils;
@@ -34,7 +35,7 @@ public class ClienteRepository {
     
     public ClienteRepository(Context context) {
         this.context = context;
-        this.database = new CafeFidelidadDB(context);
+        this.database = CafeFidelidadDB.getInstance(context);
         this.apiService = RetrofitClient.getInstance(context).getApiService();
         this.executor = Executors.newFixedThreadPool(4);
     }
@@ -58,7 +59,7 @@ public class ClienteRepository {
     /**
      * Obtiene el cliente actual por ID
      */
-    public LiveData<Cliente> getCurrentCliente(int clienteId) {
+    public LiveData<Cliente> getClienteById(int clienteId) {
         executor.execute(() -> {
             try {
                 Cliente cliente = database.obtenerClientePorId(clienteId);
@@ -131,7 +132,7 @@ public class ClienteRepository {
                 // Insertar cliente
                 long id = database.insertarCliente(cliente);
                 if (id > 0) {
-                    cliente.setId((int) id);
+                    cliente.setId(String.valueOf(id));
                     callback.onSuccess(cliente);
                     successLiveData.postValue("Cliente creado exitosamente");
                 } else {

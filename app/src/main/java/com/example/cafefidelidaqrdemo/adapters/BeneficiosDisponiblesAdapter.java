@@ -132,10 +132,10 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
         }
         
         private void setupVigencia(Beneficio beneficio, Context context) {
-            if (beneficio.getVigencia_fin() > 0) {
+            if (beneficio.getFechaFinVigencia() != null) {
                 Date now = new Date();
-                Date fechaFin = new Date(beneficio.getVigencia_fin());
-                long diasRestantes = (beneficio.getVigencia_fin() - now.getTime()) / (1000 * 60 * 60 * 24);
+                Date fechaFin = beneficio.getFechaFinVigencia();
+                long diasRestantes = (beneficio.getFechaFinVigencia().getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
                 
                 if (diasRestantes > 7) {
                     textVigencia.setText(String.format("Válido hasta %s", dateFormat.format(fechaFin)));
@@ -235,9 +235,9 @@ public class BeneficiosDisponiblesAdapter extends RecyclerView.Adapter<Beneficio
             if (tipo == null) return "¡Disponible!";
             switch (tipo.toUpperCase()) {
                 case "DESCUENTO_PORCENTAJE":
-                return String.format("%.0f%% OFF", beneficio.getDescuento_pct());
+                return String.format("%.0f%% OFF", beneficio.getValorDescuentoPorcentaje());
             case "DESCUENTO_MONTO":
-                return String.format("$%.0f OFF", beneficio.getDescuento_monto());
+                return String.format("$%.0f OFF", beneficio.getValorDescuentoFijo());
                 case "DOS_POR_UNO":
                     return "¡2x1!";
                 case "PREMIO":

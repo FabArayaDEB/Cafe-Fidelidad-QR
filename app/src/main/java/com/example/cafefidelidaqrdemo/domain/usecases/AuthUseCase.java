@@ -1,6 +1,6 @@
 package com.example.cafefidelidaqrdemo.domain.usecases;
 
-import com.example.cafefidelidaqrdemo.database.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
 import android.content.Context;
@@ -114,14 +114,14 @@ public class AuthUseCase {
         nuevoCliente.setEmail(email);
         nuevoCliente.setNombre(nombre);
         nuevoCliente.setTelefono(telefono);
-        nuevoCliente.setCreado_en(System.currentTimeMillis());
+        nuevoCliente.setFechaCreacion(System.currentTimeMillis());
         
         // Registrar usuario
         authRepository.register(email, password, new AuthRepository.AuthCallback<String>() {
             @Override
             public void onSuccess(String userId) {
                 // Establecer ID del usuario
-                nuevoCliente.setId(Integer.parseInt(userId));
+                nuevoCliente.setId(userId);
                 
                 // Guardar datos del cliente
                 clienteRepository.createCliente(nuevoCliente, new ClienteRepository.ClienteCallback() {
@@ -162,17 +162,18 @@ public class AuthUseCase {
             @Override
             public void onSuccess(String userId) {
                 if (userId != null) {
-                    clienteRepository.get(userId, new ClienteRepository.ClienteCallback() {
-                        @Override
-                        public void onSuccess(Cliente cliente) {
+                    try {
+                        Cliente cliente = clienteRepository.getClienteByIdSync(Integer.parseInt(userId));
+                        if (cliente != null) {
                             callback.onSuccess(cliente);
+                        } else {
+                            callback.onError("Cliente no encontrado");
                         }
-                        
-                        @Override
-                        public void onError(String error) {
-                            callback.onError("Error al obtener datos del usuario: " + error);
-                        }
-                    });
+                    } catch (NumberFormatException e) {
+                        callback.onError("ID de usuario inválido");
+                    } catch (Exception e) {
+                        callback.onError("Error al obtener cliente: " + e.getMessage());
+                    }
                 } else {
                     callback.onError("Usuario no autenticado");
                 }

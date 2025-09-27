@@ -9,7 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Sucursal;
+import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
 
@@ -34,8 +34,8 @@ public class SucursalesViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _isRefreshing = new MutableLiveData<>(false);
     
     // ==================== DATOS OBSERVABLES ====================
-    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> sucursales;
-    private final LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> sucursalesActivas;
+    private final LiveData<List<Sucursal>> sucursales;
+    private final LiveData<List<Sucursal>> sucursalesActivas;
     private final LiveData<Boolean> isLoading;
     private final LiveData<String> error;
     
@@ -103,7 +103,7 @@ public class SucursalesViewModel extends AndroidViewModel {
     /**
      * Lista completa de sucursales
      */
-    public LiveData<List<com.example.cafefidelidaqrdemo.database.models.Sucursal>> getSucursales() {
+    public LiveData<List<Sucursal>> getSucursales() {
         return sucursales;
     }
     
@@ -263,7 +263,9 @@ public class SucursalesViewModel extends AndroidViewModel {
     
     /**
      * Busca sucursales por texto
+     * TODO: Implementar método searchSucursales en SucursalRepository
      */
+    /*
     public void searchSucursales(String query, SearchCallback callback) {
         repository.searchSucursales(query, new SucursalRepository.SearchCallback() {
             @Override
@@ -272,6 +274,7 @@ public class SucursalesViewModel extends AndroidViewModel {
             }
         });
     }
+    */
     
     /**
      * Actualiza la ubicación del usuario
@@ -283,7 +286,9 @@ public class SucursalesViewModel extends AndroidViewModel {
     
     /**
      * Obtiene sucursales con distancia calculada
+     * TODO: Implementar método getSucursalesWithDistance en SucursalRepository
      */
+    /*
     public void getSucursalesWithDistance(double userLat, double userLon, SucursalesViewModel.DistanceCallback callback) {
         repository.getSucursalesWithDistance(userLat, userLon, new SucursalRepository.DistanceCallback() {
             @Override
@@ -302,6 +307,7 @@ public class SucursalesViewModel extends AndroidViewModel {
             }
         });
     }
+    */
     
     /**
      * Establece el estado de permisos de ubicación

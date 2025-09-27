@@ -293,12 +293,12 @@ public class FragmentSucursales extends Fragment {
             }
         });
         
-        // Observar estado offline
-        viewModel.getIsOffline().observe(getViewLifecycleOwner(), isOffline -> {
-            if (isOffline != null) {
-                textViewOffline.setVisibility(isOffline ? View.VISIBLE : View.GONE);
-            }
-        });
+//        // Observar estado offline
+//        viewModel.get().observe(getViewLifecycleOwner(), isOffline -> {
+//            if (isOffline != null) {
+//                textViewOffline.setVisibility(isOffline ? View.VISIBLE : View.GONE);
+//            }
+//        });
         
         // Observar permisos de ubicación
         viewModel.getLocationPermissionDenied().observe(getViewLifecycleOwner(), denied -> {
@@ -386,8 +386,8 @@ public class FragmentSucursales extends Fragment {
         
         for (Sucursal sucursal : sucursalesOriginales) {
             boolean pasaFiltroEstado = estadoSeleccionado.isEmpty() || 
-                (estadoSeleccionado.equalsIgnoreCase("activo") && sucursal.getEstado().equals("activo")) ||
-                (estadoSeleccionado.equalsIgnoreCase("inactivo") && !sucursal.getEstado().equals("activo"));
+                (estadoSeleccionado.equalsIgnoreCase("activo") && sucursal.isActiva()) ||
+                (estadoSeleccionado.equalsIgnoreCase("inactivo") && !sucursal.isActiva());
             
             boolean pasaFiltroBusqueda = queryBusqueda.isEmpty() || 
                 sucursal.getNombre().toLowerCase().contains(queryBusqueda.toLowerCase()) ||
@@ -400,6 +400,17 @@ public class FragmentSucursales extends Fragment {
         
         // Ordenar según criterio seleccionado
         if ("distancia".equals(ordenSeleccionado) && userLocation != null) {
+            // TODO: Implementar ordenamiento por distancia cuando getSucursalesWithDistance esté disponible
+            // Por ahora, usar ordenamiento por nombre
+            sucursalesFiltradas.sort((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()));
+            
+            List<SucursalesAdapter.SucursalItem> items = new ArrayList<>();
+            for (Sucursal sucursal : sucursalesFiltradas) {
+                items.add(new SucursalesAdapter.SucursalItem(sucursal, null));
+            }
+            adapter.submitList(items);
+            
+            /*
             viewModel.getSucursalesWithDistance(userLocation.getLatitude(), 
                 userLocation.getLongitude(), new SucursalesViewModel.DistanceCallback() {
                     @Override
@@ -417,6 +428,7 @@ public class FragmentSucursales extends Fragment {
                         showError(error);
                     }
                 });
+            */
         } else {
             // Ordenar por nombre
             sucursalesFiltradas.sort((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()));

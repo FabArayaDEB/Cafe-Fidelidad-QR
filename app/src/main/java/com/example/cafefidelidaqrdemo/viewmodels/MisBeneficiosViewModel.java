@@ -9,8 +9,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
-import com.example.cafefidelidaqrdemo.database.models.Beneficio;
-import com.example.cafefidelidaqrdemo.database.models.Canje;
+import com.example.cafefidelidaqrdemo.models.Beneficio;
+import com.example.cafefidelidaqrdemo.models.Canje;
 import com.example.cafefidelidaqrdemo.network.ApiClient;
 import com.example.cafefidelidaqrdemo.network.ApiService;
 import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
@@ -79,11 +79,11 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         this.error = createErrorLiveData();
         this.isOffline = beneficioRepository.getIsOffline();
         
-        // Configure OTP observables
-        this.otpActual = canjeRepository.getOtpActual();
-        this.tiempoRestante = canjeRepository.getTiempoRestante();
-        this.otpValido = canjeRepository.getOtpValido();
-        this.estadoCanje = canjeRepository.getEstadoCanje();
+        // Configure OTP observables - TODO: Implement OTP functionality
+        this.otpActual = new MutableLiveData<>("");
+        this.tiempoRestante = new MutableLiveData<>(0L);
+        this.otpValido = new MutableLiveData<>(false);
+        this.estadoCanje = new MutableLiveData<>("inactivo");
         
         // Configure derived UI data
         this.hasData = createHasDataLiveData();
@@ -172,15 +172,10 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
             return;
         }
         
-        beneficioRepository.refreshBeneficios(new BaseRepository.SimpleCallback() {
+        beneficioRepository.refreshBeneficios(new BeneficioRepository.OnResultCallback<Boolean>() {
             @Override
-            public void onSuccess() {
-                // Success handled by LiveData observers
-            }
-            
-            @Override
-            public void onError(String errorMessage) {
-                // Error handled by LiveData observers
+            public void onResult(Boolean result) {
+                // Success/error handled by repository's LiveData
             }
         });
     }
@@ -192,15 +187,20 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         
         _isRefreshing.setValue(true);
         
-        beneficioRepository.forceSyncBeneficios(new BaseRepository.SimpleCallback() {
+        beneficioRepository.refreshBeneficios(new BeneficioRepository.OnResultCallback<Boolean>() {
             @Override
-            public void onSuccess() {
+            public void onResult(Boolean result) {
                 _isRefreshing.setValue(false);
+                // Success/error handled by repository's LiveData
             }
-            
+        });
+    }
+    
+    public void forceSyncBeneficios() {
+        beneficioRepository.forceSyncBeneficios(new BeneficioRepository.OnResultCallback<Boolean>() {
             @Override
-            public void onError(String errorMessage) {
-                _isRefreshing.setValue(false);
+            public void onResult(Boolean result) {
+                // Success/error handled by repository's LiveData
             }
         });
     }
@@ -234,15 +234,18 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
             return;
         }
         
-        canjeRepository.solicitarNuevoOtp(clienteId, beneficioId, sucursalId);
+        // TODO: Implement OTP functionality
+        // canjeRepository.solicitarNuevoOtp(clienteId, beneficioId, sucursalId);
     }
     
     public void confirmarCanje(String otpCodigo, String cajeroId) {
-        canjeRepository.confirmarCanje(otpCodigo, cajeroId);
+        // TODO: Implement canje confirmation functionality
+        // canjeRepository.confirmarCanje(otpCodigo, cajeroId);
     }
     
     public void limpiarEstadoOtp() {
-        canjeRepository.limpiarEstado();
+        // TODO: Implement OTP state clearing functionality
+        // canjeRepository.limpiarEstado();
     }
     
     public void clearError() {
@@ -275,9 +278,9 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         }
         
         // Check expiration
-        if (beneficio.getVigencia_fin() > 0) {
+        if (beneficio.getFechaVencimiento() > 0) {
             long currentTime = System.currentTimeMillis();
-            if (currentTime > beneficio.getVigencia_fin()) {
+            if (currentTime > beneficio.getFechaVencimiento()) {
                 return false;
             }
         }
@@ -293,24 +296,24 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         StringBuilder descripcion = new StringBuilder();
         descripcion.append("Tipo: ").append(beneficio.getTipo()).append("\n");
         
-        if (beneficio.getDescuento_pct() > 0) {
-            descripcion.append("Descuento: ").append(beneficio.getDescuento_pct()).append("%\n");
-        }
-        
-        if (beneficio.getDescuento_monto() > 0) {
-            descripcion.append("Descuento: $").append(beneficio.getDescuento_monto()).append("\n");
+        if (beneficio.getValorDescuento() > 0) {
+            if ("descuento".equals(beneficio.getTipo())) {
+                descripcion.append("Descuento: ").append(beneficio.getValorDescuento()).append("%\n");
+            } else {
+                descripcion.append("Valor: $").append(beneficio.getValorDescuento()).append("\n");
+            }
         }
         
         return descripcion.toString();
     }
     
     public String getVigenciaFormateada(Beneficio beneficio) {
-        if (beneficio == null || beneficio.getVigencia_fin() <= 0) {
+        if (beneficio == null || beneficio.getFechaVencimiento() == 0) {
             return "Sin fecha de vencimiento";
         }
         
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        return "Válido hasta: " + sdf.format(new Date(beneficio.getVigencia_fin()));
+        return "Válido hasta: " + sdf.format(new Date(beneficio.getFechaVencimiento()));
     }
     
     // Private Helper Methods

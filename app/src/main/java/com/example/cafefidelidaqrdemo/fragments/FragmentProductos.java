@@ -20,7 +20,7 @@ import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import android.content.Intent;
 import com.example.cafefidelidaqrdemo.DetalleProductoActivity;
 // import com.example.cafefidelidaqrdemo.activities.DetalleProductoActivity; // TODO: Crear esta actividad
-import com.example.cafefidelidaqrdemo.database.models.Producto;
+import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.viewmodels.ProductosViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;

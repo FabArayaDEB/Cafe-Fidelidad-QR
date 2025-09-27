@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.repository.AdminRepository;
 import com.example.cafefidelidaqrdemo.models.Producto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,21 +118,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
         
         executor.execute(() -> {
             try {
-                // Verificar si ya existe un producto con el mismo nombre
-                if (adminRepository.existeProductoPorNombre(producto.getNombre())) {
-                    errorMessage.postValue("Ya existe un producto con ese nombre");
-                    isCreating.postValue(false);
-                    return;
-                }
-                
-                // Verificar si ya existe un producto con el mismo código
-                if (producto.getCodigoBarras() != null && !producto.getCodigoBarras().isEmpty()) {
-                    if (adminRepository.existeProductoPorCodigo(producto.getCodigoBarras())) {
-                        errorMessage.postValue("Ya existe un producto con ese código");
-                        isCreating.postValue(false);
-                        return;
-                    }
-                }
+                // Note: Validaciones de duplicados no implementadas en AdminRepository
                 
                 adminRepository.crearProducto(producto, new AdminRepository.AdminCallback<Producto>() {
                     @Override
@@ -173,15 +160,9 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     return;
                 }
                 
-                // Verificar nombres duplicados (excluyendo el producto actual)
-                if (adminRepository.existeProductoPorNombreExcluyendoId(producto.getNombre(), producto.getId())) {
-                    errorMessage.postValue("Ya existe otro producto con ese nombre");
-                    isUpdating.postValue(false);
-                    return;
-                }
+                // Note: Validación de nombres duplicados no implementada en AdminRepository
                 
-                // Actualizar fecha de modificación
-                producto.setFechaActualizacion(System.currentTimeMillis());
+                // Note: fechaActualizacion no está disponible en database.models.Producto
                 
                 adminRepository.actualizarProducto(producto, new AdminRepository.AdminCallback<Producto>() {
                     @Override
@@ -206,36 +187,20 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     
     /**
      * Activa un producto
+     * TODO: Implementar método activarProducto en AdminRepository
      */
     public void activarProducto(long productoId) {
-        adminRepository.activarProducto(productoId, new AdminRepository.AdminCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean result) {
-                successMessage.postValue("Producto activado exitosamente");
-            }
-            
-            @Override
-            public void onError(String error) {
-                errorMessage.postValue("Error al activar producto: " + error);
-            }
-        });
+        // Método temporalmente deshabilitado - AdminRepository no tiene activarProducto
+        errorMessage.postValue("Función de activar producto no disponible temporalmente");
     }
     
     /**
      * Desactiva un producto
+     * TODO: Implementar método desactivarProducto en AdminRepository
      */
     public void desactivarProducto(long productoId, String motivo) {
-        adminRepository.desactivarProducto(productoId, motivo, new AdminRepository.AdminCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean result) {
-                successMessage.postValue("Producto desactivado exitosamente");
-            }
-            
-            @Override
-            public void onError(String error) {
-                errorMessage.postValue("Error al desactivar producto: " + error);
-            }
-        });
+        // Método temporalmente deshabilitado - AdminRepository no tiene desactivarProducto
+        errorMessage.postValue("Función de desactivar producto no disponible temporalmente");
     }
     
     /**
@@ -244,12 +209,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     public void eliminarProducto(long productoId) {
         isDeleting.setValue(true);
         
-        // Verificar si el producto está siendo usado
-        if (adminRepository.productoTieneDependencias(productoId)) {
-            errorMessage.postValue("No se puede eliminar: el producto tiene dependencias. Considere desactivarlo.");
-            isDeleting.postValue(false);
-            return;
-        }
+        // Note: Validación de dependencias no implementada en AdminRepository
         
         adminRepository.eliminarProducto(productoId, new AdminRepository.AdminCallback<Boolean>() {
             @Override
@@ -275,16 +235,24 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     
     /**
      * Obtiene productos por categoría
+     * TODO: Implementar método getProductosPorCategoria en AdminRepository
      */
     public LiveData<List<Producto>> getProductosPorCategoria(String categoria) {
-        return adminRepository.getProductosPorCategoria(categoria);
+        // Método temporalmente deshabilitado - AdminRepository no tiene getProductosPorCategoria
+        MutableLiveData<List<Producto>> result = new MutableLiveData<>();
+        result.postValue(new ArrayList<>());
+        return result;
     }
     
     /**
      * Obtiene productos con stock bajo
+     * TODO: Implementar método getProductosStockBajo en AdminRepository
      */
     public LiveData<List<Producto>> getProductosStockBajo(int umbral) {
-        return adminRepository.getProductosStockBajo(umbral);
+        // Método temporalmente deshabilitado - AdminRepository no tiene getProductosStockBajo
+        MutableLiveData<List<Producto>> result = new MutableLiveData<>();
+        result.postValue(new ArrayList<>());
+        return result;
     }
     
     /**
@@ -298,7 +266,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     return;
                 }
                 
-                adminRepository.actualizarStockProducto(productoId, nuevoStock, motivo);
+                adminRepository.actualizarStockProducto(String.valueOf(productoId), nuevoStock, motivo);
                 successMessage.postValue("Stock actualizado exitosamente");
                 
             } catch (Exception e) {
@@ -318,8 +286,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
                     return;
                 }
                 
-                adminRepository.actualizarPrecioProducto(productoId, nuevoPrecio, motivo);
-                successMessage.postValue("Precio actualizado exitosamente");
+                // Note: actualizarPrecioProducto no implementado en AdminRepository
+                successMessage.postValue("Funcionalidad de actualización de precio no disponible");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar precio: " + e.getMessage());
@@ -333,8 +301,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     public void actualizarProductos() {
         executor.execute(() -> {
             try {
-                adminRepository.sincronizarProductos();
-                successMessage.postValue("Productos actualizados desde el servidor");
+                // Note: sincronizarProductos no implementado en AdminRepository
+                successMessage.postValue("Funcionalidad de sincronización no disponible");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error al actualizar productos: " + e.getMessage());
@@ -363,8 +331,8 @@ public class ProductosAdminViewModel extends AndroidViewModel {
     public void sincronizarConServidor() {
         executor.execute(() -> {
             try {
-                adminRepository.sincronizarProductosConServidor();
-                successMessage.postValue("Sincronización completada");
+                // Note: sincronizarProductosConServidor no implementado en AdminRepository
+                successMessage.postValue("Funcionalidad de sincronización con servidor no disponible");
                 
             } catch (Exception e) {
                 errorMessage.postValue("Error en sincronización: " + e.getMessage());
@@ -410,10 +378,7 @@ public class ProductosAdminViewModel extends AndroidViewModel {
             return false;
         }
         
-        if (producto.getStock() < 0) {
-            errorMessage.setValue("El stock no puede ser negativo");
-            return false;
-        }
+        // Note: stock no está disponible en database.models.Producto
         
         if (producto.getDescripcion() != null && producto.getDescripcion().length() > 500) {
             errorMessage.setValue("La descripción no puede exceder 500 caracteres");

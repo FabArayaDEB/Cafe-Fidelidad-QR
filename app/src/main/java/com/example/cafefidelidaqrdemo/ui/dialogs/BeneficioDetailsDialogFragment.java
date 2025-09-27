@@ -100,7 +100,7 @@ public class BeneficioDetailsDialogFragment extends DialogFragment {
         }
         
         // Set valor based on tipo
-        if (beneficio.getTipo() == Beneficio.TipoBeneficio.DESCUENTO_PORCENTAJE && beneficio.getValorDescuentoPorcentaje() > 0) {
+        if ("DESCUENTO_PORCENTAJE".equals(beneficio.getTipo()) && beneficio.getValorDescuentoPorcentaje() > 0) {
             textValor.setText(String.valueOf(beneficio.getValorDescuentoPorcentaje()) + "%");
         } else if (beneficio.getValorDescuentoFijo() > 0) {
             textValor.setText("$" + String.valueOf(beneficio.getValorDescuentoFijo()));
