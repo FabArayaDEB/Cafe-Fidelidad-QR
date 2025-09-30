@@ -104,12 +104,12 @@ public class ClienteQRViewModel extends AndroidViewModel {
     }
     
     /**
-     * Genera un McID único basado en los datos del cliente
+     * Genera un ID único basado en los datos del cliente
      * @param cliente Datos del cliente
      * @return McID generado
      */
     private String generateMcId(Cliente cliente) {
-        // Generar McID basado en nombre y email
+        // Generar ID basado en nombre y email
         String nombre = cliente.getNombre().toUpperCase();
         String apellido = ""; // No hay apellido separado en ClienteEntity
         String email = cliente.getEmail().toLowerCase();
@@ -148,15 +148,15 @@ public class ClienteQRViewModel extends AndroidViewModel {
     }
     
     /**
-     * Obtiene el McID del cliente
+     * Obtiene el ID del cliente
      * @return McID del cliente
      */
     public String getClienteMcId() {
         Cliente cliente = _clienteData.getValue();
         if (cliente != null) {
-            return "McID: " + generateMcId(cliente);
+            return "ID: " + generateMcId(cliente);
         }
-        return "McID: ";
+        return "ID: ";
     }
     
     /**
