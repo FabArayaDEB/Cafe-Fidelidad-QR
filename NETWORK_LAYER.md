@@ -2,42 +2,33 @@
 
 ## Descripción General
 
-El directorio `network` contiene toda la **infraestructura de comunicación** con servicios web y APIs externas en el proyecto CafeFidelidaQRDemo. Esta capa maneja las solicitudes HTTP, autenticación, interceptores, manejo de errores de red y la configuración de clientes HTTP usando **Retrofit** y **OkHttp**.
+El directorio `network` contiene la **infraestructura HTTP** de la aplicación: definición de endpoints REST, creación del cliente Retrofit y utilidades de conectividad.
 
-La capa de red en esta aplicación:
-- **Centraliza las comunicaciones**: Un punto único para todas las llamadas HTTP
-- **Maneja autenticación**: Interceptores automáticos para tokens y credenciales
-- **Gestiona errores**: Manejo centralizado de errores de red y HTTP
-- **Optimiza rendimiento**: Caché inteligente y reutilización de conexiones
-- **Garantiza seguridad**: HTTPS, certificate pinning y validación de respuestas
-- **Facilita debugging**: Logging detallado y métricas de red
-
-Cada API service está diseñado siguiendo principios REST y utiliza Retrofit para la definición de endpoints, con interceptores personalizados para autenticación, logging y manejo de errores.
+Componentes principales:
+- `ApiService`: interfaz Retrofit con endpoints para auth y CRUD de clientes, productos, beneficios, sucursales, visitas y canjes; además de reportes.
+- `RetrofitClient`: cliente configurado con `BASE_URL` (`https://api.cafefidelidad.com/`) y `GsonConverterFactory`; integra `OkHttp` con `HttpLoggingInterceptor`.
+- `ApiClient`: fachada simple para obtener una instancia de `ApiService`.
+- `NetworkUtils`: utilidades para verificar conectividad (`isNetworkAvailable`).
 
 ## Estado del Proyecto
 
 ### ✅ Implementado
-- Cliente HTTP con Retrofit y OkHttp
-- APIs principales (Auth, Cliente, Transaccion, Producto)
-- Interceptores (Auth, Logging, Error, Retry)
-- Callbacks tipados y manejo de errores
-- Utilidades de conectividad
-- Configuración de seguridad básica
-- Caché HTTP
+- Cliente HTTP con Retrofit + Gson
+- OkHttp con `logging-interceptor` para debugging
+- Definición de endpoints REST en `ApiService`
+- Utilidades de conectividad (`NetworkUtils.isNetworkAvailable`)
 
 ### 🔄 En Desarrollo
-- Certificate pinning completo
-- Métricas de performance
-- Optimizaciones de caché
-- APIs de reportes avanzados
+- Manejo de autenticación (tokens) y headers dinámicos
+- Manejo centralizado de errores y reintentos
+- Certificate pinning en producción
+- Endpoints adicionales de reportes
 
 ### 📋 Futuras Mejoras
-- Implementación de GraphQL
-- WebSocket para tiempo real
-- Compresión de requests/responses
-- Offline-first con sincronización
-- Rate limiting inteligente
-- Métricas de red detalladas
+- Compresión de requests/responses (GZIP)
+- Estrategias de caché HTTP y offline-first
+- Rate limiting y backoff exponencial
+- Métricas y tracing de red
 
 ## Mejores Prácticas
 
@@ -67,9 +58,7 @@ Cada API service está diseñado siguiendo principios REST y utiliza Retrofit pa
 
 ## Conclusión
 
-La capa de red proporciona una infraestructura robusta y escalable para todas las comunicaciones HTTP de la aplicación. La implementación con Retrofit y OkHttp garantiza rendimiento, seguridad y facilidad de mantenimiento.
-
-La arquitectura permite un manejo eficiente de las comunicaciones tanto síncronas como asíncronas, con estrategias de caché inteligentes y manejo robusto de errores que garantizan una experiencia de usuario fluida incluso en condiciones de red adversas.
+La capa de red, basada en Retrofit/OkHttp y Gson, centraliza la comunicación con la API y facilita el consumo de endpoints de forma tipada y mantenible. Con `NetworkUtils`, la aplicación decide cuándo realizar llamadas o trabajar en modo offline.
 
 ---
 

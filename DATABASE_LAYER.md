@@ -2,80 +2,102 @@
 
 ## Descripción General
 
-El directorio `database` implementa la **capa de persistencia local** utilizando **Room Database** en la arquitectura MVVM del proyecto CafeFidelidaQRDemo. Esta capa proporciona almacenamiento offline, caché de datos y sincronización local para garantizar que la aplicación funcione sin conexión a internet.
+El directorio `database` implementa la **persistencia local** utilizando un `SQLiteOpenHelper` propio: `CafeFidelidadDB.java`. Esta capa gestiona el archivo `cafe_fidelidad.db`, crea el esquema de tablas, realiza operaciones CRUD y sirve como fuente de datos local para repositorios.
 
-Room Database actúa como una abstracción sobre SQLite, proporcionando:
-- **Validación de consultas en tiempo de compilación**
-- **Anotaciones declarativas** para definir esquemas
-- **Integración nativa con LiveData** para observación reactiva
-- **Soporte para migraciones** automáticas y manuales
-- **Type converters** para tipos de datos complejos
-- **Relaciones entre entidades** con Foreign Keys
+Características principales de la implementación:
+- `SQLiteOpenHelper` con `onCreate` y `onUpgrade` para gestión de esquema.
+- Tablas normalizadas con claves foráneas y constraints.
+- Métodos CRUD para modelos: `Cliente`, `Producto`, `Sucursal`, `Beneficio`, `Visita`, `Canje`.
+- Consultas específicas: búsqueda de productos, filtros por categoría/estado, listados de beneficios disponibles, visitas por cliente, canjes por estado.
+- Uso de `ContentValues`, `Cursor` y consultas parametrizadas para seguridad y rendimiento.
 
-Esta capa es fundamental para:
-- **Funcionamiento Offline**: Almacenamiento local cuando no hay conectividad
-- **Caché Inteligente**: Reducción de llamadas a API mediante caché local
-- **Sincronización**: Coordinación entre datos locales y remotos
-- **Performance**: Acceso rápido a datos frecuentemente utilizados
-- **Consistencia**: Mantenimiento de integridad referencial
+Nota: Aunque el proyecto declara dependencias de Room en `build.gradle`, la implementación activa utiliza SQLite manual mediante `CafeFidelidadDB`.
 
 ## Estado del Proyecto
 
 ### ✅ Implementado
-- Base de datos Room completa con 16 entidades
-- DAOs para todas las entidades principales
-- Convertidores de tipos para Date, List y Map
-- Relaciones Foreign Key entre entidades
-- Índices para optimización de consultas
-- Patrón Singleton para instancia de base de datos
-- Consultas básicas CRUD para todas las entidades
-- Consultas específicas de negocio
-- LiveData para observación de cambios
-- Manejo de sincronización con campos de control
+- Archivo `cafe_fidelidad.db` y `CafeFidelidadDB` funcional
+- Esquema de tablas: clientes, productos, sucursales, beneficios, visitas, canjes
+- Claves foráneas y restricciones de integridad
+- CRUD completo para modelos principales
+- Búsqueda y filtros de productos (categoría, disponibilidad, activo)
+- Listado de beneficios por puntos requeridos y estado
+- Visitas y canjes vinculados a clientes y productos
+- Integración con repositorios mediante hilos de fondo (`ExecutorService`)
 
 ### 🔄 En Desarrollo
-- Migraciones de base de datos
-- Consultas de agregación complejas
-- Optimizaciones de rendimiento avanzadas
-- Testing automatizado completo
-- Backup y restauración automática
+- Estrategias de migración en `onUpgrade`
+- Consultas agregadas y reportes avanzados
+- Índices adicionales para columnas de alta consulta
+- Testing automatizado de CRUD y restricciones
+- Exportación/backup del archivo SQLite
 
 ### 📋 Futuras Mejoras
-- Migración a Room con Coroutines y Flow
-- Implementación de Full-Text Search (FTS)
-- Encriptación de datos sensibles
-- Compresión de datos JSON
-- Particionado de tablas grandes
-- Índices compuestos optimizados
-- Triggers para auditoría automática
-- Views materializadas para reportes
+- Full-Text Search (FTS) para búsqueda avanzada
+- Encriptación de datos sensibles (SQLCipher)
+- Vistas materializadas para reportes
+- Triggers de auditoría y consistencia
+- Índices compuestos y particionado lógico
 
 ## Mejores Prácticas
 
 ### 1. Diseño de Entidades
-- **Primary Keys**: Usar String UUIDs para compatibilidad con APIs
-- **Foreign Keys**: Definir relaciones explícitas con CASCADE
-- **Índices**: Crear índices en columnas de búsqueda frecuente
-- **Validaciones**: Usar constraints de base de datos cuando sea posible
+- **Primary Keys**: IDs string (UUID) para compatibilidad con API remota
+- **Foreign Keys**: Definir relaciones con `ON DELETE/UPDATE` apropiados
+- **Índices**: Crear índices en columnas de búsqueda (nombre, categoría, activo)
+- **Constraints**: Validaciones a nivel de base (NOT NULL, UNIQUE)
 
 ### 2. Consultas Eficientes
-- **Paginación**: Implementar para listas grandes
 - **Proyecciones**: Seleccionar solo columnas necesarias
-- **Joins**: Usar @Transaction para consultas complejas
-- **Caché**: Implementar estrategias de caché inteligente
+- **Joins**: Consultas con `INNER/LEFT JOIN` según necesidad
+- **Parámetros**: Usar `?` para evitar SQL injection
+- **Índices**: Aprovechar índices para `WHERE` y `ORDER BY`
 
 ### 3. Manejo de Datos
-- **Threading**: Todas las operaciones en background threads
-- **Transacciones**: Usar @Transaction para operaciones atómicas
-- **Sincronización**: Campos de control para sync con servidor
-- **Cleanup**: Implementar limpieza automática de datos antiguos
+- **Threading**: Ejecutar desde repositorios con `ExecutorService`
+- **Transacciones**: Usar `beginTransaction()`/`setTransactionSuccessful()`/`endTransaction()`
+- **Sincronización**: Campos de control (timestamps, flags) para sync futura
+- **Cleanup**: Limpieza de datos antiguos/registros inactivos
+
+## Esquema de Tablas (Resumen)
+
+- `clientes`: id, nombre, apellido, email, telefono, fecha_nacimiento, fecha_registro, puntos, activo
+- `productos`: id, nombre, descripcion, precio, categoria, activo, disponible, stock, imagen_url
+- `sucursales`: id, nombre, direccion, ciudad, latitud, longitud, telefono
+- `beneficios`: id, nombre, descripcion, puntos_requeridos, activo, fecha_inicio, fecha_fin
+- `visitas`: id, cliente_id (FK), sucursal_id (FK), fecha_visita, puntos_ganados, notas
+- `canjes`: id, cliente_id (FK), beneficio_id (FK), producto_id (FK), fecha_canje, puntos_usados, estado
+
+Claves foráneas principales
+- `visitas.cliente_id` → `clientes.id`
+- `visitas.sucursal_id` → `sucursales.id`
+- `canjes.cliente_id` → `clientes.id`
+- `canjes.beneficio_id` → `beneficios.id`
+- `canjes.producto_id` → `productos.id`
+
+## Operaciones CRUD y Consultas
+
+- Clientes: crear, obtener por id/email, actualizar datos, activar/desactivar, sumar puntos.
+- Productos: crear, listar, buscar por nombre, filtrar por categoría/activo/disponible, actualizar stock y disponibilidad.
+- Sucursales: crear, listar, obtener por ciudad, actualizar datos.
+- Beneficios: crear, listar, filtrar por puntos requeridos/estado, activar/desactivar.
+- Visitas: registrar visita, listar por cliente/sucursal, cálculo de puntos ganados.
+- Canjes: registrar canje, listar por cliente/estado, validar puntos disponibles.
+
+## Flujo de Datos
+
+```
+Repositories (Auth/Producto/Sucursal/Beneficio/Visita/Canje)
+  ↕ (CRUD/consultas en hilos de fondo)
+CafeFidelidadDB (SQLiteOpenHelper)
+```
+
+Los repositorios encapsulan threading, estados (`isLoading`, `error`, `success`) y coordinan lecturas/escrituras con la base local y, cuando aplique, con servicios de red (`ApiService`).
 
 ## Conclusión
 
-La capa de base de datos proporciona una base sólida para el almacenamiento y gestión de datos en la aplicación. La implementación con Room Database garantiza rendimiento, consistencia y facilidad de mantenimiento.
-
-La arquitectura permite un funcionamiento robusto tanto online como offline, con sincronización inteligente y caché optimizado para una experiencia de usuario fluida.
+La capa de base de datos, implementada con `SQLiteOpenHelper`, proporciona almacenamiento local robusto y operaciones CRUD eficientes para los módulos de clientes, productos, sucursales, beneficios, visitas y canjes. Su integración con los repositorios y el uso de hilos de fondo asegura buen rendimiento y una experiencia fluida.
 
 ---
 
-**Nota**: Esta documentación describe la arquitectura y componentes de la capa de base de datos del proyecto CafeFidelidaQRDemo. Para implementación específica, consultar los archivos de código correspondientes en el directorio `database/`.
+**Nota**: Para detalles de implementación, consultar `app/src/main/java/com/example/cafefidelidaqrdemo/database/CafeFidelidadDB.java`.
