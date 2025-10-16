@@ -45,13 +45,11 @@ public class LoginActivity extends AppCompatActivity {
         // Configurar observadores
         setupObservers();
         
-        // DEBUG: Mostrar credenciales disponibles
-        Toast.makeText(this, "CREDENCIALES CORRECTAS:\n" +
-                "📧 Cliente: cliente@cafe.com\n" +
-                "🔑 Contraseña: cliente123\n\n" +
-                "📧 Admin: admin@cafe.com\n" +
-                "🔑 Contraseña: admin123\n\n" +
-                "⚠️ IMPORTANTE: Escribir exactamente como se muestra", 
+        // INFO: Mostrar credenciales de ejemplo (demo y SQLite)
+        Toast.makeText(this, "Ejemplos de acceso:\n" +
+                "• Cliente demo: cliente@test.com / cliente123\n" +
+                "• Admin demo: admin@test.com / admin123\n" +
+                "• Cliente SQLite: juan@email.com / 123456", 
                 Toast.LENGTH_LONG).show();
 
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {

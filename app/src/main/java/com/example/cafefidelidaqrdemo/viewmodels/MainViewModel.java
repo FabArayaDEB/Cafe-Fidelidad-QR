@@ -72,8 +72,8 @@ public class MainViewModel extends AndroidViewModel {
      */
     private void setupLiveDataSync() {
         // Por simplicidad, vamos a actualizar ambos StateFlow y LiveData en los métodos
-        // Inicializar LiveData con valores por defecto
-        isAuthenticatedLiveData.setValue(false);
+        // Inicializar LiveData: isAuthenticated en null para evitar redirección prematura
+        isAuthenticatedLiveData.setValue(null);
         errorLiveData.setValue(null);
         isLoadingLiveData.setValue(false);
         toolbarTitleLiveData.setValue("Mi Perfil");

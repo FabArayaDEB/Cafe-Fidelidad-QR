@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.ProductoRepository;
+import androidx.lifecycle.LiveData;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
 // import com.google.firebase.database.DatabaseReference;
@@ -39,6 +41,7 @@ public class CatalogoActivity extends AppCompatActivity {
     private EditText etBuscar;
     private Spinner spinnerCategoria, spinnerOrden;
     private ProgressDialog progressDialog;
+    private ProductoRepository productoRepository;
     // private DatabaseReference databaseReference;
 
     // Categorías disponibles
@@ -102,8 +105,8 @@ public class CatalogoActivity extends AppCompatActivity {
         progressDialog.setMessage("Cargando productos...");
         progressDialog.setCancelable(false);
 
-        // Referencia a Firebase
-        // databaseReference = FirebaseDatabase.getInstance().getReference("Productos");
+        // Inicializar repositorio de productos (SQLite)
+        productoRepository = ProductoRepository.getInstance(getApplicationContext());
     }
 
     private void setupRecyclerView() {
@@ -168,49 +171,45 @@ public class CatalogoActivity extends AppCompatActivity {
 
     private void loadProductos() {
         progressDialog.show();
-        
-        // databaseReference.addValueEventListener(new ValueEventListener() {
-        //     @Override
-        //     public void onDataChange(@NonNull DataSnapshot snapshot) {
-        //         productos.clear();
-        //         for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-        //             Producto producto = dataSnapshot.getValue(Producto.class);
-        //             if (producto != null && producto.isActivo()) {
-        //                 listaProductos.add(producto);
-        //             }
-        //         }
-        //         
-        //         filtrarProductos();
-        //         progressDialog.dismiss();
-        //     }
-        //
-        //     @Override
-        //     public void onCancelled(@NonNull DatabaseError error) {
-        //         progressDialog.dismiss();
-        //         Toast.makeText(CatalogoActivity.this, 
-        //                 "Error al cargar productos: " + error.getMessage(), 
-        //                 Toast.LENGTH_SHORT).show();
-        //     }
-        // });
-        
-        // Método deshabilitado - Firebase removido
-        progressDialog.dismiss();
-        Toast.makeText(this, "Carga de productos deshabilitada", Toast.LENGTH_SHORT).show();
+
+        // Observar productos disponibles publicados por administradores desde SQLite
+        LiveData<List<Producto>> liveData = productoRepository.getProductosDisponibles();
+        liveData.observe(this, productos -> {
+            listaProductos.clear();
+            if (productos != null) {
+                listaProductos.addAll(productos);
+            }
+            filtrarProductos();
+            progressDialog.dismiss();
+        });
+
+        // Observar errores del repositorio para informar a la UI
+        productoRepository.getError().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(CatalogoActivity.this, "Error al cargar productos: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void filtrarProductos() {
-        String textoBusqueda = etBuscar.getText().toString().toLowerCase().trim();
-        String categoriaSeleccionada = spinnerCategoria.getSelectedItem().toString();
+        String textoBusqueda = etBuscar != null ? etBuscar.getText().toString().toLowerCase().trim() : "";
+        String categoriaSeleccionada = (spinnerCategoria != null && spinnerCategoria.getSelectedItem() != null)
+                ? spinnerCategoria.getSelectedItem().toString()
+                : "Todas";
         
         listaProductosFiltrada.clear();
         
         for (Producto producto : listaProductos) {
+            String nombre = producto.getNombre() != null ? producto.getNombre() : "";
+            String descripcion = producto.getDescripcion() != null ? producto.getDescripcion() : "";
+            String categoria = producto.getCategoria() != null ? producto.getCategoria() : "";
+
             boolean coincideTexto = textoBusqueda.isEmpty() || 
-                    producto.getNombre().toLowerCase().contains(textoBusqueda) ||
-                    producto.getDescripcion().toLowerCase().contains(textoBusqueda);
+                    nombre.toLowerCase().contains(textoBusqueda) ||
+                    descripcion.toLowerCase().contains(textoBusqueda);
             
-            boolean coincideCategoria = categoriaSeleccionada.equals("Todas") ||
-                    producto.getCategoria().equals(categoriaSeleccionada);
+            boolean coincideCategoria = "Todas".equals(categoriaSeleccionada) ||
+                    categoria.equals(categoriaSeleccionada);
             
             if (coincideTexto && coincideCategoria) {
                 listaProductosFiltrada.add(producto);
@@ -221,14 +220,18 @@ public class CatalogoActivity extends AppCompatActivity {
     }
 
     private void ordenarProductos() {
-        String ordenSeleccionado = spinnerOrden.getSelectedItem().toString();
+        String ordenSeleccionado = (spinnerOrden != null && spinnerOrden.getSelectedItem() != null)
+                ? spinnerOrden.getSelectedItem().toString()
+                : "Nombre A-Z";
         
         switch (ordenSeleccionado) {
             case "Nombre A-Z":
                 Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
                     public int compare(Producto p1, Producto p2) {
-                        return p1.getNombre().compareToIgnoreCase(p2.getNombre());
+                        String n1 = p1.getNombre() != null ? p1.getNombre() : "";
+                        String n2 = p2.getNombre() != null ? p2.getNombre() : "";
+                        return n1.compareToIgnoreCase(n2);
                     }
                 });
                 break;
@@ -237,7 +240,9 @@ public class CatalogoActivity extends AppCompatActivity {
                 Collections.sort(listaProductosFiltrada, new Comparator<Producto>() {
                     @Override
                     public int compare(Producto p1, Producto p2) {
-                        return p2.getNombre().compareToIgnoreCase(p1.getNombre());
+                        String n1 = p1.getNombre() != null ? p1.getNombre() : "";
+                        String n2 = p2.getNombre() != null ? p2.getNombre() : "";
+                        return n2.compareToIgnoreCase(n1);
                     }
                 });
                 break;

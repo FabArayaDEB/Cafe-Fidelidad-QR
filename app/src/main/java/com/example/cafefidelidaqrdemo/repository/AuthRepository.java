@@ -4,11 +4,13 @@ import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
+import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
+import com.example.cafefidelidaqrdemo.models.Cliente;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Repository SIMPLIFICADO para autenticación local
+ * Repository para autenticación local
  */
 public class AuthRepository {
     
@@ -19,8 +21,8 @@ public class AuthRepository {
     // Credenciales simples
     private static final Map<String, LocalUser> USERS = new HashMap<>();
     static {
-        USERS.put("cliente@test.com", new LocalUser("cliente123", "Cliente Demo", "cliente", "user_001"));
-        USERS.put("admin@test.com", new LocalUser("admin123", "Administrador", "admin", "admin_001"));
+        USERS.put("cliente@test.com", new LocalUser("123456", "test", "cliente", "user_001"));
+        USERS.put("admin@test.com", new LocalUser("123456", "Admin", "admin", "admin_001"));
     }
     
     private LocalUser currentUser;
@@ -75,7 +77,7 @@ public class AuthRepository {
         LocalUser user = USERS.get(cleanEmail);
         
         if (user != null && user.password.equals(cleanPassword)) {
-            // Login exitoso
+            // Login exitoso (usuarios locales predefinidos: admin/cliente demo)
             android.util.Log.d("AuthRepository", "Login exitoso: " + user.name + " (" + user.role + ")");
             currentUser = user;
             currentUserLiveData.postValue(user);
@@ -87,14 +89,53 @@ public class AuthRepository {
             
             isLoadingLiveData.postValue(false);
             callback.onSuccess(user.uid);
-        } else {
-            // Login fallido
-            android.util.Log.d("AuthRepository", "Login fallido para: " + email);
-            String error = "Email o contraseña incorrectos";
+            return;
+        }
+
+        // Fallback: intentar autenticación contra SQLite (clientes reales)
+        if (context == null) {
+            String error = "Contexto no establecido para autenticación local";
+            android.util.Log.e("AuthRepository", error);
             errorLiveData.postValue(error);
             isLoadingLiveData.postValue(false);
             callback.onError(error);
+            return;
         }
+
+        new Thread(() -> {
+            try {
+                ClienteRepository clienteRepository = new ClienteRepository(context);
+                Cliente cliente = clienteRepository.getClienteByEmailSync(cleanEmail);
+                
+                if (cliente != null && cliente.getPassword() != null && cliente.getPassword().equals(cleanPassword)) {
+                    // Construir usuario local como cliente
+                    LocalUser sqliteUser = new LocalUser(cleanPassword, cliente.getNombre(), "cliente", cliente.getId());
+                    currentUser = sqliteUser;
+                    currentUserLiveData.postValue(sqliteUser);
+                    
+                    // Crear sesión persistente
+                    if (sessionManager != null) {
+                        sessionManager.createSession(cliente.getId(), cleanEmail, cliente.getNombre());
+                    }
+                    
+                    android.util.Log.d("AuthRepository", "Login SQLite exitoso para: " + cleanEmail);
+                    isLoadingLiveData.postValue(false);
+                    callback.onSuccess(cliente.getId());
+                } else {
+                    String error = "Email o contraseña incorrectos";
+                    android.util.Log.d("AuthRepository", "Login SQLite fallido para: " + cleanEmail);
+                    errorLiveData.postValue(error);
+                    isLoadingLiveData.postValue(false);
+                    callback.onError(error);
+                }
+            } catch (Exception e) {
+                String error = "Error en autenticación local: " + e.getMessage();
+                android.util.Log.e("AuthRepository", error);
+                errorLiveData.postValue(error);
+                isLoadingLiveData.postValue(false);
+                callback.onError(error);
+            }
+        }).start();
     }
     
     /**
@@ -144,6 +185,21 @@ public class AuthRepository {
      * Obtiene el usuario actual - VERSIÓN LOCAL
      */
     public LocalUser getCurrentUser() {
+        // Si no hay usuario en memoria pero existe una sesión, reconstruirlo
+        if (currentUser == null && sessionManager != null && sessionManager.isLoggedIn()) {
+            String userId = sessionManager.getUserId();
+            String email = sessionManager.getUserEmail();
+            String name = sessionManager.getUserName();
+            String role = "cliente"; // Por defecto, los usuarios de SQLite son clientes
+            if (email != null && email.equals("admin@test.com")) {
+                role = "admin";
+            }
+
+            currentUser = new LocalUser("", name != null ? name : "Usuario", role, 
+                    userId != null ? userId : "user_session");
+            currentUserLiveData.postValue(currentUser);
+            android.util.Log.d("AuthRepository", "Usuario reconstruido desde sesión: " + email + " (" + role + ")");
+        }
         return currentUser;
     }
     
@@ -162,7 +218,9 @@ public class AuthRepository {
      * Verifica si hay un usuario autenticado - VERSIÓN LOCAL
      */
     public boolean isUserLoggedIn() {
-        return currentUser != null;
+        // Considerar también la sesión persistente como autenticado
+        if (currentUser != null) return true;
+        return sessionManager != null && sessionManager.isLoggedIn();
     }
     
     /**
@@ -179,14 +237,16 @@ public class AuthRepository {
      * Verifica si el usuario actual es administrador
      */
     public boolean isCurrentUserAdmin() {
-        return currentUser != null && currentUser.isAdmin();
+        LocalUser user = getCurrentUser();
+        return user != null && user.isAdmin();
     }
     
     /**
      * Verifica si el usuario actual es cliente
      */
     public boolean isCurrentUserCliente() {
-        return currentUser != null && currentUser.isCliente();
+        LocalUser user = getCurrentUser();
+        return user != null && user.isCliente();
     }
     
     // Getters para LiveData

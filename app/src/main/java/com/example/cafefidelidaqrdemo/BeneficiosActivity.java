@@ -16,6 +16,8 @@ import com.example.cafefidelidaqrdemo.managers.BeneficioManager;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
+import com.example.cafefidelidaqrdemo.repository.BeneficioRepository;
+import androidx.lifecycle.Observer;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
     private BeneficioAdapter beneficioAdapter;
     private BeneficioManager beneficioManager;
     private SessionManager sessionManager;
+    private BeneficioRepository beneficioRepository;
     
     private List<Beneficio> todosBeneficios;
     private List<Beneficio> beneficiosDisponibles;
@@ -50,6 +53,7 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
         
         initializeComponents();
         setupUI();
+        observeBeneficios();
         loadBeneficios();
     }
     
@@ -73,6 +77,7 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
     private void initializeComponents() {
         beneficioManager = new BeneficioManager(this);
         sessionManager = new SessionManager(this);
+        beneficioRepository = new BeneficioRepository(this);
         
         todosBeneficios = new ArrayList<>();
         beneficiosDisponibles = new ArrayList<>();
@@ -99,13 +104,38 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
         // Configurar botón de actualizar
         binding.btnActualizar.setOnClickListener(v -> {
             evaluarNuevosBeneficios();
-            loadBeneficios();
+            beneficioRepository.refreshBeneficios(result -> {
+                // La actualización se reflejará vía LiveData
+            });
         });
         
         // Configurar swipe refresh
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
-            loadBeneficios();
-            binding.swipeRefreshLayout.setRefreshing(false);
+            beneficioRepository.refreshBeneficios(result -> {
+                binding.swipeRefreshLayout.setRefreshing(false);
+            });
+        });
+    }
+
+    private void observeBeneficios() {
+        beneficioRepository.getBeneficiosActivos().observe(this, new Observer<List<Beneficio>>() {
+            @Override
+            public void onChanged(List<Beneficio> beneficios) {
+                todosBeneficios = beneficios != null ? new ArrayList<>(beneficios) : new ArrayList<>();
+
+                // Asegurar estado por defecto para evitar NPE y clasificar correctamente
+                for (Beneficio b : todosBeneficios) {
+                    if (b.getEstado() == null) {
+                        b.setEstado(b.isActivo() ? "disponible" : "expirado");
+                    }
+                }
+
+                // Clasificar y actualizar UI
+                clasificarBeneficios();
+                mostrarBeneficiosDisponibles();
+                actualizarContadoresTabs();
+                actualizarVisibilidadMensajeVacio();
+            }
         });
     }
     
@@ -146,24 +176,9 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
                 finish();
                 return;
             }
-            
-            // TODO: Obtener beneficios reales desde Firebase
-            // Por ahora usar lista vacía para que compile
-            List<Beneficio> todosBeneficiosTemp = new ArrayList<>();
-            todosBeneficios = beneficioManager.obtenerBeneficiosDisponibles(clienteId, todosBeneficiosTemp);
-            
-            // Clasificar beneficios por estado
-            clasificarBeneficios();
-            
-            // Mostrar beneficios disponibles por defecto
-            mostrarBeneficiosDisponibles();
-            
-            // Actualizar contadores en las tabs
-            actualizarContadoresTabs();
-            
-            // Mostrar/ocultar mensaje vacío
-            actualizarVisibilidadMensajeVacio();
-            
+
+            // Refrescar desde SQLite; resultados se observan en observeBeneficios()
+            beneficioRepository.refreshBeneficios(result -> {});
         } catch (Exception e) {
             Log.e(TAG, "Error cargando beneficios", e);
             Toast.makeText(this, "Error cargando beneficios", Toast.LENGTH_SHORT).show();
@@ -176,7 +191,11 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
         beneficiosExpirados.clear();
         
         for (Beneficio beneficio : todosBeneficios) {
-            switch (beneficio.getEstado()) {
+            String estado = beneficio.getEstado();
+            if (estado == null) {
+                estado = beneficio.isActivo() ? "disponible" : "expirado";
+            }
+            switch (estado) {
                 case "disponible":
                     if (beneficio.esValido()) {
                         beneficiosDisponibles.add(beneficio);

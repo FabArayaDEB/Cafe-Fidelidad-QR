@@ -52,23 +52,44 @@ public class ClienteQRViewModel extends AndroidViewModel {
         executor.execute(() -> {
             try {
                 String clienteId = sessionManager.getUserId();
+                String clienteEmail = sessionManager.getUserEmail();
+                String clienteNombre = sessionManager.getUserName();
+
+                Cliente cliente = null;
                 if (clienteId != null) {
-                    // Convertir String a int para el ID del cliente
-                    int id = Integer.parseInt(clienteId);
-                    // Usar LiveData para obtener el cliente
-                    clienteRepository.getClienteById(id).observeForever(cliente -> {
-                        if (cliente != null) {
-                            _clienteData.postValue(cliente);
-                            generateQRCode(cliente);
-                        } else {
-                            _error.postValue("No se encontraron datos del cliente");
+                    // Intentar por ID numérico primero
+                    try {
+                        int idNum = Integer.parseInt(clienteId);
+                        cliente = clienteRepository.getClienteByIdSync(idNum);
+                        if (cliente == null && clienteEmail != null && !clienteEmail.isEmpty()) {
+                            cliente = clienteRepository.getClienteByEmailSync(clienteEmail);
                         }
-                    });
+                    } catch (NumberFormatException nfe) {
+                        // ID no numérico: intentar por email
+                        if (clienteEmail != null && !clienteEmail.isEmpty()) {
+                            cliente = clienteRepository.getClienteByEmailSync(clienteEmail);
+                        }
+                    }
+
+                    if (cliente == null) {
+                        cliente = construirClienteDesdeSesion(clienteId, clienteNombre, clienteEmail);
+                    }
                 } else {
-                    _error.postValue("Sesión no válida");
+                    // No hay ID en sesión: usar usuario de AuthRepository si existe
+                    com.example.cafefidelidaqrdemo.repository.AuthRepository authRepo = com.example.cafefidelidaqrdemo.repository.AuthRepository.getInstance();
+                    authRepo.setContext(getApplication());
+                    com.example.cafefidelidaqrdemo.repository.AuthRepository.LocalUser localUser = authRepo.getCurrentUser();
+                    if (localUser != null) {
+                        cliente = construirClienteDesdeSesion(localUser.uid, localUser.name, (clienteEmail != null ? clienteEmail : "cliente@test.com"));
+                    } else {
+                        _error.postValue("Sesión no válida");
+                    }
                 }
-            } catch (NumberFormatException e) {
-                _error.postValue("ID de cliente inválido");
+
+                if (cliente != null) {
+                    _clienteData.postValue(cliente);
+                    generateQRCode(cliente);
+                }
             } catch (Exception e) {
                 _error.postValue("Error al cargar datos: " + e.getMessage());
             } finally {
@@ -126,6 +147,18 @@ public class ClienteQRViewModel extends AndroidViewModel {
         }
         
         return iniciales + emailPart.toUpperCase();
+    }
+
+    private Cliente construirClienteDesdeSesion(String id, String nombre, String email) {
+        Cliente cliente = new Cliente();
+        cliente.setId(id != null ? id : "user_demo");
+        cliente.setNombre(nombre != null && !nombre.isEmpty() ? nombre : "Cliente Demo");
+        cliente.setEmail(email != null && !email.isEmpty() ? email : "cliente@test.com");
+        cliente.setTelefono("");
+        cliente.setEstado("activo");
+        cliente.setPuntosAcumulados(0);
+        cliente.setActivo(true);
+        return cliente;
     }
     
     /**

@@ -17,7 +17,7 @@
         <!-- Contenedor de imagen con indicadores -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp">
+            android:layout_height="160dp">
 
             <!-- Imagen del producto -->
             <ImageView
@@ -70,10 +70,11 @@
                 android:layout_height="wrap_content"
                 android:text="Café Americano"
                 android:textColor="@color/coffee_primary"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:maxLines="2"
-                android:ellipsize="end" />
+                android:ellipsize="end"
+                android:lineSpacingExtra="1dp" />
 
             <!-- Descripción del producto -->
             <TextView
@@ -83,9 +84,10 @@
                 android:layout_marginTop="4dp"
                 android:text="Café negro preparado con granos premium"
                 android:textColor="@color/coffee_secondary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:maxLines="2"
-                android:ellipsize="end" />
+                android:ellipsize="end"
+                android:lineSpacingExtra="1dp" />
 
             <!-- Contenedor de precios -->
             <LinearLayout
@@ -102,7 +104,7 @@
                     android:layout_height="wrap_content"
                     android:text="$25.00"
                     android:textColor="@color/coffee_primary"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <!-- Precio original (tachado) -->
@@ -121,15 +123,6 @@
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1" />
-
-                <!-- Stock -->
-                <TextView
-                    android:id="@+id/tv_stock"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Stock: 15"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -183,6 +176,25 @@
                         android:visibility="gone" />
 
                 </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Estado: stock y puntos -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Stock -->
+                <TextView
+                    android:id="@+id/tv_stock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stock: 15"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <!-- Spacer -->
                 <View

@@ -212,21 +212,33 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
     }
     
     // DiffUtil para optimizar actualizaciones
-    private static final DiffUtil.ItemCallback<Producto> DIFF_CALLBACK = 
+    private static final DiffUtil.ItemCallback<Producto> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<Producto>() {
             @Override
             public boolean areItemsTheSame(@NonNull Producto oldItem, @NonNull Producto newItem) {
-                return oldItem.getId().equals(newItem.getId());
+                String oldId = oldItem.getId();
+                String newId = newItem.getId();
+                return oldId != null && oldId.equals(newId);
             }
-            
+
             @Override
             public boolean areContentsTheSame(@NonNull Producto oldItem, @NonNull Producto newItem) {
-                return oldItem.getNombre().equals(newItem.getNombre()) &&
-                       oldItem.getCategoria().equals(newItem.getCategoria()) &&
-                       Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0 &&
-                       oldItem.getEstado().equals(newItem.getEstado()) &&
-                       oldItem.getPuntosRequeridos() == newItem.getPuntosRequeridos() &&
-                       oldItem.getStockDisponible() == newItem.getStockDisponible();
+                String oldNombre = oldItem.getNombre();
+                String newNombre = newItem.getNombre();
+                String oldCategoria = oldItem.getCategoria();
+                String newCategoria = newItem.getCategoria();
+                String oldEstado = oldItem.getEstado();
+                String newEstado = newItem.getEstado();
+
+                boolean nombreSame = (oldNombre == null ? newNombre == null : oldNombre.equals(newNombre));
+                boolean categoriaSame = (oldCategoria == null ? newCategoria == null : oldCategoria.equals(newCategoria));
+                boolean estadoSame = (oldEstado == null ? newEstado == null : oldEstado.equals(newEstado));
+
+                boolean precioSame = Double.compare(oldItem.getPrecio(), newItem.getPrecio()) == 0;
+                boolean puntosSame = oldItem.getPuntosRequeridos() == newItem.getPuntosRequeridos();
+                boolean stockSame = oldItem.getStockDisponible() == newItem.getStockDisponible();
+
+                return nombreSame && categoriaSame && precioSame && estadoSame && puntosSame && stockSame;
             }
         };
     
