@@ -1,12 +1,16 @@
 package com.example.cafefidelidaqrdemo.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,7 +25,7 @@ import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
 import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
-
+import com.example.cafefidelidaqrdemo.viewmodels.ClienteQRViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,6 +35,20 @@ public class FragmentPerfil extends Fragment {
     private FragmentPerfilBinding binding;
     private Context mContext;
     private AuthRepository authRepository;
+    private ClienteQRViewModel clienteQRViewModel;
+    private Handler refreshHandler;
+    private final long REFRESH_INTERVAL_MS = 60_000; // 60 segundos
+    private final Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (clienteQRViewModel != null) {
+                clienteQRViewModel.refreshQR();
+            }
+            if (refreshHandler != null) {
+                refreshHandler.postDelayed(this, REFRESH_INTERVAL_MS);
+            }
+        }
+    };
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -56,6 +74,10 @@ public class FragmentPerfil extends Fragment {
         // Inicializar AuthRepository
         authRepository = AuthRepository.getInstance();
         authRepository.setContext(mContext);
+
+        // Inicializar ViewModel de QR
+        clienteQRViewModel = new ViewModelProvider(this).get(ClienteQRViewModel.class);
+        setupObservers();
         
         // Configurar listeners
         setupClickListeners();
@@ -73,12 +95,7 @@ public class FragmentPerfil extends Fragment {
             if (binding.tvNombres != null) {
                 binding.tvNombres.setText(currentUser.name);
             }
-            // TODO: Implementar más campos según el layout
         }
-        
-        // TODO: Implementar carga de QR y otros datos del cliente
-        // binding.tvPuntos.setText("0 puntos");
-        // binding.tvNivel.setText("Bronce");
     }
     
     private void setupClickListeners() {
@@ -97,10 +114,14 @@ public class FragmentPerfil extends Fragment {
             startActivity(intent);
         });
         
-        // Configurar listener para refrescar QR
+        // Ampliar QR al tocar
         binding.ivQrPersonal.setOnClickListener(v -> {
-            // TODO: Implementar generación de QR
-            Toast.makeText(mContext, "Funcionalidad de QR en desarrollo", Toast.LENGTH_SHORT).show();
+            Bitmap current = clienteQRViewModel != null ? clienteQRViewModel.qrBitmap.getValue() : null;
+            if (current != null) {
+                showQrDialog(current);
+            } else {
+                Toast.makeText(mContext, "QR no disponible aún", Toast.LENGTH_SHORT).show();
+            }
         });
         
         // Configurar listener para Mi Cuenta
@@ -108,6 +129,40 @@ public class FragmentPerfil extends Fragment {
             Intent intent = new Intent(mContext, DatosPersonalesActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void setupObservers() {
+        // Observa el bitmap del QR
+        clienteQRViewModel.qrBitmap.observe(getViewLifecycleOwner(), bitmap -> {
+            if (bitmap != null && binding != null && binding.ivQrPersonal != null) {
+                binding.ivQrPersonal.setImageBitmap(bitmap);
+            }
+        });
+        // Observa datos del cliente
+        clienteQRViewModel.clienteData.observe(getViewLifecycleOwner(), cliente -> {
+            updateClienteInfo(cliente);
+            if (binding != null) {
+                binding.tvSaludo.setText(clienteQRViewModel.getPersonalizedGreeting());
+                binding.tvMcid.setText(clienteQRViewModel.getClienteMcId());
+            }
+        });
+        // Observa errores
+        clienteQRViewModel.error.observe(getViewLifecycleOwner(), err -> {
+            if (err != null && !err.isEmpty()) {
+                Toast.makeText(mContext, err, Toast.LENGTH_SHORT).show();
+                clienteQRViewModel.clearError();
+            }
+        });
+    }
+
+    private void showQrDialog(Bitmap bitmap) {
+        View dialogView = LayoutInflater.from(mContext).inflate(R.layout.dialog_qr_fullscreen, null);
+        ImageView imageView = dialogView.findViewById(R.id.iv_qr_fullscreen);
+        imageView.setImageBitmap(bitmap);
+        new AlertDialog.Builder(mContext)
+                .setView(dialogView)
+                .setPositiveButton("Cerrar", (d, w) -> d.dismiss())
+                .show();
     }
     
     private void updateClienteInfo(Cliente cliente) {
@@ -125,8 +180,8 @@ public class FragmentPerfil extends Fragment {
             }
             binding.tvSaludo.setText(greeting);
             
-            // Mostrar McID
-            binding.tvMcid.setText(cliente.getId());
+            // Mostrar ID generado por ViewModel
+            binding.tvMcid.setText(clienteQRViewModel.getClienteMcId());
             
             // Mostrar datos del usuario
             binding.tvNombres.setText(cliente.getNombre());
@@ -142,7 +197,20 @@ public class FragmentPerfil extends Fragment {
         }
     }
     
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (refreshHandler == null) refreshHandler = new Handler(Looper.getMainLooper());
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (refreshHandler != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+        }
+    }
     
     @Override
     public void onDestroyView() {

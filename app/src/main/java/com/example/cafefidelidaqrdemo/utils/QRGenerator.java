@@ -2,6 +2,12 @@ package com.example.cafefidelidaqrdemo.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Base64;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.UUID;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -13,16 +19,31 @@ import com.google.zxing.qrcode.QRCodeWriter;
 public class QRGenerator {
     
     private static final int QR_SIZE = 512;
+    // Nota: En producción, mover la clave a almacenamiento seguro (keystore/config remoto)
+    private static final String HMAC_SECRET = "CAFEDI_APP_SECRET_DEMO";
     
     /**
      * Genera un código QR para cliente
      */
     public static Bitmap generateClientQR(String clienteId, String nombre, String email, String mcId, int puntos) {
         try {
-            String qrContent = String.format(
-                "CLIENTE:%s|NOMBRE:%s|EMAIL:%s|MCID:%s|PUNTOS:%d",
-                clienteId, nombre, email, mcId, puntos
+            // Campos dinámicos
+            long timestamp = System.currentTimeMillis();
+            String nonce = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);
+
+            // Sanitizar valores para evitar romper el formato clave:valor
+            String safeNombre = sanitize(nombre);
+            String safeEmail = sanitize(email);
+            String safeMcId = sanitize(mcId);
+
+            // Base de datos a firmar
+            String base = String.format(
+                    "CLIENTE:%s|NOMBRE:%s|EMAIL:%s|MCID:%s|PUNTOS:%d|TS:%d|NONCE:%s",
+                    clienteId, safeNombre, safeEmail, safeMcId, puntos, timestamp, nonce
             );
+
+            String signature = hmacSha256(base, HMAC_SECRET);
+            String qrContent = base + "|SIG:" + signature;
             
             QRCodeWriter writer = new QRCodeWriter();
             BitMatrix bitMatrix = writer.encode(qrContent, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE);
@@ -58,17 +79,55 @@ public class QRGenerator {
         
         try {
             String[] parts = qrContent.split("\\|");
-            String clienteId = parts[0].split(":")[1];
-            String nombre = parts[1].split(":")[1];
-            String email = parts[2].split(":")[1];
-            String mcId = parts[3].split(":")[1];
-            int puntos = Integer.parseInt(parts[4].split(":")[1]);
-            
-            return new ClienteQRData(clienteId, nombre, email, mcId, puntos);
+            String clienteId = null, nombre = null, email = null, mcId = null; int puntos = 0;
+            for (String p : parts) {
+                int idx = p.indexOf(":");
+                if (idx <= 0) continue;
+                String key = p.substring(0, idx);
+                String val = p.substring(idx + 1);
+                switch (key) {
+                    case "CLIENTE": clienteId = val; break;
+                    case "NOMBRE": nombre = val; break;
+                    case "EMAIL": email = val; break;
+                    case "MCID": mcId = val; break;
+                    case "PUNTOS": try { puntos = Integer.parseInt(val); } catch (Exception ignored) {} break;
+                    default: break; // Ignorar TS, NONCE, SIG u otros
+                }
+            }
+            if (clienteId == null) return null;
+            return new ClienteQRData(nombrar(clienteId), nombrar(nombre), nombrar(email), nombrar(mcId), puntos);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private static String sanitize(String s) {
+        if (s == null) return "";
+        return s.replaceAll("[|:]", "_");
+    }
+
+    private static String hmacSha256(String data, String secret) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] raw = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.encodeToString(raw, Base64.NO_WRAP);
+        } catch (Exception e) {
+            // Fallback: SHA-256 simple si HMAC falla (no recomendado para producción)
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] raw = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+                return Base64.encodeToString(raw, Base64.NO_WRAP);
+            } catch (Exception ex) {
+                return "";
+            }
+        }
+    }
+
+    private static String nombrar(String s) {
+        return s == null ? "" : s;
     }
     
     /**

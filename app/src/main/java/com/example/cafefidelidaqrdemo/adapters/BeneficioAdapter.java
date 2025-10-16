@@ -89,7 +89,8 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
     
     private void configurarIconoBeneficio(ImageView iconView, String tipo) {
         int iconResource;
-        switch (tipo) {
+        String safeTipo = tipo != null ? tipo : "beneficio";
+        switch (safeTipo) {
             case "descuento":
                 iconResource = R.drawable.ic_coffee_placeholder;
                 break;
@@ -104,17 +105,22 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
     }
 
     private void configurarValorBeneficio(TextView valorView, Beneficio beneficio) {
-        String valor = "";
-        switch (beneficio.getTipo()) {
-            case "descuento":
-                valor = "Descuento $";
-                break;
-            case "dos_por_uno":
-                valor = "2x1";
-                break;
-            default:
-                valor = "Beneficio";
-                break;
+        String tipo = beneficio.getTipo();
+        String valor;
+        if (tipo == null) {
+            valor = "Beneficio";
+        } else {
+            switch (tipo) {
+                case "descuento":
+                    valor = "Descuento $";
+                    break;
+                case "dos_por_uno":
+                    valor = "2x1";
+                    break;
+                default:
+                    valor = "Beneficio";
+                    break;
+            }
         }
         valorView.setText(valor);
     }
@@ -190,7 +196,11 @@ public class BeneficioAdapter extends RecyclerView.Adapter<BeneficioAdapter.Bene
     }
 
     private void configurarBotones(BeneficioViewHolder holder, Beneficio beneficio) {
-        switch (beneficio.getEstado()) {
+        String estado = beneficio.getEstado();
+        if (estado == null) {
+            estado = beneficio.isActivo() ? "disponible" : "expirado";
+        }
+        switch (estado) {
             case "disponible":
                 // if (beneficio.isVigente()) { // Método no existe
                 holder.btnUsar.setVisibility(View.VISIBLE);
