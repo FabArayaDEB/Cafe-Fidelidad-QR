@@ -2,7 +2,7 @@
 
 ## Descripción General
 
-El directorio `viewmodels` contiene todos los **ViewModels** del proyecto CafeFidelidaQRDemo, implementando el patrón **MVVM (Model-View-ViewModel)**. Los ViewModels actúan como intermediarios entre la UI (Activities/Fragments) y la lógica de negocio (UseCases/Repositories), gestionando el estado de la interfaz de usuario y sobreviviendo a cambios de configuración.
+El directorio `viewmodels` contiene los **ViewModels** del proyecto, implementando el patrón **MVVM (Model-View-ViewModel)**. Los ViewModels actúan como intermediarios entre la UI (Activities/Fragments) y los repositorios, gestionando el estado de la interfaz y sobreviviendo a cambios de configuración.
 
 Los ViewModels en esta capa proporcionan:
 - **Gestión de Estado**: Manejo del estado de la UI con LiveData/Observable
@@ -14,19 +14,23 @@ Los ViewModels en esta capa proporcionan:
 - **Navegación**: Control de flujos de navegación entre pantallas
 - **Caché de Datos**: Almacenamiento temporal de datos para mejor rendimiento
 
-Cada ViewModel extiende de `BaseViewModel` para heredar funcionalidades comunes como manejo de errores, estados de carga, validaciones y comunicación con repositorios. La arquitectura sigue el patrón Factory para la creación de ViewModels con dependencias inyectadas.
+Los ViewModels usan `LiveData` y, cuando corresponde, `AndroidViewModel` para acceder a `Application`. Los estados de carga y error provienen, en su mayoría, de los repositorios (`BaseRepository`) para evitar duplicaciones.
 
-Los ViewModels se organizan por funcionalidad (auth, admin, cliente, shared) y utilizan LiveData para la comunicación reactiva con la UI, garantizando que los datos se mantengan sincronizados y la interfaz responda automáticamente a los cambios.
+ViewModels existentes:
+- `LoginViewModel`: validación de email/contraseña, login local vía `AuthRepository`, expone `isLoading`, errores y éxito.
+- `ProductosViewModel` (AndroidViewModel): gestión de productos, búsqueda y filtros; observa `ProductoRepository` (`isLoading`, errores, offline, empty state).
+- `SucursalesViewModel`: gestión y listado de sucursales.
+- `MisBeneficiosViewModel`: combina estados de múltiples repositorios con `MediatorLiveData`.
+- `MainViewModel`: estados propios para navegación y carga general.
+- `ClienteQRViewModel`: estados propios para operaciones de QR.
 
 ## Estado del Proyecto
 
 ### ✅ Implementado
-- BaseViewModel con funcionalidad común
-- ViewModels principales (Login, Admin, Cliente)
-- Factory pattern para creación de ViewModels
-- Manejo de estados de carga y errores
-- Validación de formularios
-- Integración con Use Cases
+- ViewModels principales (Login, Productos, Sucursales, Beneficios, Main, ClienteQR)
+- Manejo de estados de carga y errores con `LiveData`
+- Validación sencilla de formularios (login)
+- Observación de estados de repositorios (`isLoading`, errores)
 
 ### 🔄 En Desarrollo
 - ViewModels de reportes avanzados
@@ -56,6 +60,7 @@ Los ViewModels se organizan por funcionalidad (auth, admin, cliente, shared) y u
 - **Estados Claros**: Definir estados específicos
 - **Error Handling**: Manejo consistente de errores
 - **Loading States**: Indicadores de carga apropiados
+ - **Estados del Repositorio**: Preferir `repository.getIsLoading()` y evitar duplicación
 
 ### 3. Performance
 - **Lazy Loading**: Cargar datos solo cuando se necesiten
@@ -71,10 +76,4 @@ Los ViewModels se organizan por funcionalidad (auth, admin, cliente, shared) y u
 
 ## Conclusión
 
-La capa de ViewModels proporciona una separación clara entre la UI y la lógica de negocio, implementando el patrón MVVM de forma robusta. Los ViewModels manejan el estado de la UI, sobreviven a cambios de configuración y proporcionan una interfaz limpia para la comunicación con las capas de datos.
-
-La implementación con LiveData permite una programación reactiva que mantiene la UI sincronizada con los datos, mientras que el patrón Factory facilita la inyección de dependencias y la creación de ViewModels.
-
----
-
-**Nota**: Esta documentación describe la arquitectura y componentes de la capa de ViewModels del proyecto CafeFidelidaQRDemo. Para implementación específica, consultar los archivos de código correspondientes en el directorio `viewmodels/`.
+La capa de ViewModels proporciona una separación clara entre la UI y el acceso a datos, implementando MVVM con `LiveData`. Los estados de los repositorios se exponen a la UI de forma reactiva, y se evita duplicar `isLoading` cuando ya lo gestiona el repositorio.

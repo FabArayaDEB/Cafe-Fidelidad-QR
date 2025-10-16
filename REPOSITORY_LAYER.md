@@ -2,41 +2,34 @@
 
 ## Descripción General
 
-El directorio `repository` implementa la **capa de acceso a datos** en la arquitectura MVVM del proyecto. Los repositorios actúan como una **única fuente de verdad** para los datos, abstrayendo las fuentes de datos (base de datos local, APIs remotas) y proporcionando una interfaz limpia para los ViewModels.
+El directorio `repository` implementa la **capa de acceso a datos** (local y remoto) y sirve de puente entre ViewModels y las fuentes de información: `CafeFidelidadDB` (SQLite) y `ApiService` (Retrofit).
 
-Los repositorios en esta capa:
-- **Abstraen las fuentes de datos**: Ocultan la complejidad de acceso a datos locales y remotos
-- **Implementan lógica de sincronización**: Coordinan entre datos offline y online
-- **Proporcionan caché inteligente**: Optimizan el rendimiento mediante estrategias de caché
-- **Manejan errores de red**: Implementan retry logic y fallbacks
-- **Garantizan consistencia**: Mantienen la integridad de los datos
-- **Facilitan testing**: Permiten inyección de dependencias y mocking
+Características clave:
+- Cada repositorio extiende `BaseRepository`, que provee estados compartidos vía `LiveData`: `isLoading`, `errorMessage`, `successMessage`, `isOffline`.
+- Operaciones asíncronas mediante `ExecutorService` para no bloquear la UI.
+- Callbacks de resultado para operaciones de larga duración.
+- Integración con SQLite (`CafeFidelidadDB`) para CRUD y consultas.
+- Integración con API (`ApiService`) para sincronización y operaciones remotas.
 
-Cada repositorio sigue el **patrón Repository** y extiende de `BaseRepository` para heredar funcionalidades comunes como manejo de threads, logging y gestión de errores.
+Repositorios existentes:
+- `AuthRepository`, `ProductoRepository`, `SucursalRepository`, `BeneficioRepository`, `ClienteRepository`, `CanjeRepository`, `VisitaRepository`, `VisitaAdminRepository`, `AdminRepository`.
 
 ## Estado del Proyecto
 
 ### ✅ Implementado
-- Todos los repositorios principales
-- BaseRepository con funcionalidad común
-- Interfaces de contrato
-- Patrón Singleton para repositorios críticos
-- Manejo de errores y retry logic
-- Conversión entre modelos y entidades
-- Sincronización básica con servidor
+- BaseRepository con `LiveData` de estados y `ExecutorService`
+- Repositorios principales conectados a `CafeFidelidadDB` y `ApiService`
+- CRUD de productos, clientes, sucursales, beneficios, visitas y canjes
+- Búsqueda y filtrado de productos (categoría, disponibilidad, activo)
+- Autenticación local con `SessionManager` y roles
+- Interfaces y callbacks para operaciones asíncronas
 
 ### 🔄 En Desarrollo
-- Optimizaciones de caché avanzadas
-- Métricas de rendimiento
-- Testing automatizado completo
-- Documentación de APIs
+- Estrategias de sincronización con servidor (selectiva)
+- Métricas de rendimiento y profiling de consultas
+- Testing automatizado de repositorios
+- Documentación detallada de endpoints y flujos
 
-### 📋 Futuras Mejoras
-- Migración a Coroutines para operaciones asíncronas
-- Implementación de Repository Pattern con Flow
-- Caché distribuido
-- Sincronización offline-first mejorada
-- Compresión de datos para transferencias
 
 ## Mejores Prácticas
 
@@ -46,9 +39,9 @@ Cada repositorio sigue el **patrón Repository** y extiende de `BaseRepository` 
 - **UseCase**: Solo lógica de negocio
 
 ### 2. Manejo de Threading
-- Operaciones de base de datos en background threads
-- Callbacks en main thread para UI updates
-- Pool de threads configurado apropiadamente
+- Ejecutar operaciones en `ExecutorService`
+- Publicar resultados/estados vía `LiveData` (main thread)
+- Evitar fugas con cancelación y limpieza adecuada
 
 ### 3. Gestión de Memoria
 - Cleanup de recursos en onDestroy
@@ -60,8 +53,11 @@ Cada repositorio sigue el **patrón Repository** y extiende de `BaseRepository` 
 - Sanitización de queries
 - Manejo seguro de credenciales
 
+## Ejemplos de Flujos
+
+- Productos: `ProductosViewModel` → `ProductoRepository` → `CafeFidelidadDB` (carga inicial) y `ApiService` (sync opcional). Estados expuestos por `BaseRepository`.
+- Login: `LoginViewModel` → `AuthRepository` → validación local y `SessionManager`. `LiveData` de usuario actual y `isLoading`.
+
 ## Conclusión
 
-La capa de repositorios proporciona una abstracción robusta y escalable para el acceso a datos en la aplicación. La implementación sigue las mejores prácticas de Android y facilita el mantenimiento, testing y evolución del proyecto.
-
-La separación clara entre fuentes de datos locales y remotas, junto con estrategias de sincronización inteligentes, garantiza una experiencia de usuario fluida tanto online como offline.
+La capa de repositorios ofrece una abstracción clara y reactiva sobre fuentes de datos locales (SQLite) y remotas (Retrofit). El uso de `BaseRepository` estandariza estados y threading, facilitando mantenimiento y escalabilidad.

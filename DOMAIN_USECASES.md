@@ -2,282 +2,76 @@
 
 ## Descripción General
 
-El directorio `domain/usecases` implementa la **capa de lógica de negocio** en la arquitectura Clean Architecture/MVVM del proyecto CafeFidelidaQRDemo. Los Use Cases encapsulan las reglas de negocio específicas de la aplicación, proporcionando una separación clara entre la lógica de presentación, acceso a datos e interfaz de usuario.
+El directorio `domain/usecases` implementa la **lógica de negocio** desacoplada de UI y acceso a datos. Actualmente existe un único caso de uso: `AuthUseCase`.
 
-## Estructura del Directorio
+## Estructura Real del Directorio
 
 ```
 domain/usecases/
-├── AuthUseCase.java           # Lógica de autenticación y registro
-├── PuntosUseCase.java         # Sistema de puntos y beneficios
-└── TransaccionQRUseCase.java  # Procesamiento de transacciones QR
+└── AuthUseCase.java
 ```
 
-## Casos de Uso Implementados
+## AuthUseCase
 
-### 1. AuthUseCase
+- **Ubicación**: `domain/usecases/AuthUseCase.java`.
+- **Propósito**: Encapsula la lógica de autenticación, registro y obtención del usuario actual.
+- **Dependencias**: `AuthRepository` y `ClienteRepository`.
 
-**Ubicación**: `domain/usecases/AuthUseCase.java`
+### Responsabilidades
+- Validar entradas básicas (email y contraseña) en login/registro.
+- Registrar usuarios y crear el perfil `Cliente` asociado.
+- Autenticar usuarios y resolver el perfil desde `ClienteRepository`.
+- Cerrar sesión y exponer estado mediante callbacks.
+- Traducir errores técnicos a mensajes amigables (`translateAuthError`).
 
-**Propósito**: Gestiona toda la lógica de negocio relacionada con autenticación y registro de usuarios.
+### Métodos principales (firma real)
+- `void loginUser(String email, String password, AuthCallback callback)`.
+- `void registerUser(String email, String password, String nombre, String telefono, AuthCallback callback)`.
+- `void logout(AuthRepository.AuthCallback<Void> callback)`.
+- `void getCurrentUser(AuthCallback callback)`.
 
-**Responsabilidades**:
-- Validación de credenciales de usuario
-- Manejo y traducción de errores de autenticación
-- Coordinación entre AuthRepository y ClienteRepository
-- Creación de perfiles de usuario completos
-- Gestión de sesiones de usuario
-
-**Métodos Principales**:
+### Ejemplo de uso
 ```java
-// Autenticación de usuario
-void loginUser(String email, String password, AuthCallback callback)
-
-// Registro de nuevo usuario
-void registerUser(ClienteEntity nuevoCliente, String password, AuthCallback callback)
-
-// Validación de credenciales
-boolean validateCredentials(String email, String password)
-
-// Traducción de errores
-String translateAuthError(String error)
+AuthUseCase auth = new AuthUseCase(context);
+auth.loginUser(email, password, new AuthUseCase.AuthCallback() {
+    @Override public void onSuccess(Cliente cliente) { /* actualizar estado UI */ }
+    @Override public void onError(String error) { /* mostrar mensaje de error */ }
+});
 ```
 
-**Callbacks**:
-- `AuthCallback`: Para operaciones de autenticación
-- `RegistrationCallback`: Para registro de usuarios
+## Casos de uso planificados
 
-### 2. PuntosUseCase
+- `PuntosUseCase`: Reglas de puntos y beneficios (parte de la lógica actual vive en `BeneficioManager`).
+- `TransaccionQRUseCase`: Procesamiento de transacciones basadas en QR (validación y registro). No existe en el código actual.
 
-**Ubicación**: `domain/usecases/PuntosUseCase.java`
-
-**Propósito**: Implementa toda la lógica del sistema de puntos, beneficios y recompensas de fidelidad.
-
-**Responsabilidades**:
-- Cálculo de puntos por transacciones
-- Gestión de beneficios disponibles
-- Validación de canjes de recompensas
-- Determinación de niveles de cliente
-- Aplicación de reglas de negocio de fidelidad
-
-**Constantes de Negocio**:
-```java
-private static final int PUNTOS_CAFE_GRATIS = 100;
-private static final int PUNTOS_DESCUENTO_10 = 50;
-private static final int PUNTOS_DESCUENTO_20 = 150;
-private static final int PUNTOS_POSTRE_GRATIS = 80;
-private static final int PUNTOS_BEBIDA_PREMIUM = 120;
-```
-
-**Métodos Principales**:
-```java
-// Obtener beneficios disponibles
-void getBeneficiosDisponibles(String clienteId, BeneficiosCallback callback)
-
-// Canjear beneficio
-void canjearBeneficio(String clienteId, String beneficioId, PuntosCallback callback)
-
-// Calcular puntos por compra
-int calcularPuntosPorCompra(double montoCompra)
-
-// Verificar elegibilidad para beneficio
-boolean esElegibleParaBeneficio(int puntosCliente, String beneficioId)
-```
-
-**Modelo de Beneficio**:
-```java
-public static class Beneficio {
-    private String id;
-    private String nombre;
-    private String descripcion;
-    private int puntosRequeridos;
-    private String icono;
-    private boolean disponible;
-}
-```
-
-**Callbacks**:
-- `PuntosCallback`: Para operaciones de puntos
-- `BeneficiosCallback`: Para lista de beneficios
-
-### 3. TransaccionQRUseCase
-
-**Ubicación**: `domain/usecases/TransaccionQRUseCase.java`
-
-**Propósito**: Maneja toda la lógica de procesamiento de transacciones mediante códigos QR.
-
-**Responsabilidades**:
-- Validación de códigos QR escaneados
-- Procesamiento de transacciones
-- Actualización automática de puntos del cliente
-- Registro de historial de transacciones
-- Coordinación entre múltiples repositorios
-
-**Métodos Principales**:
-```java
-// Procesar código QR escaneado
-void procesarCodigoQR(String qrData, TransaccionCallback callback)
-
-// Validar formato de QR
-boolean validarFormatoQR(String qrData)
-
-// Registrar transacción
-void registrarTransaccion(TransaccionEntity transaccion, TransaccionCallback callback)
-
-// Actualizar puntos del cliente
-void actualizarPuntosCliente(String clienteId, int puntosGanados, PuntosCallback callback)
-```
-
-**Callbacks**:
-- `TransaccionCallback`: Para operaciones de transacción
-- `QRValidationCallback`: Para validación de QR
-
-## Arquitectura y Flujo de Datos
-
-### Posición en la Arquitectura MVVM
+## Arquitectura y Flujo
 
 ```
-UI Layer (Activities/Fragments)
-        ↕️
-Presentation Layer (ViewModels)
-        ↕️
-Domain Layer (Use Cases) ← ESTA CAPA
-        ↕️
-Data Layer (Repositories)
-        ↕️
-Database/Network (Room/Retrofit)
-```
-
-### Principios de Diseño
-
-1. **Single Responsibility**: Cada Use Case tiene una responsabilidad específica
-2. **Dependency Inversion**: Dependen de abstracciones, no de implementaciones
-3. **Clean Architecture**: Separación clara de capas
-4. **Testabilidad**: Fácil testing unitario de reglas de negocio
-
-### Patrón de Implementación
-
-Cada Use Case sigue este patrón:
-
-```java
-public class ExampleUseCase {
-    // Dependencias (Repositories)
-    private final Repository repository;
-    
-    // Constructor con inyección de dependencias
-    public ExampleUseCase() {
-        this.repository = Repository.getInstance();
-    }
-    
-    // Método principal del caso de uso
-    public void executeUseCase(InputParams params, Callback callback) {
-        // 1. Validar entrada
-        if (!validateInput(params)) {
-            callback.onError("Invalid input");
-            return;
-        }
-        
-        // 2. Aplicar lógica de negocio
-        ProcessedData result = applyBusinessLogic(params);
-        
-        // 3. Interactuar con repositorios
-        repository.performOperation(result, new Repository.Callback() {
-            @Override
-            public void onSuccess(Data data) {
-                callback.onSuccess(data);
-            }
-            
-            @Override
-            public void onError(String error) {
-                callback.onError(translateError(error));
-            }
-        });
-    }
-    
-    // Métodos privados para lógica interna
-    private boolean validateInput(InputParams params) { /* ... */ }
-    private ProcessedData applyBusinessLogic(InputParams params) { /* ... */ }
-    private String translateError(String error) { /* ... */ }
-}
-```
-
-## Beneficios de esta Arquitectura
-
-### 1. Separación de Responsabilidades
-- **ViewModels**: Solo manejan estado de UI y eventos
-- **Use Cases**: Solo contienen lógica de negocio
-- **Repositories**: Solo manejan acceso a datos
-
-
-## Integración con ViewModels
-
-### Ejemplo de Uso en ViewModel
-
-```java
-public class LoginViewModel extends ViewModel {
-    private final AuthUseCase authUseCase;
-    private final MutableLiveData<AuthState> authState = new MutableLiveData<>();
-    
-    public LoginViewModel() {
-        this.authUseCase = new AuthUseCase(getApplication());
-    }
-    
-    public void login(String email, String password) {
-        authState.setValue(AuthState.LOADING);
-        
-        authUseCase.loginUser(email, password, new AuthUseCase.AuthCallback() {
-            @Override
-            public void onSuccess(ClienteEntity cliente) {
-                authState.setValue(AuthState.SUCCESS);
-            }
-            
-            @Override
-            public void onError(String error) {
-                authState.setValue(AuthState.ERROR(error));
-            }
-        });
-    }
-}
+UI (Activities/Fragments)
+ ↕️
+ViewModels
+ ↕️
+Use Cases (AuthUseCase)
+ ↕️
+Repositories
 ```
 
 ## Mejores Prácticas
 
-### 1. Manejo de Errores
-- Siempre proporcionar callbacks para éxito y error
-- Traducir errores técnicos a mensajes de usuario
-- Logging apropiado para debugging
-
-### 2. Validación
-- Validar todas las entradas antes del procesamiento
-- Aplicar reglas de negocio consistentemente
-- Proporcionar mensajes de error descriptivos
-
-### 3. Callbacks
-- Usar interfaces específicas para cada tipo de operación
-- Manejar casos de éxito y error explícitamente
-- Evitar callbacks anidados (callback hell)
-
-### 4. Dependencias
-- Inyectar dependencias a través del constructor
-- Usar singletons para repositorios cuando sea apropiado
-- Mantener acoplamiento bajo entre componentes
+- Mantener validación de entrada clara y temprana.
+- Proveer callbacks de éxito/error con mensajes traducidos.
+- Evitar acoplamiento con UI; depender de repositorios/abstracciones.
+- Facilitar testing unitario con dependencias inyectables.
 
 ## Estado del Proyecto
 
 ### ✅ Implementado
-- AuthUseCase: Autenticación y registro completos
-- PuntosUseCase: Sistema de puntos y beneficios funcional
-- TransaccionQRUseCase: Procesamiento de QR implementado
-- Integración con ViewModels existentes
-- Callbacks y manejo de errores
+- `AuthUseCase`: login, registro, logout y usuario actual.
 
 ### 🔄 En Desarrollo
-- Testing unitario de Use Cases
-- Documentación de APIs internas
-- Optimizaciones de rendimiento
+- Documentación y pruebas unitarias de use cases.
+- Diseño de `PuntosUseCase` y `TransaccionQRUseCase`.
 
 ### 📋 Futuras Mejoras
-- Implementación de más Use Cases según necesidades
-- Migración a Coroutines para operaciones asíncronas
-- Implementación de caché en Use Cases
-- Métricas y analytics de uso
+- Migración a coroutines/Kotlin para operaciones asíncronas.
+- Inyección de dependencias (DI) en use cases para testabilidad.
