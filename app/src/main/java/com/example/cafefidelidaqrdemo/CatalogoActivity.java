@@ -2,6 +2,7 @@ package com.example.cafefidelidaqrdemo;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.content.Intent;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -280,8 +281,10 @@ public class CatalogoActivity extends AppCompatActivity {
     }
 
     private void onProductoClick(Producto producto) {
-        Toast.makeText(this, "Producto seleccionado: " + producto.getNombre(), Toast.LENGTH_SHORT).show();
-        // TODO: Implementar navegación a detalle del producto
+        // Navegar al detalle del producto
+        Intent intent = new Intent(this, DetalleProductoActivity.class);
+        intent.putExtra("producto_id", producto.getId());
+        startActivity(intent);
     }
 
     @Override

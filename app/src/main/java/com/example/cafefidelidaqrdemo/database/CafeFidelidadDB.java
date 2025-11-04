@@ -13,6 +13,9 @@ import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.models.Visita;
+import com.example.cafefidelidaqrdemo.models.ResenaProducto;
+import com.example.cafefidelidaqrdemo.models.ResenaSucursal;
+import com.example.cafefidelidaqrdemo.models.PromedioCalificacion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +25,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     
     // Información de la base de datos
     private static final String DATABASE_NAME = "cafe_fidelidad.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     
     // Nombres de las tablas
     private static final String TABLE_CLIENTES = "clientes";
@@ -31,6 +34,9 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String TABLE_BENEFICIOS = "beneficios";
     private static final String TABLE_VISITAS = "visitas";
     private static final String TABLE_CANJES = "canjes";
+    // Tablas de reseñas
+    private static final String TABLE_RESENAS_PRODUCTOS = "resenas_productos";
+    private static final String TABLE_RESENAS_SUCURSALES = "resenas_sucursales";
     
     // Columnas comunes
     private static final String COLUMN_ID = "id";
@@ -81,6 +87,15 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String COLUMN_CANJE_FECHA = "fecha_canje";
     private static final String COLUMN_CANJE_PUNTOS_UTILIZADOS = "puntos_utilizados";
     private static final String COLUMN_CANJE_ESTADO = "estado";
+    
+    // Columnas tablas reseñas
+    private static final String COLUMN_RESENA_PRODUCTO_ID = "producto_id";
+    private static final String COLUMN_RESENA_SUCURSAL_ID = "sucursal_id";
+    private static final String COLUMN_RESENA_USUARIO_ID = "usuario_id";
+    private static final String COLUMN_RESENA_CALIFICACION = "calificacion";
+    private static final String COLUMN_RESENA_COMENTARIO = "comentario";
+    private static final String COLUMN_RESENA_FECHA_CREACION = "fecha_creacion";
+    private static final String COLUMN_RESENA_FECHA_ACTUALIZACION = "fecha_actualizacion";
     
     // Sentencias SQL para crear las tablas
     private static final String CREATE_TABLE_CLIENTES = "CREATE TABLE " + TABLE_CLIENTES + " (" +
@@ -144,6 +159,29 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             "FOREIGN KEY(" + COLUMN_CANJE_CLIENTE_ID + ") REFERENCES " + TABLE_CLIENTES + "(" + COLUMN_ID + "), " +
             "FOREIGN KEY(" + COLUMN_CANJE_BENEFICIO_ID + ") REFERENCES " + TABLE_BENEFICIOS + "(" + COLUMN_ID + ")" +
             ");";
+
+    // Sentencias SQL para crear tablas de reseñas
+    private static final String CREATE_TABLE_RESENAS_PRODUCTOS = "CREATE TABLE IF NOT EXISTS " + TABLE_RESENAS_PRODUCTOS + " (" +
+            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_RESENA_PRODUCTO_ID + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_USUARIO_ID + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_CALIFICACION + " INTEGER NOT NULL CHECK(" + COLUMN_RESENA_CALIFICACION + " BETWEEN 1 AND 5), " +
+            COLUMN_RESENA_COMENTARIO + " TEXT, " +
+            COLUMN_RESENA_FECHA_CREACION + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_FECHA_ACTUALIZACION + " INTEGER NOT NULL, " +
+            "FOREIGN KEY(" + COLUMN_RESENA_PRODUCTO_ID + ") REFERENCES " + TABLE_PRODUCTOS + "(" + COLUMN_ID + ")" +
+            ");";
+
+    private static final String CREATE_TABLE_RESENAS_SUCURSALES = "CREATE TABLE IF NOT EXISTS " + TABLE_RESENAS_SUCURSALES + " (" +
+            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_RESENA_SUCURSAL_ID + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_USUARIO_ID + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_CALIFICACION + " INTEGER NOT NULL CHECK(" + COLUMN_RESENA_CALIFICACION + " BETWEEN 1 AND 5), " +
+            COLUMN_RESENA_COMENTARIO + " TEXT, " +
+            COLUMN_RESENA_FECHA_CREACION + " INTEGER NOT NULL, " +
+            COLUMN_RESENA_FECHA_ACTUALIZACION + " INTEGER NOT NULL, " +
+            "FOREIGN KEY(" + COLUMN_RESENA_SUCURSAL_ID + ") REFERENCES " + TABLE_SUCURSALES + "(" + COLUMN_ID + ")" +
+            ");";
     
     private static CafeFidelidadDB instance;
     
@@ -168,6 +206,14 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_BENEFICIOS);
         db.execSQL(CREATE_TABLE_VISITAS);
         db.execSQL(CREATE_TABLE_CANJES);
+        // Crear tablas de reseñas
+        db.execSQL(CREATE_TABLE_RESENAS_PRODUCTOS);
+        db.execSQL(CREATE_TABLE_RESENAS_SUCURSALES);
+        // Índices para reseñas
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_producto ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_PRODUCTO_ID + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_usuario ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_USUARIO_ID + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_sucursal ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_SUCURSAL_ID + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_usuario ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_USUARIO_ID + ")");
         
         Log.d(TAG, "Base de datos creada exitosamente");
         
@@ -195,6 +241,15 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_CLIENTES);
                 onCreate(db);
             }
+        }
+        if (oldVersion < 3) {
+            // Agregar tablas de reseñas para productos y sucursales
+            db.execSQL(CREATE_TABLE_RESENAS_PRODUCTOS);
+            db.execSQL(CREATE_TABLE_RESENAS_SUCURSALES);
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_producto ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_PRODUCTO_ID + ")");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_usuario ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_USUARIO_ID + ")");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_sucursal ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_SUCURSAL_ID + ")");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_usuario ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_USUARIO_ID + ")");
         }
     }
     
@@ -1105,5 +1160,159 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         }
         db.close();
         return count;
+    }
+
+    // =====================
+    // Reseñas de Productos
+    // =====================
+    public long insertarResenaProducto(ResenaProducto resena) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_RESENA_PRODUCTO_ID, resena.getProductoId());
+        values.put(COLUMN_RESENA_USUARIO_ID, resena.getUsuarioId());
+        values.put(COLUMN_RESENA_CALIFICACION, resena.getCalificacion());
+        values.put(COLUMN_RESENA_COMENTARIO, resena.getComentario());
+        values.put(COLUMN_RESENA_FECHA_CREACION, resena.getFechaCreacion());
+        values.put(COLUMN_RESENA_FECHA_ACTUALIZACION, resena.getFechaActualizacion());
+        long id = db.insert(TABLE_RESENAS_PRODUCTOS, null, values);
+        db.close();
+        return id;
+    }
+
+    public List<ResenaProducto> obtenerResenasProducto(int productoId, int limit, int offset) {
+        List<ResenaProducto> lista = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT * FROM " + TABLE_RESENAS_PRODUCTOS + " WHERE " + COLUMN_RESENA_PRODUCTO_ID + " = ? ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC LIMIT ? OFFSET ?",
+                new String[]{String.valueOf(productoId), String.valueOf(limit), String.valueOf(offset)}
+        );
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                ResenaProducto r = new ResenaProducto();
+                r.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                r.setProductoId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_PRODUCTO_ID)));
+                r.setUsuarioId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_USUARIO_ID)));
+                r.setCalificacion(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_CALIFICACION)));
+                r.setComentario(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RESENA_COMENTARIO)));
+                r.setFechaCreacion(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_RESENA_FECHA_CREACION)));
+                r.setFechaActualizacion(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_RESENA_FECHA_ACTUALIZACION)));
+                lista.add(r);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        db.close();
+        return lista;
+    }
+
+    public int actualizarResenaProducto(ResenaProducto resena) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_RESENA_CALIFICACION, resena.getCalificacion());
+        values.put(COLUMN_RESENA_COMENTARIO, resena.getComentario());
+        values.put(COLUMN_RESENA_FECHA_ACTUALIZACION, resena.getFechaActualizacion());
+        int rows = db.update(TABLE_RESENAS_PRODUCTOS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(resena.getId())});
+        db.close();
+        return rows;
+    }
+
+    public int eliminarResenaProducto(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(TABLE_RESENAS_PRODUCTOS, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+        db.close();
+        return rows;
+    }
+
+    public PromedioCalificacion obtenerPromedioCalificacionProducto(int productoId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT AVG(" + COLUMN_RESENA_CALIFICACION + ") AS promedio, COUNT(*) AS cantidad FROM " + TABLE_RESENAS_PRODUCTOS + " WHERE " + COLUMN_RESENA_PRODUCTO_ID + " = ?",
+                new String[]{String.valueOf(productoId)}
+        );
+        double promedio = 0.0;
+        int cantidad = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            promedio = cursor.getDouble(cursor.getColumnIndexOrThrow("promedio"));
+            cantidad = cursor.getInt(cursor.getColumnIndexOrThrow("cantidad"));
+            cursor.close();
+        }
+        db.close();
+        return new PromedioCalificacion(promedio, cantidad);
+    }
+
+    // =====================
+    // Reseñas de Sucursales
+    // =====================
+    public long insertarResenaSucursal(ResenaSucursal resena) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_RESENA_SUCURSAL_ID, resena.getSucursalId());
+        values.put(COLUMN_RESENA_USUARIO_ID, resena.getUsuarioId());
+        values.put(COLUMN_RESENA_CALIFICACION, resena.getCalificacion());
+        values.put(COLUMN_RESENA_COMENTARIO, resena.getComentario());
+        values.put(COLUMN_RESENA_FECHA_CREACION, resena.getFechaCreacion());
+        values.put(COLUMN_RESENA_FECHA_ACTUALIZACION, resena.getFechaActualizacion());
+        long id = db.insert(TABLE_RESENAS_SUCURSALES, null, values);
+        db.close();
+        return id;
+    }
+
+    public List<ResenaSucursal> obtenerResenasSucursal(int sucursalId, int limit, int offset) {
+        List<ResenaSucursal> lista = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT * FROM " + TABLE_RESENAS_SUCURSALES + " WHERE " + COLUMN_RESENA_SUCURSAL_ID + " = ? ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC LIMIT ? OFFSET ?",
+                new String[]{String.valueOf(sucursalId), String.valueOf(limit), String.valueOf(offset)}
+        );
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                ResenaSucursal r = new ResenaSucursal();
+                r.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                r.setSucursalId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_SUCURSAL_ID)));
+                r.setUsuarioId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_USUARIO_ID)));
+                r.setCalificacion(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESENA_CALIFICACION)));
+                r.setComentario(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RESENA_COMENTARIO)));
+                r.setFechaCreacion(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_RESENA_FECHA_CREACION)));
+                r.setFechaActualizacion(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_RESENA_FECHA_ACTUALIZACION)));
+                lista.add(r);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        db.close();
+        return lista;
+    }
+
+    public int actualizarResenaSucursal(ResenaSucursal resena) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_RESENA_CALIFICACION, resena.getCalificacion());
+        values.put(COLUMN_RESENA_COMENTARIO, resena.getComentario());
+        values.put(COLUMN_RESENA_FECHA_ACTUALIZACION, resena.getFechaActualizacion());
+        int rows = db.update(TABLE_RESENAS_SUCURSALES, values, COLUMN_ID + " = ?", new String[]{String.valueOf(resena.getId())});
+        db.close();
+        return rows;
+    }
+
+    public int eliminarResenaSucursal(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(TABLE_RESENAS_SUCURSALES, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+        db.close();
+        return rows;
+    }
+
+    public PromedioCalificacion obtenerPromedioCalificacionSucursal(int sucursalId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT AVG(" + COLUMN_RESENA_CALIFICACION + ") AS promedio, COUNT(*) AS cantidad FROM " + TABLE_RESENAS_SUCURSALES + " WHERE " + COLUMN_RESENA_SUCURSAL_ID + " = ?",
+                new String[]{String.valueOf(sucursalId)}
+        );
+        double promedio = 0.0;
+        int cantidad = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            promedio = cursor.getDouble(cursor.getColumnIndexOrThrow("promedio"));
+            cantidad = cursor.getInt(cursor.getColumnIndexOrThrow("cantidad"));
+            cursor.close();
+        }
+        db.close();
+        return new PromedioCalificacion(promedio, cantidad);
     }
 }
