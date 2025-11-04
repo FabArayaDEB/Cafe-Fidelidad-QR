@@ -19,6 +19,7 @@ import com.example.cafefidelidaqrdemo.ui.admin.FragmentProductosAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentBeneficiosAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentClientesAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentSucursalesAdmin;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentResenasAdmin;
 
 /**
  * Fragment principal del módulo de administración
@@ -62,6 +63,7 @@ public class FragmentAdminDashboard extends Fragment {
         setupCardBeneficios();
         setupCardClientes();
         setupCardSucursales();
+        setupCardResenas();
         setupCardEstadisticas();
         setupCardConfiguracion();
     }
@@ -92,6 +94,13 @@ public class FragmentAdminDashboard extends Fragment {
         binding.iconSucursales.setImageResource(R.drawable.ic_location);
         binding.textTituloSucursales.setText("Sucursales");
         binding.textDescripcionSucursales.setText("Gestionar ubicaciones y horarios");
+    }
+
+    private void setupCardResenas() {
+        binding.cardResenas.setOnClickListener(v -> navegarAResenas());
+        binding.iconResenas.setImageResource(R.drawable.ic_chat);
+        binding.textTituloResenas.setText("Reseñas");
+        binding.textDescripcionResenas.setText("Ver comentarios de productos y sucursales");
     }
     
     private void setupCardEstadisticas() {
@@ -189,6 +198,7 @@ public class FragmentAdminDashboard extends Fragment {
         binding.cardProductos.setEnabled(enabled);
         binding.cardBeneficios.setEnabled(enabled);
         binding.cardSucursales.setEnabled(enabled);
+        binding.cardResenas.setEnabled(enabled);
         binding.cardEstadisticas.setEnabled(enabled);
         binding.cardConfiguracion.setEnabled(enabled);
         
@@ -196,6 +206,7 @@ public class FragmentAdminDashboard extends Fragment {
         binding.cardProductos.setAlpha(alpha);
         binding.cardBeneficios.setAlpha(alpha);
         binding.cardSucursales.setAlpha(alpha);
+        binding.cardResenas.setAlpha(alpha);
         binding.cardEstadisticas.setAlpha(alpha);
         binding.cardConfiguracion.setAlpha(alpha);
     }
@@ -253,6 +264,18 @@ public class FragmentAdminDashboard extends Fragment {
             transaction.commit();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a clientes", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void navegarAResenas() {
+        try {
+            FragmentResenasAdmin fragment = new FragmentResenasAdmin();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("ResenasAdmin");
+            transaction.commit();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error al navegar a reseñas", Toast.LENGTH_SHORT).show();
         }
     }
     

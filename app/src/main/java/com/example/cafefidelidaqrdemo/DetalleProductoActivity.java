@@ -1,9 +1,10 @@
 package com.example.cafefidelidaqrdemo;
 
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.EditText;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,6 +14,11 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.models.Producto;
+import com.example.cafefidelidaqrdemo.models.ResenaProducto;
+import com.example.cafefidelidaqrdemo.models.PromedioCalificacion;
+import com.example.cafefidelidaqrdemo.repository.ProductoRepository;
+import com.example.cafefidelidaqrdemo.repository.ResenasProductoRepository;
+import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.google.android.material.button.MaterialButton;
 // import com.google.firebase.database.DataSnapshot;
 // import com.google.firebase.database.DatabaseError;
@@ -27,12 +33,23 @@ public class DetalleProductoActivity extends AppCompatActivity {
     private TextView tvStock, tvCalorias, tvIngredientes, tvCategoria;
     private TextView tvVegano, tvVegetariano, tvSinLactosa, tvSinGluten;
     private TextView tvPuntosRequeridos;
-    private MaterialButton btnAgregarCarrito;
     private Toolbar toolbar;
 
     private String productoId;
     private Producto producto;
     // private DatabaseReference productosRef;
+
+    // Reseñas UI
+    private RatingBar rbResena;
+    private EditText etComentarioResena;
+    private MaterialButton btnEnviarResena;
+    private TextView tvPromedioResenas, tvConteoResenas;
+
+    // Repositorios
+    private ResenasProductoRepository resenasRepository;
+    private ProductoRepository productoRepository;
+    private AuthRepository authRepository;
+    private int productoIdInt = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +64,22 @@ public class DetalleProductoActivity extends AppCompatActivity {
             return;
         }
 
+        try {
+            productoIdInt = Integer.parseInt(productoId);
+        } catch (NumberFormatException e) {
+            productoIdInt = -1;
+        }
+
         initViews();
         setupToolbar();
-        setupFirebase();
-        loadProductoDetails();
+        // Inicializar repositorios
+        productoRepository = ProductoRepository.getInstance(getApplicationContext());
+        resenasRepository = ResenasProductoRepository.getInstance(getApplicationContext());
+        authRepository = AuthRepository.getInstance();
+        authRepository.setContext(getApplicationContext());
+
+        setupResenaUI();
+        loadProductoFromRepository();
     }
 
     private void initViews() {
@@ -71,7 +100,13 @@ public class DetalleProductoActivity extends AppCompatActivity {
         tvSinLactosa = findViewById(R.id.tv_sin_lactosa);
         tvSinGluten = findViewById(R.id.tv_sin_gluten);
         tvPuntosRequeridos = findViewById(R.id.tv_puntos_requeridos);
-        btnAgregarCarrito = findViewById(R.id.btn_agregar_carrito);
+
+        // Reseñas
+        rbResena = findViewById(R.id.rb_resena);
+        etComentarioResena = findViewById(R.id.et_comentario_resena);
+        btnEnviarResena = findViewById(R.id.btn_enviar_resena);
+        tvPromedioResenas = findViewById(R.id.tv_promedio_resenas);
+        tvConteoResenas = findViewById(R.id.tv_conteo_resenas);
     }
 
     private void setupToolbar() {
@@ -90,33 +125,107 @@ public class DetalleProductoActivity extends AppCompatActivity {
         });
     }
 
-    private void setupFirebase() {
-        // productosRef = FirebaseDatabase.getInstance().getReference("productos");
+    private void loadProductoFromRepository() {
+        if (productoIdInt <= 0) {
+            Toast.makeText(this, "ID de producto inválido", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        productoRepository.getProductoById(productoIdInt).observe(this, p -> {
+            if (p != null) {
+                producto = p;
+                displayProductoDetails();
+                // Cargar promedio de reseñas
+                resenasRepository.obtenerPromedio(productoIdInt);
+            } else {
+                Toast.makeText(DetalleProductoActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
     }
 
-    private void loadProductoDetails() {
-        // productosRef.child(productoId).addValueEventListener(new ValueEventListener() {
-        //     @Override
-        //     public void onDataChange(@NonNull DataSnapshot snapshot) {
-        //         if (snapshot.exists()) {
-        //             producto = snapshot.getValue(ProductoEntity.class);
-        //             if (producto != null) {
-        //                 displayProductoDetails();
-        //             }
-        //         } else {
-        //             Toast.makeText(DetalleProductoActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
-        //             finish();
-        //         }
-        //     }
-        //
-        //     @Override
-        //     public void onCancelled(@NonNull DatabaseError error) {
-        //         Toast.makeText(DetalleProductoActivity.this, "Error al cargar producto: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-        //     }
-        // });
-        
-        // Método deshabilitado - Firebase removido
-        Toast.makeText(this, "Carga de productos deshabilitada", Toast.LENGTH_SHORT).show();
+    private void setupResenaUI() {
+        // Observar promedio
+        resenasRepository.getPromedioLiveData().observe(this, promedio -> {
+            if (promedio != null) {
+                tvPromedioResenas.setText(String.format(java.util.Locale.getDefault(), "Promedio: %.1f", promedio.getPromedio()));
+                tvConteoResenas.setText(String.format(java.util.Locale.getDefault(), "(%d reseñas)", promedio.getCantidad()));
+            }
+        });
+
+        // Observar errores/exitos
+        resenasRepository.getErrorLiveData().observe(this, error -> {
+            if (error != null && !error.trim().isEmpty()) {
+                Toast.makeText(DetalleProductoActivity.this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+        resenasRepository.getSuccessLiveData().observe(this, msg -> {
+            if (msg != null && !msg.trim().isEmpty()) {
+                Toast.makeText(DetalleProductoActivity.this, msg, Toast.LENGTH_SHORT).show();
+                // Refrescar promedio
+                if (productoIdInt > 0) {
+                    resenasRepository.obtenerPromedio(productoIdInt);
+                }
+                // Limpiar formulario
+                rbResena.setRating(0f);
+                etComentarioResena.setText("");
+            }
+        });
+
+        // Enviar reseña
+        if (btnEnviarResena != null) {
+            btnEnviarResena.setOnClickListener(v -> {
+                if (productoIdInt <= 0) {
+                    Toast.makeText(DetalleProductoActivity.this, "Producto inválido", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int calificacion = Math.round(rbResena != null ? rbResena.getRating() : 0f);
+                if (calificacion < 1 || calificacion > 5) {
+                    Toast.makeText(DetalleProductoActivity.this, "Selecciona una calificación de 1 a 5", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String comentario = etComentarioResena != null ? etComentarioResena.getText().toString().trim() : "";
+
+                // Obtener usuario actual (acepta IDs no numéricos de usuarios locales demo)
+                AuthRepository.LocalUser user = authRepository.getCurrentUser();
+                int usuarioIdInt = 0;
+                if (user != null && user.uid != null) {
+                    try {
+                        // Intentar parsear ID directamente
+                        usuarioIdInt = Integer.parseInt(user.uid);
+                    } catch (NumberFormatException e) {
+                        // Si el UID no es numérico (p.ej. "user_001"), intentar resolver por email de sesión en SQLite
+                        try {
+                            com.example.cafefidelidaqrdemo.utils.SessionManager sm = new com.example.cafefidelidaqrdemo.utils.SessionManager(DetalleProductoActivity.this);
+                            String emailSesion = sm.getUserEmail();
+                            if (emailSesion != null && !emailSesion.trim().isEmpty()) {
+                                com.example.cafefidelidaqrdemo.repository.ClienteRepository clienteRepo = new com.example.cafefidelidaqrdemo.repository.ClienteRepository(DetalleProductoActivity.this);
+                                com.example.cafefidelidaqrdemo.models.Cliente c = clienteRepo.getClienteByEmailSync(emailSesion.trim());
+                                if (c != null && c.getId() != null) {
+                                    try {
+                                        usuarioIdInt = Integer.parseInt(c.getId());
+                                    } catch (NumberFormatException ignored) {
+                                        usuarioIdInt = 0;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {
+                            usuarioIdInt = 0;
+                        }
+                    }
+                }
+                if (usuarioIdInt <= 0) {
+                    Toast.makeText(DetalleProductoActivity.this, "Debes iniciar sesión con un cliente válido para reseñar", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                long now = System.currentTimeMillis();
+                ResenaProducto resena = new ResenaProducto(0, productoIdInt, usuarioIdInt, calificacion, comentario, now, now);
+                resenasRepository.crearResena(resena);
+            });
+        }
     }
 
     private void displayProductoDetails() {
@@ -137,11 +246,9 @@ public class DetalleProductoActivity extends AppCompatActivity {
         if (producto.isDisponible()) {
             tvStock.setText("Disponible");
             tvStock.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            btnAgregarCarrito.setEnabled(true);
         } else {
             tvStock.setText("No disponible");
             tvStock.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            btnAgregarCarrito.setEnabled(false);
         }
 
         // Configurar información nutricional - No disponible en ProductoEntity
@@ -162,22 +269,6 @@ public class DetalleProductoActivity extends AppCompatActivity {
         // Configurar puntos requeridos - ocultar por ahora ya que no está en el modelo
         tvPuntosRequeridos.setVisibility(View.GONE);
 
-        // Configurar botón de agregar al carrito
-        btnAgregarCarrito.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                agregarAlCarrito();
-            }
-        });
-    }
-
-    private void agregarAlCarrito() {
-        if (producto != null && producto.isDisponible()) {
-            // TODO: Implementar lógica de carrito de compras
-            Toast.makeText(this, "Producto agregado al carrito", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Producto no disponible", Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
