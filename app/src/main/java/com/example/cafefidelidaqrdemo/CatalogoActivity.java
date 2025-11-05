@@ -184,9 +184,8 @@ public class CatalogoActivity extends AppCompatActivity {
             progressDialog.dismiss();
         });
 
-        // Observar errores del repositorio para informar a la UI
         productoRepository.getError().observe(this, error -> {
-            if (error != null) {
+            if (error != null && !error.isEmpty()) {
                 Toast.makeText(CatalogoActivity.this, "Error al cargar productos: " + error, Toast.LENGTH_SHORT).show();
             }
         });
@@ -281,6 +280,7 @@ public class CatalogoActivity extends AppCompatActivity {
     }
 
     private void onProductoClick(Producto producto) {
+        // Navegar al detalle del producto pasando el ID
         // Navegar al detalle del producto
         Intent intent = new Intent(this, DetalleProductoActivity.class);
         intent.putExtra("producto_id", producto.getId());
