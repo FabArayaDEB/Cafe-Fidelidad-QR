@@ -77,7 +77,7 @@
     <string name="btn_iniciar_escaner">Iniciar Escáner</string>
     <string name="txt_instrucciones_qr">Apunta la cámara hacia el código QR para escanearlo</string>
     <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
-    
+
     <!-- Historial -->
     <string name="historial">Historial</string>
     <string name="sin_historial">No hay historial disponible</string>
@@ -85,6 +85,8 @@
     
     <!-- Catálogo -->
     <string name="catalogo">Catálogo</string>
+    <string name="cafe_name">Nombre del Café</string>
+    <string name="cafe_precio">Precio</string>
     
     <!-- Beneficios -->
     <string name="beneficios">Beneficios</string>

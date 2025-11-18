@@ -31,11 +31,11 @@ android {
         viewBinding true
         dataBinding true
     }
-    
-    lintOptions {
+    lint {
         abortOnError false
         checkReleaseBuilds false
     }
+
 }
 
 dependencies {
