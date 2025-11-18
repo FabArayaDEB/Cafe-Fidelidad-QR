@@ -4,7 +4,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,121 +16,144 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.BeneficiosDisponiblesAdapter;
+import com.example.cafefidelidaqrdemo.database.CafeFidelidadDB;
+import com.example.cafefidelidaqrdemo.managers.BeneficioManager;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
-import com.example.cafefidelidaqrdemo.ui.dialogs.BeneficioDetailsDialogFragment;
+import com.example.cafefidelidaqrdemo.models.Visita;
 import com.example.cafefidelidaqrdemo.viewmodels.MisBeneficiosViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragment simplificado para mostrar beneficios disponibles del cliente
+ * Fragment actualizado con sistema de sellos digitales (tarjeta virtual de fidelización)
  */
 public class FragmentProgresoFidelizacion extends Fragment {
-    
-    private static final String TAG = "FragmentProgresoFidelizacion";
-    
-    // Views principales
-    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private static final int TOTAL_SELLOS = 7; // Cantidad total para canjear un beneficio
+
+    // Views
+    private LinearLayout sellosContainer;
+    private TextView textProgresoNumero;
+    private TextView textProgresoDescripcion;
+    private Button btnCanjear;
     private RecyclerView recyclerBeneficiosDisponibles;
-    private TextView textBeneficiosDisponiblesTitle;
-    private View emptyStateView;
-    
-    // Adapters
-    private BeneficiosDisponiblesAdapter beneficiosDisponiblesAdapter;
-    
-    // ViewModels
+
+    // Lógica y datos
+    private CafeFidelidadDB db;
+    private BeneficioManager beneficioManager;
     private MisBeneficiosViewModel beneficioViewModel;
-    
-    public static FragmentProgresoFidelizacion newInstance() {
-        return new FragmentProgresoFidelizacion();
-    }
-    
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        beneficioViewModel = new ViewModelProvider(this).get(MisBeneficiosViewModel.class);
-    }
-    
+    private BeneficiosDisponiblesAdapter beneficiosAdapter;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_progreso_fidelizacion, container, false);
     }
-    
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
-        initViews(view);
-        setupRecyclerViews();
-        setupSwipeRefresh();
-        setupObservers();
-        
-        // Cargar beneficios disponibles
-        beneficioViewModel.refreshBeneficios();
-    }
-    
-    private void initViews(View view) {
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        sellosContainer = view.findViewById(R.id.sellosContainer);
+        textProgresoNumero = view.findViewById(R.id.textProgresoNumero);
+        textProgresoDescripcion = view.findViewById(R.id.textProgresoDescripcion);
+        btnCanjear = view.findViewById(R.id.btnCanjear);
         recyclerBeneficiosDisponibles = view.findViewById(R.id.recyclerViewBeneficiosDisponibles);
-        // textBeneficiosDisponiblesTitle = view.findViewById(R.id.textBeneficiosDisponiblesTitle); // ID no existe en layout
-        emptyStateView = view.findViewById(R.id.layoutEmpty);
-    }
-    
-    private void setupRecyclerViews() {
-        // Setup beneficios disponibles
-        beneficiosDisponiblesAdapter = new BeneficiosDisponiblesAdapter(new ArrayList<>(), this::onBeneficioClick);
-        
+
+        // Inicializaciones
+        db = CafeFidelidadDB.getInstance(getContext());
+        beneficioManager = new BeneficioManager(requireContext());
+        beneficioViewModel = new ViewModelProvider(this).get(MisBeneficiosViewModel.class);
+
+        // Configurar RecyclerView
+        beneficiosAdapter = new BeneficiosDisponiblesAdapter(new ArrayList<>(), this::onBeneficioClick);
         recyclerBeneficiosDisponibles.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerBeneficiosDisponibles.setAdapter(beneficiosDisponiblesAdapter);
-    }
-    
-    private void setupSwipeRefresh() {
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            beneficioViewModel.refreshBeneficios();
+        recyclerBeneficiosDisponibles.setAdapter(beneficiosAdapter);
+
+        // Cargar progreso inicial
+        actualizarProgreso();
+
+        // Cargar lista de beneficios
+        beneficioViewModel.refreshBeneficios();
+        beneficioViewModel.getBeneficiosDisponibles().observe(getViewLifecycleOwner(), beneficios -> {
+            if (beneficios != null) beneficiosAdapter.updateBeneficios(beneficios);
         });
+
+        // Acción de canje
+        btnCanjear.setOnClickListener(v -> realizarCanje());
     }
-    
-    private void setupObservers() {
-        // Observar beneficios disponibles
-        beneficioViewModel.getBeneficiosDisponibles().observe(getViewLifecycleOwner(), this::updateBeneficiosDisponibles);
-        
-        // Observar estado de carga
-        beneficioViewModel.getIsRefreshing().observe(getViewLifecycleOwner(), isRefreshing -> {
-            swipeRefreshLayout.setRefreshing(isRefreshing);
-        });
-        
-        // Observar errores
-        beneficioViewModel.getError().observe(getViewLifecycleOwner(), error -> {
-            if (error != null && !error.isEmpty()) {
-                // Mostrar error (simplificado)
-                showEmptyState();
+
+    /**
+     * Actualiza la interfaz mostrando los sellos y el progreso del cliente.
+     */
+    private void actualizarProgreso() {
+        int clienteId = 1; // Temporal hasta implementar sesión real
+        List<Visita> visitasCliente = db.obtenerVisitasPorCliente(clienteId);
+
+        int sellosActuales = visitasCliente.size();
+        boolean beneficioDisponible = beneficioManager.verificarBeneficioPorSellos(visitasCliente, TOTAL_SELLOS);
+        int faltantes = beneficioManager.obtenerSellosRestantes(visitasCliente, TOTAL_SELLOS);
+
+        // Actualizar textos
+        textProgresoNumero.setText(sellosActuales + "/" + TOTAL_SELLOS);
+        textProgresoDescripcion.setText(
+                beneficioDisponible
+                        ? "🎉 ¡Puedes canjear tu café gratis!"
+                        : "☕ Te faltan " + faltantes + " visitas para tu próximo beneficio"
+        );
+
+        btnCanjear.setEnabled(beneficioDisponible);
+
+        // Dibujar sellos visuales
+        sellosContainer.removeAllViews();
+        for (int i = 0; i < TOTAL_SELLOS; i++) {
+            ImageView sello = new ImageView(getContext());
+
+            // Si el cliente completó todos los sellos, el último se muestra dorado
+            if (beneficioDisponible && i == TOTAL_SELLOS - 1) {
+                sello.setImageResource(R.drawable.ic_cafe_dorado);
+            } else if (i < sellosActuales) {
+                sello.setImageResource(R.drawable.ic_cafe_lleno);
+            } else {
+                sello.setImageResource(R.drawable.ic_cafe_vacio);
             }
-        });
-    }
-    
-    private void updateBeneficiosDisponibles(List<Beneficio> beneficios) {
-        if (beneficios != null && !beneficios.isEmpty()) {
-            beneficiosDisponiblesAdapter.updateBeneficios(beneficios);
-            recyclerBeneficiosDisponibles.setVisibility(View.VISIBLE);
-            emptyStateView.setVisibility(View.GONE);
-        } else {
-            showEmptyState();
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(100, 100);
+            params.setMargins(8, 0, 8, 0);
+            sello.setLayoutParams(params);
+            sellosContainer.addView(sello);
         }
     }
-    
-    private void showEmptyState() {
-        recyclerBeneficiosDisponibles.setVisibility(View.GONE);
-        emptyStateView.setVisibility(View.VISIBLE);
+
+    /**
+     * Realiza el canje del beneficio si el usuario completó los sellos.
+     */
+    private void realizarCanje() {
+        int clienteId = 1; // Temporal
+        List<Visita> visitasCliente = db.obtenerVisitasPorCliente(clienteId);
+
+        boolean beneficioDisponible = beneficioManager.verificarBeneficioPorSellos(visitasCliente, TOTAL_SELLOS);
+        if (beneficioDisponible) {
+            Toast.makeText(getContext(), "🎉 ¡Café gratis canjeado con éxito!", Toast.LENGTH_SHORT).show();
+
+            // Registrar canje en la base de datos
+            beneficioManager.registrarCanjePorSellos(clienteId, TOTAL_SELLOS);
+
+            // Reiniciar visitas después del canje
+            db.reiniciarVisitasCliente(clienteId);
+
+            // Refrescar progreso visual
+            actualizarProgreso();
+        } else {
+            Toast.makeText(getContext(), "⚠️ Aún no completas los sellos necesarios", Toast.LENGTH_SHORT).show();
+        }
     }
-    
+
     private void onBeneficioClick(Beneficio beneficio) {
-        BeneficioDetailsDialogFragment dialog = BeneficioDetailsDialogFragment.newInstance(beneficio);
-        dialog.show(getParentFragmentManager(), "BeneficioDetailsDialog");
+        Toast.makeText(getContext(), "Beneficio: " + beneficio.getNombre(), Toast.LENGTH_SHORT).show();
     }
 }

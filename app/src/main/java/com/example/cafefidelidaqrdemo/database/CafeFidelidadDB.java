@@ -1315,4 +1315,23 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         db.close();
         return new PromedioCalificacion(promedio, cantidad);
     }
+
+    // ===============================
+// 🔹 REINICIAR VISITAS DEL CLIENTE
+// ===============================
+    /**
+     * Reinicia (elimina) todas las visitas registradas de un cliente,
+     * utilizado después de realizar un canje de beneficio por sellos.
+     */
+    public void reiniciarVisitasCliente(int clienteId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            int filas = db.delete("visitas", "cliente_id = ?", new String[]{String.valueOf(clienteId)});
+            Log.d(TAG, "✅ Visitas reiniciadas para cliente ID: " + clienteId + ". Filas eliminadas: " + filas);
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error al reiniciar visitas del cliente", e);
+        } finally {
+            db.close();
+        }
+    }
 }
