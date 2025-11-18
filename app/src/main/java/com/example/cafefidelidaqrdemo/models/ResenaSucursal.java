@@ -41,4 +41,12 @@ public class ResenaSucursal {
 
     public long getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(long fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public int getClienteId() {
+        return this.usuarioId;
+    }
+
+    public void setClienteId(int clienteId) {
+        this.usuarioId = clienteId;
+    }
 }

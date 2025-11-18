@@ -213,7 +213,11 @@ public class AuthRepository {
             callback.onError("No hay usuario autenticado");
         }
     }
-    
+
+    public String getCurrentUserUid() {
+        LocalUser user = getCurrentUser();
+        return user != null ? user.uid : null;
+    }
     /**
      * Verifica si hay un usuario autenticado - VERSIÓN LOCAL
      */

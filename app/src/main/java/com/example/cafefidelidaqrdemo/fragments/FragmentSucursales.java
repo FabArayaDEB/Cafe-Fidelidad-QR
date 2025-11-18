@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import android.content.Intent;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -486,17 +488,11 @@ public class FragmentSucursales extends Fragment {
             }
         }
     }
-    
+
     private void showSucursalDetails(Sucursal sucursal) {
-        String message = String.format(
-            "Sucursal: %s\nDirección: %s\nHorario: %s\nEstado: %s",
-            sucursal.getNombre(),
-            sucursal.getDireccion(),
-            sucursal.getHorarioApertura() + " - " + sucursal.getHorarioCierre(),
-            sucursal.isActiva() ? "Activa" : "Inactiva"
-        );
-        
-        Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(getActivity(), com.example.cafefidelidaqrdemo.SucursalDetalleActivity.class);
+        intent.putExtra("sucursal_id", sucursal.getId());
+        startActivity(intent);
     }
     
     private void showSucursalOptions(Sucursal sucursal) {
@@ -519,9 +515,6 @@ public class FragmentSucursales extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Los datos se refrescan automáticamente a través del ViewModel
-        
-        // Verificar permisos de ubicación por si cambiaron
         checkLocationPermission();
     }
 }

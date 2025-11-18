@@ -84,6 +84,12 @@
             android:exported="false"
             android:label="Gestión de Ubicación"
             android:parentActivityName=".activities.MainActivity" />
+
+        <activity
+            android:name=".SucursalDetalleActivity"
+            android:exported="false"
+            android:label="Detalle Sucursal"
+            android:parentActivityName=".ClienteMainActivity" />
         
         <!-- Servicio de ubicación -->
         <service

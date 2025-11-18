@@ -17,6 +17,7 @@ import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
 import com.example.cafefidelidaqrdemo.fragments.FragmentProductos;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.google.android.material.navigation.NavigationBarView;
+import com.example.cafefidelidaqrdemo.fragments.FragmentSucursales;
 
 public class ClienteMainActivity extends AppCompatActivity {
 
@@ -68,11 +69,11 @@ public class ClienteMainActivity extends AppCompatActivity {
                 if (itemId == R.id.item_perfil) {
                     verFragPerfil();
                     return true;
-                } else if (itemId == R.id.item_puntos) {
-                    verFragPuntos();
+                } else if (itemId == R.id.item_sucursales) {
+                    verSucursales();
                     return true;
                 } else if (itemId == R.id.item_catalogo) {
-                    verCatalogo(); // Ahora llama al método corregido
+                    verCatalogo();
                     return true;
                 } else if (itemId == R.id.item_beneficios) {
                     verBeneficios();
@@ -120,6 +121,16 @@ public class ClienteMainActivity extends AppCompatActivity {
         FragmentProductos fragment = new FragmentProductos();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentProductos");
+        fragmentTransaction.commit();
+    }
+
+    private void verSucursales() {
+        viewModel.setToolbarTitle("Nuestras Sucursales");
+        binding.tvTitulo.setText("Sucursales");
+
+        FragmentSucursales fragment = new FragmentSucursales();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentSucursales");
         fragmentTransaction.commit();
     }
 

@@ -20,6 +20,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import androidx.annotation.Nullable;
 
 public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalItem, SucursalesAdapter.SucursalViewHolder> {
     
@@ -69,18 +70,21 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
             holder.bind(item);
         }
     }
-    
-    // Método para actualizar lista con distancias
-    public void submitListWithDistance(List<SucursalItem> list) {
-        submitList(list);
+
+    /**
+     * Actualiza la lista de sucursales (con o sin distancia).
+     * Este método reemplaza a la implementación por defecto de ListAdapter para evitar recursión.
+     */
+    @Override
+    public void submitList(@Nullable List<SucursalItem> list) {
+        super.submitList(list);
     }
-    
-    // Método para actualizar lista sin distancias
-    public void submitList(List<SucursalItem> sucursales) {
-        List<SucursalItem> items = sucursales.stream()
-            .map(sucursal -> new SucursalItem(sucursal.getSucursal(), null))
-            .collect(Collectors.toList());
-        submitList(items);
+
+    /**
+     * Método de conveniencia para mayor claridad, simplemente llama al padre.
+     */
+    public void submitListWithDistance(List<SucursalItem> list) {
+        super.submitList(list);
     }
     
     // Interfaces para callbacks
@@ -226,7 +230,6 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
                 }
             });
             
-            // Long click listener
             cardView.setOnLongClickListener(v -> {
                 if (onSucursalLongClickListener != null) {
                     onSucursalLongClickListener.onSucursalLongClick(sucursal);

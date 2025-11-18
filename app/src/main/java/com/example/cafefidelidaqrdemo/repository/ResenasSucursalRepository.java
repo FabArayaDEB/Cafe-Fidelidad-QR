@@ -12,9 +12,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Repository local para gestionar reseñas de sucursales (SQLite)
- */
 public class ResenasSucursalRepository {
 
     private static ResenasSucursalRepository instance;
@@ -35,7 +32,7 @@ public class ResenasSucursalRepository {
         return instance;
     }
 
-    private ResenasSucursalRepository(Context context) {
+    public ResenasSucursalRepository(Context context) {
         this.database = CafeFidelidadDB.getInstance(context);
         this.executor = Executors.newFixedThreadPool(3);
     }
@@ -46,7 +43,6 @@ public class ResenasSucursalRepository {
     public LiveData<String> getErrorLiveData() { return errorLiveData; }
     public LiveData<String> getSuccessLiveData() { return successLiveData; }
 
-    // Crear reseña
     public void crearResena(ResenaSucursal resena) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
@@ -65,7 +61,6 @@ public class ResenasSucursalRepository {
         });
     }
 
-    // Listar reseñas por sucursal
     public void listarResenasPorSucursal(int sucursalId, int limit, int offset) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
@@ -80,7 +75,22 @@ public class ResenasSucursalRepository {
         });
     }
 
-    // Actualizar reseña
+    public LiveData<List<ResenaSucursal>> obtenerResenas(int sucursalId) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                // Cargar 50 reseñas por defecto
+                List<ResenaSucursal> lista = database.obtenerResenasSucursal(sucursalId, 50, 0);
+                resenasLiveData.postValue(lista);
+            } catch (Exception e) {
+                errorLiveData.postValue(e.getMessage());
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+        return resenasLiveData;
+    }
+
     public void actualizarResena(ResenaSucursal resena) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
@@ -99,7 +109,6 @@ public class ResenasSucursalRepository {
         });
     }
 
-    // Eliminar reseña
     public void eliminarResena(int id) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
@@ -118,7 +127,6 @@ public class ResenasSucursalRepository {
         });
     }
 
-    // Obtener promedio
     public void obtenerPromedio(int sucursalId) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
