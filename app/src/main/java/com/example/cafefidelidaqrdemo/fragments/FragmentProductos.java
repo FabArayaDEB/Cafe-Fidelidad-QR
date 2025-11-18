@@ -18,7 +18,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.ProductosAdapter;
 import android.content.Intent;
-import com.example.cafefidelidaqrdemo.DetalleProductoActivity;
+import com.example.cafefidelidaqrdemo.ProductoDetalleActivity;
 // import com.example.cafefidelidaqrdemo.activities.DetalleProductoActivity; // TODO: Crear esta actividad
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.viewmodels.ProductosViewModel;
@@ -106,7 +106,7 @@ public class FragmentProductos extends Fragment {
             @Override
             public void onProductoClick(Producto producto) {
                 // Abrir detalle del producto
-                Intent intent = new Intent(getActivity(), DetalleProductoActivity.class);
+                Intent intent = new Intent(getActivity(), ProductoDetalleActivity.class);
                 intent.putExtra("producto_id", producto.getId());
                 startActivity(intent);
             }

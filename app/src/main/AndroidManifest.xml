@@ -66,6 +66,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ProductoDetalleActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".BeneficiosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".HistorialActivity"
+            android:exported="false" />
         
         <activity
             android:name=".activities.UbicacionActivity"

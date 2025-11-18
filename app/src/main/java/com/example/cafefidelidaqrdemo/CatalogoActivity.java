@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -282,7 +281,7 @@ public class CatalogoActivity extends AppCompatActivity {
     private void onProductoClick(Producto producto) {
         // Navegar al detalle del producto pasando el ID
         // Navegar al detalle del producto
-        Intent intent = new Intent(this, DetalleProductoActivity.class);
+        Intent intent = new Intent(this, ProductoDetalleActivity.class);
         intent.putExtra("producto_id", producto.getId());
         startActivity(intent);
     }

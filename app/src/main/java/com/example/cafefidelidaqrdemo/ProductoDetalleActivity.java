@@ -8,14 +8,11 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.bumptech.glide.Glide;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.models.ResenaProducto;
-import com.example.cafefidelidaqrdemo.models.PromedioCalificacion;
 import com.example.cafefidelidaqrdemo.repository.ProductoRepository;
 import com.example.cafefidelidaqrdemo.repository.ResenasProductoRepository;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
@@ -26,7 +23,7 @@ import com.google.android.material.button.MaterialButton;
 // import com.google.firebase.database.FirebaseDatabase;
 // import com.google.firebase.database.ValueEventListener;
 
-public class DetalleProductoActivity extends AppCompatActivity {
+public class ProductoDetalleActivity extends AppCompatActivity {
 
     private ImageView ivProducto, ivPopular;
     private TextView tvNombre, tvDescripcion, tvPrecio, tvPrecioOriginal, tvDescuento;
@@ -138,7 +135,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
                 // Cargar promedio de reseñas
                 resenasRepository.obtenerPromedio(productoIdInt);
             } else {
-                Toast.makeText(DetalleProductoActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductoDetalleActivity.this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
@@ -156,12 +153,12 @@ public class DetalleProductoActivity extends AppCompatActivity {
         // Observar errores/exitos
         resenasRepository.getErrorLiveData().observe(this, error -> {
             if (error != null && !error.trim().isEmpty()) {
-                Toast.makeText(DetalleProductoActivity.this, error, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductoDetalleActivity.this, error, Toast.LENGTH_SHORT).show();
             }
         });
         resenasRepository.getSuccessLiveData().observe(this, msg -> {
             if (msg != null && !msg.trim().isEmpty()) {
-                Toast.makeText(DetalleProductoActivity.this, msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductoDetalleActivity.this, msg, Toast.LENGTH_SHORT).show();
                 // Refrescar promedio
                 if (productoIdInt > 0) {
                     resenasRepository.obtenerPromedio(productoIdInt);
@@ -176,13 +173,13 @@ public class DetalleProductoActivity extends AppCompatActivity {
         if (btnEnviarResena != null) {
             btnEnviarResena.setOnClickListener(v -> {
                 if (productoIdInt <= 0) {
-                    Toast.makeText(DetalleProductoActivity.this, "Producto inválido", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductoDetalleActivity.this, "Producto inválido", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 int calificacion = Math.round(rbResena != null ? rbResena.getRating() : 0f);
                 if (calificacion < 1 || calificacion > 5) {
-                    Toast.makeText(DetalleProductoActivity.this, "Selecciona una calificación de 1 a 5", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductoDetalleActivity.this, "Selecciona una calificación de 1 a 5", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -198,10 +195,10 @@ public class DetalleProductoActivity extends AppCompatActivity {
                     } catch (NumberFormatException e) {
                         // Si el UID no es numérico (p.ej. "user_001"), intentar resolver por email de sesión en SQLite
                         try {
-                            com.example.cafefidelidaqrdemo.utils.SessionManager sm = new com.example.cafefidelidaqrdemo.utils.SessionManager(DetalleProductoActivity.this);
+                            com.example.cafefidelidaqrdemo.utils.SessionManager sm = new com.example.cafefidelidaqrdemo.utils.SessionManager(ProductoDetalleActivity.this);
                             String emailSesion = sm.getUserEmail();
                             if (emailSesion != null && !emailSesion.trim().isEmpty()) {
-                                com.example.cafefidelidaqrdemo.repository.ClienteRepository clienteRepo = new com.example.cafefidelidaqrdemo.repository.ClienteRepository(DetalleProductoActivity.this);
+                                com.example.cafefidelidaqrdemo.repository.ClienteRepository clienteRepo = new com.example.cafefidelidaqrdemo.repository.ClienteRepository(ProductoDetalleActivity.this);
                                 com.example.cafefidelidaqrdemo.models.Cliente c = clienteRepo.getClienteByEmailSync(emailSesion.trim());
                                 if (c != null && c.getId() != null) {
                                     try {
@@ -217,7 +214,7 @@ public class DetalleProductoActivity extends AppCompatActivity {
                     }
                 }
                 if (usuarioIdInt <= 0) {
-                    Toast.makeText(DetalleProductoActivity.this, "Debes iniciar sesión con un cliente válido para reseñar", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductoDetalleActivity.this, "Debes iniciar sesión con un cliente válido para reseñar", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
