@@ -249,6 +249,78 @@ public class CanjeRepository {
         });
     }
 
+    /**
+     * 🔹 Nuevo método: Registrar un canje directamente desde un Beneficio disponible
+     * Crea el registro de canje y marca el beneficio como usado (sin reiniciar visitas).
+     */
+    public void registrarCanjeDesdeBeneficio(Beneficio beneficio, String clienteId, String sucursalId, OnResultCallback<Boolean> callback) {
+        isLoadingLiveData.postValue(true);
+        executor.execute(() -> {
+            try {
+                if (beneficio == null) {
+                    errorLiveData.postValue("Beneficio no puede ser nulo");
+                    callback.onResult(false);
+                    return;
+                }
+
+                if (!beneficio.esValido()) {
+                    errorLiveData.postValue("Beneficio no válido o vencido");
+                    callback.onResult(false);
+                    return;
+                }
+
+                if (clienteId == null || clienteId.isEmpty()) {
+                    errorLiveData.postValue("Cliente es requerido");
+                    callback.onResult(false);
+                    return;
+                }
+
+                // Construir el canje a partir del beneficio
+                Canje canje = new Canje();
+                canje.setClienteId(Integer.parseInt(clienteId));
+                // Si el id del beneficio es String, intentar convertirlo
+                try {
+                    canje.setBeneficioId(Integer.parseInt(beneficio.getId()));
+                } catch (Exception e) {
+                    // Si no es convertible, establecer 0 y continuar
+                    canje.setBeneficioId(0);
+                }
+                canje.setFechaCanje(System.currentTimeMillis());
+                canje.setPuntosUtilizados(beneficio.getVisitasRequeridas());
+                canje.setEstado("completado");
+
+                long insertResult = database.insertarCanje(canje);
+                if (insertResult == -1) {
+                    errorLiveData.postValue("Error al registrar canje");
+                    callback.onResult(false);
+                    return;
+                }
+
+                // Marcar beneficio como usado y desactivarlo
+                beneficio.marcarComoUsado();
+                beneficio.setActivo(false);
+
+                int updateResult = database.actualizarBeneficio(beneficio);
+                if (updateResult <= 0) {
+                    errorLiveData.postValue("Error al actualizar estado del beneficio");
+                    callback.onResult(false);
+                    return;
+                }
+
+                // Recargar canjes en memoria
+                loadCanjes();
+                errorLiveData.postValue(null);
+                callback.onResult(true);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al registrar canje desde beneficio", e);
+                errorLiveData.postValue("Error al registrar canje: " + e.getMessage());
+                callback.onResult(false);
+            } finally {
+                isLoadingLiveData.postValue(false);
+            }
+        });
+    }
+
     // 🔹 Cargar todos los canjes almacenados
     private void loadCanjes() {
         executor.execute(() -> {

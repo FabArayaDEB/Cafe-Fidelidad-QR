@@ -91,7 +91,7 @@ public class ClienteMainActivity extends AppCompatActivity {
                     return true;
                 } else if (itemId == R.id.item_puntos) {
                     verFragPuntos();
-                    viewModel.setToolbarTitle("Mis Puntos");
+                    viewModel.setToolbarTitle("Mis Sellos");
                     return true;
                 } else if (itemId == R.id.item_catalogo) {
                     verCatalogo();
@@ -127,9 +127,9 @@ public class ClienteMainActivity extends AppCompatActivity {
      * Muestra el fragmento de puntos
      */
     private void verFragPuntos(){
-        binding.tvTitulo.setText("Mis Puntos");
-        // TODO: Implementar fragmento de puntos simplificado
-        Toast.makeText(this, "Funcionalidad de puntos en desarrollo", Toast.LENGTH_SHORT).show();
+        binding.tvTitulo.setText("Mis Sellos");
+        // TODO: Implementar fragmento de sellos simplificado
+        Toast.makeText(this, "Funcionalidad de sellos en desarrollo", Toast.LENGTH_SHORT).show();
     }
     
     /**

@@ -4,7 +4,7 @@ import android.util.Log;
 import java.util.regex.Pattern;
 
 /**
- * Validador de códigos QR simplificado
+ * Validador de códigos QR 
  * Proporciona validaciones básicas para códigos QR
  */
 public class QRValidator {
@@ -28,13 +28,13 @@ public class QRValidator {
         
         // Verificar longitud
         if (trimmedQR.length() < MIN_QR_LENGTH || trimmedQR.length() > MAX_QR_LENGTH) {
-            Log.w(TAG, "QR code length is invalid: " + trimmedQR.length());
+            Log.w(TAG, "QR longitud invalida: " + trimmedQR.length());
             return false;
         }
         
         // Verificar patrón básico
         if (!QR_PATTERN.matcher(trimmedQR).matches()) {
-            Log.w(TAG, "QR code format is invalid");
+            Log.w(TAG, "QR formato invalido");
             return false;
         }
         
@@ -77,7 +77,7 @@ public class QRValidator {
             return qrCode.substring(0, Math.min(10, qrCode.length()));
             
         } catch (Exception e) {
-            Log.e(TAG, "Error extracting cliente ID from QR", e);
+            Log.e(TAG, "Error al extraer el id del usuario con QR", e);
             return null;
         }
     }
@@ -95,14 +95,14 @@ public class QRValidator {
             // Verificar que no contenga caracteres peligrosos
             if (qrCode.contains("<script>") || qrCode.contains("javascript:") || 
                 qrCode.contains("data:") || qrCode.contains("vbscript:")) {
-                Log.w(TAG, "QR code contains potentially dangerous content");
+                Log.w(TAG, "QR contiene caracteres peligrosos");
                 return false;
             }
             
             return true;
             
         } catch (Exception e) {
-            Log.e(TAG, "Error validating QR integrity", e);
+            Log.e(TAG, "Error validando la integridad del QR", e);
             return false;
         }
     }

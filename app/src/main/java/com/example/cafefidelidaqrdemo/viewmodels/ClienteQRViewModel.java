@@ -109,8 +109,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
                     String.valueOf(cliente.getId()),
                     cliente.getNombre(),
                     cliente.getEmail(),
-                    generateMcId(cliente),
-                    cliente.getPuntosAcumulados()
+                    generateMcId(cliente)
                 );
                 
                 if (qrBitmap != null) {

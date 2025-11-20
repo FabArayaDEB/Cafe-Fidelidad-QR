@@ -49,47 +49,17 @@ public class BeneficioManager {
     private List<Beneficio> evaluarReglasBasicas(String clienteId, int totalVisitas) {
         List<Beneficio> beneficios = new ArrayList<>();
 
-        // Cada 5 visitas = 10% de descuento
-        if (totalVisitas > 0 && totalVisitas % 5 == 0) {
-            beneficios.add(crearBeneficioDescuentoPorcentaje(
-                    "¡5 Visitas Completadas!",
-                    "10% de descuento en tu próxima compra",
-                    10.0,
-                    clienteId,
-                    7 // Válido por 7 días
-            ));
-        }
-
-        // Cada 10 visitas = Café gratis ☕
-        if (totalVisitas > 0 && totalVisitas % 10 == 0) {
-            beneficios.add(crearBeneficioProductoGratis(
-                    "¡10 Visitas Completadas!",
+        // Regla única: otorgar beneficio al alcanzar exactamente 7 sellos
+        if (totalVisitas == 7) {
+            Beneficio beneficio = crearBeneficioProductoGratis(
+                    "¡7 Sellos!",
                     "Café americano gratis",
                     "cafe_americano",
                     clienteId,
                     14
-            ));
-        }
-
-        // Cada 20 visitas = 2x1
-        if (totalVisitas > 0 && totalVisitas % 20 == 0) {
-            beneficios.add(crearBeneficioDosxUno(
-                    "¡20 Visitas Completadas!",
-                    "2x1 en cualquier bebida",
-                    clienteId,
-                    30
-            ));
-        }
-
-        // Cada 50 visitas = Cliente VIP
-        if (totalVisitas > 0 && totalVisitas % 50 == 0) {
-            beneficios.add(crearBeneficioDescuentoPorcentaje(
-                    "¡Cliente VIP - 50 Visitas!",
-                    "25% de descuento en toda tu compra",
-                    25.0,
-                    clienteId,
-                    60
-            ));
+            );
+            beneficio.setVisitasRequeridas(7);
+            beneficios.add(beneficio);
         }
 
         return beneficios;

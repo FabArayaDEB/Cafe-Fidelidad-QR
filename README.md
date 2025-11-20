@@ -7,9 +7,9 @@ Aplicación Android para fidelización en cafeterías con registro de compras y 
 - Autenticación local con roles (cliente y administrador) y gestión de sesión.
 - Catálogo de productos con búsqueda, filtros y estados de disponibilidad.
 - Beneficios y canjes basados en puntos por visitas y compras.
-- Escaneo de códigos QR para registro y validación de transacciones.
-- Módulo de administración: productos, sucursales, beneficios y reportes.
-- Servicio de ubicación en primer plano para funcionalidades basadas en localización.
+- Escaneo de códigos QR para registro de puntos en fidelidad (sin transacciones).
+- Módulo de administración: productos, sucursales y beneficios.
+- Funcionalidades básicas de ubicación (sin servicio en segundo plano) para asociar coordenadas a sucursales.
 
 ## Estructura del Proyecto
 
@@ -58,8 +58,7 @@ caffeFidelidaDemo/
 │       │   │   AdminRepository.java, VisitaRepository.java, VisitaAdminRepository.java
 │       │   ├── base/ (BaseRepository)
 │       │   └── interfaces/
-│       ├── services/
-│       │   └── LocationService.java
+│       ├── services/ (eliminado en el prototipo)
 │       ├── ui/
 │       │   ├── admin/ (panel administración)
 │       │   ├── cliente/
@@ -67,7 +66,7 @@ caffeFidelidaDemo/
 │       │   └── dialogs/
 │       ├── utils/
 │       │   ├── SessionManager.java, NetworkUtils.java, QRGenerator.java, QRValidator.java,
-│       │   │   LocationManager.java, LocationUtils.java, SearchManager.java
+│       │   │   SearchManager.java
 │       └── viewmodels/
 │           ├── LoginViewModel.java, ProductosViewModel.java, SucursalesViewModel.java,
 │           │   MisBeneficiosViewModel.java, MainViewModel.java, ClienteQRViewModel.java
@@ -103,11 +102,9 @@ SQLite (CafeFidelidadDB) ↔ Retrofit (ApiService)
 
 - UI: `viewBinding`, `dataBinding`, `material`, `constraintlayout`, `circleimageview`, `glide`.
 - QR: `zxing-android-embedded`, `zxing-core`.
-- Red: `retrofit`, `converter-gson`, `okhttp`, `logging-interceptor`, `gson`.
 - Cámara y navegación: `camera-core/camera2/lifecycle/view`, `navigation-fragment/ui`.
 - Ubicación y mapas: `play-services-location`, `play-services-maps`.
 - Testing: `junit`, `mockito`, `arch-core-testing`.
-- Nota: Dependencias de `room` y `workmanager` están presentes pero no se usan en la implementación actual; la base de datos real es `SQLiteOpenHelper`.
 
 ## Base de Datos (Resumen)
 
@@ -118,7 +115,7 @@ SQLite (CafeFidelidadDB) ↔ Retrofit (ApiService)
 
 ## Servicios y Utilidades
 
-- `LocationService`: servicio en primer plano con notificación y actualización continua de ubicación.
+- Ubicación básica: obtención puntual de coordenadas mediante `FusedLocationProviderClient` en `FragmentSucursalesAdmin`.
 - `SessionManager`: sesión de usuario con `SharedPreferences` (id, email, nombre, estado login).
 - `NetworkUtils`: verificación de conectividad (`ConnectivityManager`).
 - `QRGenerator`/`QRValidator`: utilidades para generar/validar QR (apoya uso de `jjwt`).
@@ -142,7 +139,7 @@ SQLite (CafeFidelidadDB) ↔ Retrofit (ApiService)
 ## Flujos de Usuario
 
 - Cliente: Login → Perfil/QR → Productos → Beneficios/Canjes → Sucursales.
-- Administrador: Login → Dashboard → Productos/Sucursales/Beneficios → Reportes.
+- Administrador: Login → Dashboard → Productos/Sucursales/Beneficios.
 
 ## Seguridad
 

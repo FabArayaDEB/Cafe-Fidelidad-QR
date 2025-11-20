@@ -108,7 +108,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/color_primary"
-                tools:text="150 puntos" />
+                tools:text="150 sellos" />
 
         </LinearLayout>
 

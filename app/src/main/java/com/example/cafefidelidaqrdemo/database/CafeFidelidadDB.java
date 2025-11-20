@@ -869,6 +869,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_SUCURSAL_HORARIO_CIERRE, sucursal.getHorarioCierre());
         values.put(COLUMN_SUCURSAL_LATITUD, sucursal.getLatitud());
         values.put(COLUMN_SUCURSAL_LONGITUD, sucursal.getLongitud());
+        // Alinear estado con flag de activa del modelo
+        values.put(COLUMN_SUCURSAL_ESTADO, sucursal.isActiva() ? "activo" : "inactivo");
         
         long id = db.insert(TABLE_SUCURSALES, null, values);
         db.close();
@@ -894,6 +896,9 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
             sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
             sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
+            // Mapear estado a bandera activa
+            String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
+            sucursal.setActiva("activo".equalsIgnoreCase(estado));
             cursor.close();
         }
         
@@ -918,6 +923,9 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
                 sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
                 sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
+                // Mapear estado a bandera activa
+                String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
+                sucursal.setActiva("activo".equalsIgnoreCase(estado));
                 sucursales.add(sucursal);
             } while (cursor.moveToNext());
             cursor.close();
@@ -931,8 +939,9 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         List<Sucursal> sucursales = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         
-        String selection = COLUMN_SUCURSAL_ACTIVA + " = ?";
-        String[] selectionArgs = {"1"};
+        // Seleccionar por estado 'activo' para evitar columnas inexistentes
+        String selection = COLUMN_SUCURSAL_ESTADO + " = ?";
+        String[] selectionArgs = {"activo"};
         
         Cursor cursor = db.query(TABLE_SUCURSALES, null, selection, selectionArgs, null, null, COLUMN_SUCURSAL_NOMBRE);
         
@@ -947,7 +956,9 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
                 sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
                 sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
-                sucursal.setActiva(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ACTIVA)) == 1);
+                // Mapear estado a bandera activa
+                String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
+                sucursal.setActiva("activo".equalsIgnoreCase(estado));
                 sucursales.add(sucursal);
             } while (cursor.moveToNext());
             cursor.close();

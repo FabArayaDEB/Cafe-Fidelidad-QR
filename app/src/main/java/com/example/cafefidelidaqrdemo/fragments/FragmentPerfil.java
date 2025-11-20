@@ -191,9 +191,7 @@ public class FragmentPerfil extends Fragment {
             if (binding.tvPuntos != null) {
                 binding.tvPuntos.setText(String.valueOf(cliente.getPuntosAcumulados()));
             }
-            if (binding.tvNivel != null) {
-                binding.tvNivel.setText(cliente.getNivel());
-            }
+            // Sistema de niveles eliminado: no se muestra nivel
         }
     }
     

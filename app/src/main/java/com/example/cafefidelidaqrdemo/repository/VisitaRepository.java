@@ -177,7 +177,32 @@ public class VisitaRepository {
             }
         });
     }
-    
+
+    /**
+     * Registra un sello (visita) para un cliente identificado por su QR personal.
+     * Este método crea una visita con fecha actual y marca un sello ganado (compatibilidad: puntosGanados=1).
+     */
+    public void registrarSello(String clienteId, String sucursalId, OnResultCallback<Boolean> callback) {
+        if (clienteId == null || clienteId.isEmpty() || sucursalId == null || sucursalId.isEmpty()) {
+            if (callback != null) callback.onResult(false);
+            errorLiveData.postValue("Cliente y sucursal son requeridos para registrar sello");
+            return;
+        }
+
+        Visita visita = new Visita();
+        visita.setUserId(clienteId);
+        visita.setSucursal(sucursalId);
+        visita.setFechaVisita(System.currentTimeMillis());
+        // Compatibilidad con esquema actual: usar puntosGanados=1 como un sello
+        try {
+            visita.setPuntosGanados(1);
+        } catch (Exception ignored) {}
+
+        insertVisita(visita, result -> {
+            if (callback != null) callback.onResult(result);
+        });
+    }
+
     // Interface para callbacks
     public interface OnResultCallback<T> {
         void onResult(T result);

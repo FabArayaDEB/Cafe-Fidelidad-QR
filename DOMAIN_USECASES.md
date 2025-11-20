@@ -42,7 +42,7 @@ auth.loginUser(email, password, new AuthUseCase.AuthCallback() {
 ## Casos de uso planificados
 
 - `PuntosUseCase`: Reglas de puntos y beneficios (parte de la lógica actual vive en `BeneficioManager`).
-- `TransaccionQRUseCase`: Procesamiento de transacciones basadas en QR (validación y registro). No existe en el código actual.
+// Eliminado: `TransaccionQRUseCase` (se descartan flujos de transacciones)
 
 ## Arquitectura y Flujo
 
@@ -70,7 +70,7 @@ Repositories
 
 ### 🔄 En Desarrollo
 - Documentación y pruebas unitarias de use cases.
-- Diseño de `PuntosUseCase` y `TransaccionQRUseCase`.
+- Diseño de `PuntosUseCase`.
 
 ### 📋 Futuras Mejoras
 - Migración a coroutines/Kotlin para operaciones asíncronas.

@@ -350,7 +350,7 @@ public class FragmentClientesAdmin extends Fragment {
                 "Nombre: %s\n" +
                 "Email: %s\n" +
                 "Teléfono: %s\n" +
-                "Puntos acumulados: %d\n" +
+                "Sellos acumulados: %d\n" +
                 "Total visitas: %d\n" +
                 "Estado: %s",
                 cliente.getNombre(),

@@ -94,7 +94,7 @@
                 android:id="@+id/tv_puntos_producto"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0 pts"
+                android:text="0 sellos"
                 android:textSize="14sp"
                 android:textColor="@color/color_secondary"
                 android:layout_marginEnd="16dp" />

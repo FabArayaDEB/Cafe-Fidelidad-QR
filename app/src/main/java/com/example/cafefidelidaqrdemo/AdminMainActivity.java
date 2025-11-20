@@ -19,7 +19,6 @@ public class AdminMainActivity extends AppCompatActivity {
 
     private ActivityAdminMainBinding binding;
     private MainViewModel viewModel;
-    // OfflineManager removido para simplificación
     private AuthRepository authRepository;
 
     @Override
@@ -51,7 +50,6 @@ public class AdminMainActivity extends AppCompatActivity {
         // Configurar botón de logout
         binding.btnLogout.setOnClickListener(v -> logout());
         
-        // Funcionalidad offline removida para simplificación
     }
     
     /**
@@ -65,9 +63,7 @@ public class AdminMainActivity extends AppCompatActivity {
                 .replace(R.id.fragmentFL, adminDashboard)
                 .commit();
     }
-    
-    // Método initializeOfflineManager removido para simplificación
-    
+
     /**
      * Configura la sincronización automática de datos
      */

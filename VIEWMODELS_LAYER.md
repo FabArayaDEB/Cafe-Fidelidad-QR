@@ -33,13 +33,12 @@ ViewModels existentes:
 - Observación de estados de repositorios (`isLoading`, errores)
 
 ### 🔄 En Desarrollo
-- ViewModels de reportes avanzados
+- (ViewModels de reportes eliminados)
 - Paginación en listas grandes
 - Caché local de datos
 - Sincronización offline
 
 ### 📋 Futuras Mejoras
-- Migración a Kotlin y Coroutines
 - StateFlow en lugar de LiveData
 - Compose State Management
 - Testing unitario completo
@@ -68,11 +67,6 @@ ViewModels existentes:
 - **Paginación**: Para listas grandes
 - **Debouncing**: Para búsquedas en tiempo real
 
-### 4. Testing
-- **Unit Tests**: Para lógica de ViewModels
-- **Mock Dependencies**: Usar mocks para repositorios
-- **LiveData Testing**: Usar InstantTaskExecutorRule
-- **Edge Cases**: Probar casos límite
 
 ## Conclusión
 

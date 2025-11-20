@@ -76,7 +76,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Puntos requeridos -->
+    <!-- Sellos requeridos -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_puntos"
         android:layout_width="match_parent"
@@ -84,7 +84,7 @@
         android:layout_marginBottom="16dp"
         app:boxStrokeColor="@color/color_primary"
         app:hintTextColor="@color/color_primary"
-        android:hint="Puntos requeridos">
+        android:hint="Sellos requeridos">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_puntos"

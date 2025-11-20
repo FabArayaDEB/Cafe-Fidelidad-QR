@@ -115,9 +115,9 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
             // Configurar stock
             tvStock.setText(String.format("Stock: %d", producto.getStockDisponible()));
             
-            // Configurar puntos requeridos
+            // Configurar sellos requeridos
             if (producto.getPuntosRequeridos() > 0) {
-                tvPuntosRequeridos.setText(String.format("⭐ %d pts", producto.getPuntosRequeridos()));
+                tvPuntosRequeridos.setText(String.format("⭐ %d sellos", producto.getPuntosRequeridos()));
                 tvPuntosRequeridos.setVisibility(View.VISIBLE);
             } else {
                 tvPuntosRequeridos.setVisibility(View.GONE);
@@ -193,8 +193,8 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
             // Configurar precio
             tvPrecio.setText(String.format("$%s", decimalFormat.format(producto.getPrecio())));
             
-            // Configurar puntos
-            tvPuntos.setText(String.format("%d pts", producto.getPuntosRequeridos()));
+            // Configurar sellos
+            tvPuntos.setText(String.format("%d sellos", producto.getPuntosRequeridos()));
             
             // Configurar estado
             String estado = producto.getEstado();

@@ -202,12 +202,12 @@
                     android:layout_height="1dp"
                     android:layout_weight="1" />
 
-                <!-- Puntos requeridos (si aplica) -->
+                <!-- Sellos requeridos (si aplica) -->
                 <TextView
                     android:id="@+id/tv_puntos_requeridos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⭐ 100 pts"
+                    android:text="⭐ 100 sellos"
                     android:textSize="12sp"
                     android:textColor="@color/coffee_accent"
                     android:textStyle="bold"

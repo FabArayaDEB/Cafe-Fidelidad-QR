@@ -45,8 +45,7 @@ public interface ApiService {
     @PUT("clientes/{id}")
     Call<Cliente> updateCliente(@Path("id") String clienteId, @Body Cliente cliente);
     
-    @GET("clientes/{id}/puntos")
-    Call<Map<String, Object>> getPuntosCliente(@Path("id") String clienteId);
+    // Eliminado endpoint de puntos de cliente (sistema de puntos descartado)
     
     // ========== PRODUCTOS ==========
     @GET("productos")
@@ -103,15 +102,7 @@ public interface ApiService {
     @GET("canjes/historial")
     Call<List<Canje>> getHistorialCanjes();
     
-    // ========== REPORTES ==========
-    @GET("reportes/ventas")
-    Call<Map<String, Object>> getReporteVentas(@Query("fechaInicio") String fechaInicio, @Query("fechaFin") String fechaFin);
-    
-    @GET("reportes/clientes")
-    Call<Map<String, Object>> getReporteClientes();
-    
-    @GET("reportes/productos")
-    Call<Map<String, Object>> getReporteProductos();
+    // (Sistema de reportes eliminado)
     
     // ========== VISITAS ==========
     @POST("visitas")
@@ -130,26 +121,21 @@ public interface ApiService {
         private String clienteId;
         private Long sucursalId;
         private String fecha;
-        private int puntos;
-        
-        public VisitaRequest(String clienteId, Long sucursalId, String fecha, int puntos) {
+
+        public VisitaRequest(String clienteId, Long sucursalId, String fecha) {
             this.clienteId = clienteId;
             this.sucursalId = sucursalId;
             this.fecha = fecha;
-            this.puntos = puntos;
         }
-        
+
         // Getters y setters
         public String getClienteId() { return clienteId; }
         public void setClienteId(String clienteId) { this.clienteId = clienteId; }
-        
+
         public Long getSucursalId() { return sucursalId; }
         public void setSucursalId(Long sucursalId) { this.sucursalId = sucursalId; }
-        
+
         public String getFecha() { return fecha; }
         public void setFecha(String fecha) { this.fecha = fecha; }
-        
-        public int getPuntos() { return puntos; }
-        public void setPuntos(int puntos) { this.puntos = puntos; }
     }
 }

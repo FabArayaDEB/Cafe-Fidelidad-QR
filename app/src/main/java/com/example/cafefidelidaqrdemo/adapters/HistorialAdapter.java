@@ -79,7 +79,9 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
             holder.textFecha.setText(dateFormat.format(new Date(visita.getFechaVisita())));
         }
         if (holder.textPuntos != null) {
-            holder.textPuntos.setText("+" + visita.getPuntosGanados() + " puntos");
+            int cantidad = visita.getPuntosGanados();
+            String etiqueta = cantidad == 1 ? "sello" : "sellos";
+            holder.textPuntos.setText("+" + cantidad + " " + etiqueta);
         }
     }
     
@@ -94,7 +96,9 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
             holder.textFecha.setText(dateFormat.format(new Date(canje.getFechaCanje())));
         }
         if (holder.textPuntos != null) {
-            holder.textPuntos.setText("-" + canje.getPuntosUsados() + " puntos");
+            int cantidad = canje.getPuntosUsados();
+            String etiqueta = cantidad == 1 ? "sello" : "sellos";
+            holder.textPuntos.setText("-" + cantidad + " " + etiqueta);
         }
     }
     

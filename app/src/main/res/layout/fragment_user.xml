@@ -41,118 +41,13 @@
                 android:textStyle="bold"
                 android:layout_marginTop="8dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="12dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/txt_nivel_actual"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_nivel_actual"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bronce"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/txt_para_siguiente"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_puntos_siguiente_nivel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
+            <!-- Se eliminó el sistema de niveles; ya no se muestra nivel ni sellos para siguiente nivel -->
 
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
-    <!-- Título del historial -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/txt_historial_puntos"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/coffee_primary"
-        android:layout_marginBottom="12dp" />
-
-    <!-- RecyclerView para el historial de transacciones -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView_transacciones"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:listitem="@layout/item_transaccion" />
-
-    <!-- Mensaje cuando no hay transacciones -->
-    <LinearLayout
-        android:id="@+id/layout_sin_transacciones"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@drawable/ic_puntos"
-            android:alpha="0.3"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/txt_sin_transacciones"
-            android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/txt_escanea_qr_puntos"
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
-            android:gravity="center"
-            android:layout_marginTop="8dp" />
-
-    </LinearLayout>
+    <!-- Historial de puntos y transacciones removido -->
+    <!-- Se retiró RecyclerView y estados vacíos relacionados a transacciones -->
 
 </LinearLayout>

@@ -5,7 +5,7 @@
 El directorio `network` contiene la **infraestructura HTTP** de la aplicación: definición de endpoints REST, creación del cliente Retrofit y utilidades de conectividad.
 
 Componentes principales:
-- `ApiService`: interfaz Retrofit con endpoints para auth y CRUD de clientes, productos, beneficios, sucursales, visitas y canjes; además de reportes.
+- `ApiService`: interfaz Retrofit con endpoints para auth y CRUD de clientes, productos, beneficios, sucursales, visitas y canjes.
 - `RetrofitClient`: cliente configurado con `BASE_URL` (`https://api.cafefidelidad.com/`) y `GsonConverterFactory`; integra `OkHttp` con `HttpLoggingInterceptor`.
 - `ApiClient`: fachada simple para obtener una instancia de `ApiService`.
 - `NetworkUtils`: utilidades para verificar conectividad (`isNetworkAvailable`).
@@ -22,7 +22,7 @@ Componentes principales:
 - Manejo de autenticación (tokens) y headers dinámicos
 - Manejo centralizado de errores y reintentos
 - Certificate pinning en producción
-- Endpoints adicionales de reportes
+- (El sistema de reportes fue eliminado)
 
 ### 📋 Futuras Mejoras
 - Compresión de requests/responses (GZIP)

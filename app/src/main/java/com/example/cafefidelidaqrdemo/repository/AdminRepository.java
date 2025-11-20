@@ -32,6 +32,11 @@ public class AdminRepository {
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> successMessage = new MutableLiveData<>();
+
+    // LiveData persistentes para sucursales (lista y conteos)
+    private final MutableLiveData<List<Sucursal>> allSucursalesLiveData = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Integer> countSucursalesActivasLiveData = new MutableLiveData<>(0);
+    private final MutableLiveData<Integer> countSucursalesInactivasLiveData = new MutableLiveData<>(0);
     
     public AdminRepository(Context context) {
         this.database = CafeFidelidadDB.getInstance(context);
@@ -241,17 +246,9 @@ public class AdminRepository {
      * Obtiene todas las sucursales
      */
     public LiveData<List<Sucursal>> getAllSucursales() {
-        MutableLiveData<List<Sucursal>> result = new MutableLiveData<>();
-        executor.execute(() -> {
-            try {
-                List<Sucursal> sucursales = database.obtenerTodasLasSucursales();
-                result.postValue(sucursales);
-            } catch (Exception e) {
-                errorMessage.postValue("Error al obtener sucursales: " + e.getMessage());
-                result.postValue(null);
-            }
-        });
-        return result;
+        // Devolver LiveData persistente y refrescar en background
+        refreshSucursalesLiveData();
+        return allSucursalesLiveData;
     }
     
     /**
@@ -289,6 +286,8 @@ public class AdminRepository {
                     sucursal.setId(String.valueOf(id));
                     callback.onSuccess(sucursal);
                     successMessage.postValue("Sucursal creada exitosamente");
+                    // Refrescar lista y conteos para notificar a observadores
+                    refreshSucursalesLiveData();
                 } else {
                     callback.onError("Error al crear sucursal");
                 }
@@ -500,31 +499,15 @@ public class AdminRepository {
     
     // Métodos de conteo para sucursales
     public LiveData<Integer> getCountSucursalesActivas() {
-        MutableLiveData<Integer> result = new MutableLiveData<>();
-        executor.execute(() -> {
-            try {
-                List<Sucursal> sucursales = database.obtenerSucursalesActivas();
-                result.postValue(sucursales != null ? sucursales.size() : 0);
-            } catch (Exception e) {
-                result.postValue(0);
-            }
-        });
-        return result;
+        // Devolver LiveData persistente y refrescar en background
+        refreshSucursalesLiveData();
+        return countSucursalesActivasLiveData;
     }
     
     public LiveData<Integer> getCountSucursalesInactivas() {
-        MutableLiveData<Integer> result = new MutableLiveData<>();
-        executor.execute(() -> {
-            try {
-                int total = database.obtenerConteoSucursales();
-                List<Sucursal> activas = database.obtenerSucursalesActivas();
-                int activasCount = activas != null ? activas.size() : 0;
-                result.postValue(total - activasCount);
-            } catch (Exception e) {
-                result.postValue(0);
-            }
-        });
-        return result;
+        // Devolver LiveData persistente y refrescar en background
+        refreshSucursalesLiveData();
+        return countSucursalesInactivasLiveData;
     }
     
     public int getCountSucursalesActivasSync() {
@@ -620,6 +603,25 @@ public class AdminRepository {
             }
         });
         return result;
+    }
+
+    // Refresca lista y conteos de sucursales y postea en LiveData persistentes
+    private void refreshSucursalesLiveData() {
+        executor.execute(() -> {
+            try {
+                List<Sucursal> todas = database.obtenerTodasLasSucursales();
+                List<Sucursal> activas = database.obtenerSucursalesActivas();
+                int total = database.obtenerConteoSucursales();
+                int activasCount = activas != null ? activas.size() : 0;
+                int inactivasCount = Math.max(0, total - activasCount);
+
+                allSucursalesLiveData.postValue(todas != null ? todas : new ArrayList<>());
+                countSucursalesActivasLiveData.postValue(activasCount);
+                countSucursalesInactivasLiveData.postValue(inactivasCount);
+            } catch (Exception e) {
+                // En caso de error, no romper UI; mantener valores actuales
+            }
+        });
     }
     
     // ========== MÉTODOS DE SINCRONIZACIÓN Y EXPORTACIÓN ==========

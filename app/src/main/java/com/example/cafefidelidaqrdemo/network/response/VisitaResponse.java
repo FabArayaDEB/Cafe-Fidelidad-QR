@@ -142,7 +142,7 @@ public class VisitaResponse {
      */
     public String getProgreso() {
         if (data != null) {
-            return "Puntos ganados: " + data.getPuntosGanados();
+            return "Sellos ganados: " + data.getPuntosGanados();
         }
         return "Sin progreso disponible";
     }

@@ -15,7 +15,7 @@
     <!-- Permisos para ubicación -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Permiso de ubicación en segundo plano eliminado para el prototipo -->
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
@@ -85,12 +85,7 @@
             android:label="Gestión de Ubicación"
             android:parentActivityName=".activities.MainActivity" />
         
-        <!-- Servicio de ubicación -->
-        <service
-            android:name=".services.LocationService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
+        <!-- Servicio de ubicación eliminado: se usa obtención básica en FragmentSucursalesAdmin -->
     </application>
 
 </manifest>

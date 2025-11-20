@@ -25,7 +25,7 @@ public class QRGenerator {
     /**
      * Genera un código QR para cliente
      */
-    public static Bitmap generateClientQR(String clienteId, String nombre, String email, String mcId, int puntos) {
+    public static Bitmap generateClientQR(String clienteId, String nombre, String email, String mcId) {
         try {
             // Campos dinámicos
             long timestamp = System.currentTimeMillis();
@@ -38,8 +38,8 @@ public class QRGenerator {
 
             // Base de datos a firmar
             String base = String.format(
-                    "CLIENTE:%s|NOMBRE:%s|EMAIL:%s|MCID:%s|PUNTOS:%d|TS:%d|NONCE:%s",
-                    clienteId, safeNombre, safeEmail, safeMcId, puntos, timestamp, nonce
+                    "CLIENTE:%s|NOMBRE:%s|EMAIL:%s|MCID:%s|TS:%d|NONCE:%s",
+                    clienteId, safeNombre, safeEmail, safeMcId, timestamp, nonce
             );
 
             String signature = hmacSha256(base, HMAC_SECRET);
@@ -79,7 +79,7 @@ public class QRGenerator {
         
         try {
             String[] parts = qrContent.split("\\|");
-            String clienteId = null, nombre = null, email = null, mcId = null; int puntos = 0;
+            String clienteId = null, nombre = null, email = null, mcId = null;
             for (String p : parts) {
                 int idx = p.indexOf(":");
                 if (idx <= 0) continue;
@@ -90,12 +90,11 @@ public class QRGenerator {
                     case "NOMBRE": nombre = val; break;
                     case "EMAIL": email = val; break;
                     case "MCID": mcId = val; break;
-                    case "PUNTOS": try { puntos = Integer.parseInt(val); } catch (Exception ignored) {} break;
                     default: break; // Ignorar TS, NONCE, SIG u otros
                 }
             }
             if (clienteId == null) return null;
-            return new ClienteQRData(nombrar(clienteId), nombrar(nombre), nombrar(email), nombrar(mcId), puntos);
+            return new ClienteQRData(nombrar(clienteId), nombrar(nombre), nombrar(email), nombrar(mcId));
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -138,14 +137,12 @@ public class QRGenerator {
         private String nombre;
         private String email;
         private String mcId;
-        private int puntos;
         
-        public ClienteQRData(String clienteId, String nombre, String email, String mcId, int puntos) {
+        public ClienteQRData(String clienteId, String nombre, String email, String mcId) {
             this.clienteId = clienteId;
             this.nombre = nombre;
             this.email = email;
             this.mcId = mcId;
-            this.puntos = puntos;
         }
         
         // Getters
@@ -153,13 +150,5 @@ public class QRGenerator {
         public String getNombre() { return nombre; }
         public String getEmail() { return email; }
         public String getMcId() { return mcId; }
-        public int getPuntos() { return puntos; }
-        
-        public String getNivel() {
-            // Determinar nivel basado en puntos
-            if (puntos >= 1000) return "VIP";
-            else if (puntos >= 500) return "Premium";
-            else return "Regular";
-        }
     }
 }

@@ -270,6 +270,27 @@ public class MisBeneficiosViewModel extends AndroidViewModel {
         limpiarEstadoOtp();
         clearError();
     }
+
+    // Canje directo de beneficio (sin OTP) usando repositorio
+    public void canjearBeneficio(Beneficio beneficio, String sucursalId) {
+        String clienteId = _clienteId.getValue();
+        if (clienteId == null || clienteId.isEmpty()) {
+            return;
+        }
+
+        if (beneficio == null) {
+            return;
+        }
+
+        canjeRepository.registrarCanjeDesdeBeneficio(beneficio, clienteId, sucursalId, result -> {
+            // El estado de carga y errores se reflejan en los LiveData del repositorio
+            if (Boolean.TRUE.equals(result)) {
+                // Opcional: refrescar beneficios y historial
+                beneficioRepository.refreshBeneficios(r -> {});
+                canjeRepository.refreshCanjes(r -> {});
+            }
+        });
+    }
     
     // Utility Methods
     public boolean puedeCanjearse(Beneficio beneficio) {

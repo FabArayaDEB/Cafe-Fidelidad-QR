@@ -98,7 +98,7 @@ public class ClientesAdminAdapter extends RecyclerView.Adapter<ClientesAdminAdap
             textNombre.setText(cliente.getNombre());
             textEmail.setText(cliente.getEmail());
             textTelefono.setText(cliente.getTelefono());
-            textPuntos.setText(String.format("%d puntos", cliente.getPuntosAcumulados()));
+            textPuntos.setText(String.format("%d sellos", cliente.getPuntosAcumulados()));
             
             // Estado
             if (cliente.isActivo()) {

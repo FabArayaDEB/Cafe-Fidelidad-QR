@@ -137,13 +137,13 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
-                <!-- Puntos requeridos -->
+                <!-- Sellos requeridos -->
                 <TextView
                     android:id="@+id/tv_puntos_requeridos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="⭐ 100 puntos requeridos"
+                    android:text="⭐ 100 sellos requeridos"
                     android:textSize="14sp"
                     android:textColor="@color/coffee_accent"
                     android:textStyle="bold"

@@ -27,7 +27,7 @@ Nota: Aunque el proyecto declara dependencias de Room en `build.gradle`, la impl
 
 ### 🔄 En Desarrollo
 - Estrategias de migración en `onUpgrade`
-- Consultas agregadas y reportes avanzados
+- Consultas agregadas (reportes avanzados eliminados)
 - Índices adicionales para columnas de alta consulta
 - Testing automatizado de CRUD y restricciones
 - Exportación/backup del archivo SQLite
@@ -35,7 +35,7 @@ Nota: Aunque el proyecto declara dependencias de Room en `build.gradle`, la impl
 ### 📋 Futuras Mejoras
 - Full-Text Search (FTS) para búsqueda avanzada
 - Encriptación de datos sensibles (SQLCipher)
-- Vistas materializadas para reportes
+- (Se eliminaron referencias a vistas de reportes)
 - Triggers de auditoría y consistencia
 - Índices compuestos y particionado lógico
 

@@ -64,8 +64,8 @@ public class FragmentAdminDashboard extends Fragment {
         setupCardClientes();
         setupCardSucursales();
         setupCardResenas();
-        setupCardEstadisticas();
         setupCardConfiguracion();
+        setupCardScanner();
     }
     
     private void setupCardProductos() {
@@ -103,18 +103,20 @@ public class FragmentAdminDashboard extends Fragment {
         binding.textDescripcionResenas.setText("Ver comentarios de productos y sucursales");
     }
     
-    private void setupCardEstadisticas() {
-        binding.cardEstadisticas.setOnClickListener(v -> navegarAEstadisticas());
-        binding.iconEstadisticas.setImageResource(R.drawable.ic_analytics);
-        binding.textTituloEstadisticas.setText("Estadísticas");
-        binding.textDescripcionEstadisticas.setText("Ver reportes y métricas");
-    }
+    // (Tarjeta de estadísticas eliminada junto con el sistema de reportes)
     
     private void setupCardConfiguracion() {
         binding.cardConfiguracion.setOnClickListener(v -> navegarAConfiguracion());
         binding.iconConfiguracion.setImageResource(R.drawable.ic_settings);
         binding.textTituloConfiguracion.setText("Configuración");
         binding.textDescripcionConfiguracion.setText("Ajustes del sistema");
+    }
+
+    private void setupCardScanner() {
+        binding.cardScanner.setOnClickListener(v -> navegarAEscaner());
+        binding.iconScanner.setImageResource(R.drawable.ic_qr);
+        binding.textTituloScanner.setText("Escanear QR");
+        binding.textDescripcionScanner.setText("Identificar cliente por código QR");
     }
     
     private void setupObservers() {
@@ -199,7 +201,7 @@ public class FragmentAdminDashboard extends Fragment {
         binding.cardBeneficios.setEnabled(enabled);
         binding.cardSucursales.setEnabled(enabled);
         binding.cardResenas.setEnabled(enabled);
-        binding.cardEstadisticas.setEnabled(enabled);
+        // binding.cardEstadisticas eliminado
         binding.cardConfiguracion.setEnabled(enabled);
         
         float alpha = enabled ? 1.0f : 0.6f;
@@ -207,7 +209,7 @@ public class FragmentAdminDashboard extends Fragment {
         binding.cardBeneficios.setAlpha(alpha);
         binding.cardSucursales.setAlpha(alpha);
         binding.cardResenas.setAlpha(alpha);
-        binding.cardEstadisticas.setAlpha(alpha);
+        // binding.cardEstadisticas eliminado
         binding.cardConfiguracion.setAlpha(alpha);
     }
     
@@ -291,10 +293,7 @@ public class FragmentAdminDashboard extends Fragment {
         }
     }
     
-    private void navegarAEstadisticas() {
-        // TODO: Implementar fragmento de estadísticas simplificado
-        Toast.makeText(getContext(), "Funcionalidad de estadísticas en desarrollo", Toast.LENGTH_SHORT).show();
-    }
+    // (Navegación a estadísticas eliminada)
     
     private void navegarAConfiguracion() {
         try {
@@ -302,6 +301,15 @@ public class FragmentAdminDashboard extends Fragment {
             Toast.makeText(getContext(), "Configuración - Próximamente", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a configuración", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void navegarAEscaner() {
+        try {
+            android.content.Intent intent = new android.content.Intent(getContext(), com.example.cafefidelidaqrdemo.activities.QRScannerActivity.class);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error al abrir escáner", Toast.LENGTH_SHORT).show();
         }
     }
     

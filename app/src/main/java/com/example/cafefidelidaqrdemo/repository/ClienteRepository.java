@@ -179,7 +179,7 @@ public class ClienteRepository {
     }
     
     /**
-     * Actualiza los puntos de un cliente
+     * Actualiza los sellos de un cliente (compatibilidad: usa campo puntosAcumulados).
      */
     public void actualizarPuntosCliente(int clienteId, int nuevosPuntos, ClienteCallback callback) {
         executor.execute(() -> {
@@ -190,19 +190,19 @@ public class ClienteRepository {
                     int rowsAffected = database.actualizarCliente(cliente);
                     if (rowsAffected > 0) {
                         callback.onSuccess(cliente);
-                        successLiveData.postValue("Puntos actualizados exitosamente");
+                        successLiveData.postValue("Sellos actualizados exitosamente");
                         // Actualizar el cliente actual si es el mismo
                         currentClienteLiveData.postValue(cliente);
                     } else {
-                        callback.onError("No se pudieron actualizar los puntos");
+                        callback.onError("No se pudieron actualizar los sellos");
                     }
                 } else {
                     callback.onError("Cliente no encontrado");
                 }
             } catch (Exception e) {
-                callback.onError("Error al actualizar puntos: " + e.getMessage());
-                errorLiveData.postValue("Error al actualizar puntos: " + e.getMessage());
-            }
+                callback.onError("Error al actualizar sellos: " + e.getMessage());
+                errorLiveData.postValue("Error al actualizar sellos: " + e.getMessage());
+    }
         });
     }
     

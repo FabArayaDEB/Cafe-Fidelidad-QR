@@ -3,9 +3,9 @@
     <string name="default_web_client_id">464976623071-mdmjkfmvibimuqtejhchmodhsj36dhta.apps.googleusercontent.com</string>
 
     <string name="item_perfil">Mi Perfil</string>
-    <string name="item_usuarios">Puntos</string>
+    <string name="item_usuarios">Sellos</string>
     <string name="item_chat">Escanear QR</string>
-    <string name="item_puntos">Puntos</string>
+    <string name="item_puntos">Sellos</string>
     <string name="item_qr">Escanear QR</string>
 
     <string name="tv_Titulo">Titulo</string>
@@ -47,30 +47,30 @@
     <string name="btn_SendCode">Enviar</string>
     
     <!-- Nuevos strings para funcionalidades de cafetería -->
-    <string name="txt_puntos_actuales">Puntos Actuales:</string>
+    <string name="txt_puntos_actuales">Sellos actuales:</string>
     <string name="txt_escanear_qr">Escanear Código QR</string>
-    <string name="txt_historial_puntos">Historial de Puntos</string>
+    <string name="txt_historial_puntos">Historial de sellos</string>
     <string name="txt_promociones">Promociones Disponibles</string>
-    <string name="txt_canjear_puntos">Canjear Puntos</string>
+    <string name="txt_canjear_puntos">Canjear sellos</string>
     <string name="txt_bienvenido_cafe">¡Bienvenido a Café Fidelidad!</string>
-    <string name="txt_programa_fidelidad">Acumula puntos con cada compra y disfruta de increíbles beneficios</string>
+    <string name="txt_programa_fidelidad">Acumula sellos con cada compra y disfruta de increíbles beneficios</string>
     <string name="txt_unete_cafe">Únete a nuestro programa de fidelidad</string>
     <string name="txt_nivel_fidelidad">Nivel de Fidelidad:</string>
     <string name="txt_total_compras">Total de Compras:</string>
-    <string name="txt_puntos_siguiente_nivel">Puntos para siguiente nivel:</string>
+    <string name="txt_puntos_siguiente_nivel">Sellos para siguiente beneficio:</string>
     <string name="txt_ultima_visita">Última Visita:</string>
-    <string name="txt_sin_transacciones">No hay transacciones registradas</string>
-    <string name="txt_puntos_ganados">Puntos Ganados</string>
+    <string name="txt_sin_transacciones">No hay actividad de sellos registrada</string>
+    <string name="txt_puntos_ganados">Sellos ganados</string>
     <string name="txt_monto_compra">Monto de Compra:</string>
-    <string name="txt_fecha_transaccion">Fecha:</string>
+    <string name="txt_fecha_transaccion">Fecha</string>
     <string name="txt_camara_no_disponible">Cámara no disponible</string>
     <string name="txt_iniciar_escaneo">Iniciar Escaneo</string>
-    <string name="txt_ultima_transaccion">Última Transacción</string>
-    <string name="txt_escanea_qr_puntos">Escanea códigos QR para ganar puntos</string>
+    <string name="txt_ultima_transaccion">Última actividad de sellos</string>
+    <string name="txt_escanea_qr_puntos">Escanea códigos QR para registrar sellos</string>
     <string name="txt_para_siguiente">para siguiente nivel</string>
     <string name="txt_nivel_actual">Nivel Actual:</string>
     <string name="txt_compras_totales">Compras Totales:</string>
-    <string name="txt_mis_puntos">Mis Puntos</string>
+    <string name="txt_mis_puntos">Mis Sellos</string>
     <string name="txt_nivel_lealtad">Nivel de Lealtad:</string>
     <string name="txt_monto">Monto:</string>
     <string name="txt_fecha">Fecha:</string>
@@ -93,7 +93,7 @@
     <string name="beneficios_usados">Usados</string>
     <string name="beneficios_expirados">Expirados</string>
     <string name="sin_beneficios">No tienes beneficios</string>
-    <string name="sin_beneficios_descripcion">Acumula más puntos para obtener beneficios</string>
+    <string name="sin_beneficios_descripcion">Acumula más sellos para obtener beneficios</string>
     <string name="usar_beneficio">Usar</string>
     <string name="beneficio_usado">Usado</string>
     <string name="beneficio_expirado">Expirado</string>
@@ -130,7 +130,7 @@
     <string name="stock_disponible">Stock disponible: %d unidades</string>
     <string name="calorias">Calorías: %d</string>
     <string name="ingredientes">Ingredientes: %s</string>
-    <string name="puntos_requeridos">%d puntos requeridos</string>
+    <string name="puntos_requeridos">%d sellos requeridos</string>
     <string name="vegano">Vegano</string>
     <string name="vegetariano">Vegetariano</string>
     <string name="sin_lactosa">Sin Lactosa</string>

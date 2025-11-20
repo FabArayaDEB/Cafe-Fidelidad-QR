@@ -83,17 +83,7 @@ public class Cliente {
         this.fechaActualizacion = System.currentTimeMillis();
     }
 
-    public String getNivel() {
-        if (puntosAcumulados >= 1000) {
-            return "Oro";
-        } else if (puntosAcumulados >= 500) {
-            return "Plata";
-        } else if (puntosAcumulados >= 100) {
-            return "Bronce";
-        } else {
-            return "Básico";
-        }
-    }
+    // Sistema de niveles eliminado: no se expone nivel
 
     @Override
     public String toString() {

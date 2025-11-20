@@ -10,8 +10,7 @@ El directorio `utils` contiene **clases de utilidad y helpers** usados en toda l
 - `NetworkUtils`: verificación básica de conectividad (`isNetworkAvailable`), inicialización de contexto (`init`).
 - `QRGenerator`: generación y validación de QR de cliente con ZXing; parseo a `ClienteQRData`.
 - `QRValidator`: validaciones auxiliares de contenido QR (estructura y prefijos). 
-- `LocationUtils`: utilidades de ubicación (permisos, cálculo de distancia Haversine, formatos de distancia, validación de coordenadas).
-- `LocationManager`: envoltorio simplificado sobre `android.location.LocationManager` con `LiveData` para ubicación y errores, start/stop updates.
+- Utilidades varias de la capa `utils` para formato, validación y soporte de componentes comunes.
 - `SearchManager`: búsqueda y filtrado local de `Sucursal` + ordenamiento por distancia, helpers `SucursalWithDistance`.
 
 ## Estado del Proyecto
@@ -20,7 +19,7 @@ El directorio `utils` contiene **clases de utilidad y helpers** usados en toda l
 - Gestión de sesión (`SessionManager`).
 - Conectividad básica (`NetworkUtils`).
 - QR de cliente (generación/validación/parseo) con ZXing (`QRGenerator`).
-- Utilidades de ubicación (`LocationUtils`) y gestor simplificado (`LocationManager`).
+- Utilidades transversales para soporte de UI, datos y helpers.
 - Búsqueda/filtrado local (`SearchManager`).
 
 ### 🔄 En Desarrollo

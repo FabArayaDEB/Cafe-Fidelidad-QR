@@ -82,7 +82,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Puntos:"
+                android:text="Sellos:"
                 android:textStyle="bold"
                 android:textColor="@color/on_surface" />
 
@@ -97,29 +97,7 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Nivel:"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface" />
-
-            <TextView
-                android:id="@+id/tvClientLevel"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:text=""
-                android:textColor="@color/secondary"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+        <!-- Sistema de niveles eliminado: se retira sección de nivel -->
 
     </LinearLayout>
 

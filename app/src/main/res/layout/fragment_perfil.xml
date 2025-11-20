@@ -249,22 +249,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
-            <!-- Nivel de Lealtad -->
-            <TextView
-                android:id="@+id/txt_nivel"
-                android:text="@string/txt_nivel_lealtad"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_nivel"
-                android:text="bajo"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <!-- Sistema de niveles eliminado -->
 
             <!-- Compras Totales -->
             <TextView
@@ -283,22 +268,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
-            <!-- Puntos para Siguiente Nivel -->
-            <TextView
-                android:id="@+id/txt_puntos_siguiente"
-                android:text="@string/txt_puntos_siguiente_nivel"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_puntos_siguiente"
-                android:text="0"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <!-- Sellos para siguiente nivel eliminados -->
 
             <!-- Última Visita -->
             <TextView

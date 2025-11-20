@@ -345,6 +345,11 @@ public class FragmentProductosAdmin extends Fragment {
         });
     }
     
+    /**
+     * Valida los campos del formulario de producto.
+     * Verifica nombre, precio y sellos requeridos, estableciendo errores en los campos
+     * cuando el valor está vacío, es inválido o negativo. Devuelve true si todo es válido.
+     */
     private boolean validarFormularioProducto(DialogProductoBinding dialogBinding) {
         boolean esValido = true;
         
@@ -373,20 +378,20 @@ public class FragmentProductosAdmin extends Fragment {
             }
         }
         
-        // Validar puntos requeridos
+        // Validar sellos requeridos
         String puntosStr = dialogBinding.editPuntos.getText().toString().trim();
         if (puntosStr.isEmpty()) {
-            dialogBinding.editPuntos.setError("Los puntos son obligatorios");
+            dialogBinding.editPuntos.setError("Los sellos son obligatorios");
             esValido = false;
         } else {
             try {
                 int puntos = Integer.parseInt(puntosStr);
                 if (puntos < 0) {
-                    dialogBinding.editPuntos.setError("Los puntos no pueden ser negativos");
+                    dialogBinding.editPuntos.setError("Los sellos no pueden ser negativos");
                     esValido = false;
                 }
             } catch (NumberFormatException e) {
-                dialogBinding.editPuntos.setError("Ingrese puntos válidos");
+                dialogBinding.editPuntos.setError("Ingrese sellos válidos");
                 esValido = false;
             }
         }

@@ -102,13 +102,13 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Campo Puntos Acumulados -->
+        <!-- Campo Sellos Acumulados -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layout_puntos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Puntos acumulados"
+            android:hint="Sellos acumulados"
             app:startIconDrawable="@drawable/ic_star"
             app:endIconMode="clear_text"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
