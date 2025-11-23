@@ -1,7 +1,6 @@
+# --- Android Standard ---
 *.iml
 .gradle/
-daemon/
-wrapper/dists/
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -14,5 +13,16 @@ wrapper/dists/
 /captures
 .externalNativeBuild
 .cxx
-local.properties
-caches/
+
+# --- Reglas Agresivas (Para evitar tus errores actuales) ---
+# Ignorar librerías de sistema y temporales
+*.dll
+*.so
+*.dylib
+
+# Ignorar carpetas basura en cualquier profundidad (**)
+**/native/
+**/cxx/
+**/caches/
+**/daemon/
+**/wrapper/dists/
