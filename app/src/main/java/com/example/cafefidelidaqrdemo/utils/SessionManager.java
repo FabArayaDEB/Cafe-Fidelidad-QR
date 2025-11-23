@@ -8,6 +8,10 @@ import android.content.SharedPreferences;
  */
 public class SessionManager {
     private static final String PREF_NAME = "CafeFidelidadSession";
+    // Clave para almacenar el contenido del QR (el UUID)
+    private static final String KEY_QR_CONTENT = "qr_code_content";
+    // Clave para almacenar el timestamp de la última generación (en milisegundos)
+    private static final String KEY_LAST_GENERATION_TIME = "last_generation_time";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_USER_NAME = "user_name";
@@ -66,5 +70,30 @@ public class SessionManager {
     public void logout() {
         editor.clear();
         editor.apply();
+    }
+
+    /**
+     * Guarda el contenido del QR y la marca de tiempo actual.
+     */
+    public void saveQRCode(String content) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(KEY_QR_CONTENT, content);
+        editor.putLong(KEY_LAST_GENERATION_TIME, System.currentTimeMillis());
+        editor.apply();
+    }
+
+    /**
+     * Recupera el contenido del QR guardado.
+     */
+    public String getQRCodeContent() {
+        return preferences.getString(KEY_QR_CONTENT, null);
+    }
+
+    /**
+     * Recupera la marca de tiempo de la última generación del QR.
+     */
+    public long getLastGenerationTime() {
+        // Devuelve 0L si no existe, lo que forzará una regeneración la primera vez.
+        return preferences.getLong(KEY_LAST_GENERATION_TIME, 0L);
     }
 }

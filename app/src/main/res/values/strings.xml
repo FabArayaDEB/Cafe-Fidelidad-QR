@@ -45,7 +45,7 @@
     <string name="txt_forgotPass">Recuperar Contraseña</string>
     <string name="txt_SendCode">Ingrese su correo para enviar las instrucciones de recuperación</string>
     <string name="btn_SendCode">Enviar</string>
-    
+
     <!-- Nuevos strings para funcionalidades de cafetería -->
     <string name="txt_puntos_actuales">Puntos Actuales:</string>
     <string name="txt_escanear_qr">Escanear Código QR</string>
@@ -77,15 +77,15 @@
     <string name="btn_iniciar_escaner">Iniciar Escáner</string>
     <string name="txt_instrucciones_qr">Apunta la cámara hacia el código QR para escanearlo</string>
     <string name="txt_bienvenida_cafe">¡Bienvenido!</string>
-    
+
     <!-- Historial -->
     <string name="historial">Historial</string>
     <string name="sin_historial">No hay historial disponible</string>
     <string name="sin_historial_descripcion">Aquí aparecerán tus visitas y canjes realizados</string>
-    
+
     <!-- Catálogo -->
     <string name="catalogo">Catálogo</string>
-    
+
     <!-- Beneficios -->
     <string name="beneficios">Beneficios</string>
     <string name="mis_beneficios">Mis Beneficios</string>
@@ -138,7 +138,7 @@
     <string name="descripcion">Descripción</string>
     <string name="informacion_nutricional">Información Nutricional</string>
     <string name="caracteristicas">Características:</string>
-    
+
     <!-- Strings adicionales -->
     <string name="offline_mode">Modo sin conexión</string>
     <string name="search_products_hint">Buscar productos...</string>
@@ -160,4 +160,6 @@
     <string name="get_location">Obtener ubicación</string>
     <string name="more_options">Más opciones</string>
     <string name="loading_products">Cargando productos...</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

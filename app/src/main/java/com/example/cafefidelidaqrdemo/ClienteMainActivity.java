@@ -12,6 +12,9 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.databinding.ActivityClienteMainBinding;
+import com.example.cafefidelidaqrdemo.databinding.FragmentProgresoFidelizacionBinding;
+import com.example.cafefidelidaqrdemo.fragments.FragmentQrVisitaCliente;
+import com.example.cafefidelidaqrdemo.ui.cliente.FragmentProgresoFidelizacion;
 import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
@@ -99,6 +102,7 @@ public class ClienteMainActivity extends AppCompatActivity {
                     verBeneficios();
                     return true;
                 } else if (itemId == R.id.item_qr) {
+                    //Se implememnto el fragmento de QR visitas cliente
                     verFragQR();
                     viewModel.setToolbarTitle("Escanear QR");
                     return true;
@@ -136,8 +140,11 @@ public class ClienteMainActivity extends AppCompatActivity {
      */
     private void verFragQR(){
         binding.tvTitulo.setText("Escanear QR");
-        // TODO: Implementar fragmento de QR simplificado
-        Toast.makeText(this, "Funcionalidad de QR en desarrollo", Toast.LENGTH_SHORT).show();
+
+        FragmentQrVisitaCliente fragment = new FragmentQrVisitaCliente();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentQR");
+        fragmentTransaction.commit();
     }
     
     /**
@@ -152,8 +159,10 @@ public class ClienteMainActivity extends AppCompatActivity {
      * Abre la actividad de beneficios
      */
     private void verBeneficios(){
-        Intent intent = new Intent(this, BeneficiosActivity.class);
-        startActivity(intent);
+        FragmentProgresoFidelizacion fragment = new FragmentProgresoFidelizacion();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentQR");
+        fragmentTransaction.commit();
     }
     
     // Métodos de sincronización offline removidos para simplificación
@@ -176,6 +185,10 @@ public class ClienteMainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    public void navegarItem(int itemId) {
+        binding.bottomNV.setSelectedItemId(itemId);
     }
     
     @Override

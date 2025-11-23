@@ -5,26 +5,31 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.cafefidelidaqrdemo.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.CodigoQr;
 import com.example.cafefidelidaqrdemo.repository.ClienteRepository;
+import com.example.cafefidelidaqrdemo.repository.CodigoQrRepository;
 import com.example.cafefidelidaqrdemo.utils.QRGenerator;
 import com.example.cafefidelidaqrdemo.utils.SessionManager;
+import com.google.zxing.WriterException;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import kotlin.jvm.internal.MutableLocalVariableReference;
 
 /**
  * ViewModel para manejar la generación y gestión del QR personal del cliente
  */
 public class ClienteQRViewModel extends AndroidViewModel {
-    
     private final ClienteRepository clienteRepository;
     private final SessionManager sessionManager;
     private final ExecutorService executor;
     
     private final MutableLiveData<Bitmap> _qrBitmap = new MutableLiveData<>();
     public final LiveData<Bitmap> qrBitmap = _qrBitmap;
-    
     private final MutableLiveData<Cliente> _clienteData = new MutableLiveData<>();
     public final LiveData<Cliente> clienteData = _clienteData;
     
@@ -38,7 +43,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
         super(application);
         this.clienteRepository = new ClienteRepository(application);
         this.sessionManager = new SessionManager(application);
-        this.executor = Executors.newFixedThreadPool(2);
+        this.executor = Executors.newFixedThreadPool(5);
         
         loadClienteData();
     }
@@ -105,6 +110,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
     private void generateQRCode(Cliente cliente) {
         executor.execute(() -> {
             try {
+
                 Bitmap qrBitmap = QRGenerator.generateClientQR(
                     String.valueOf(cliente.getId()),
                     cliente.getNombre(),
@@ -198,7 +204,7 @@ public class ClienteQRViewModel extends AndroidViewModel {
     public void clearError() {
         _error.setValue(null);
     }
-    
+
     @Override
     protected void onCleared() {
         super.onCleared();

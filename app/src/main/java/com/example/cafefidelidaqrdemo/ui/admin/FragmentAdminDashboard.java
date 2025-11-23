@@ -20,6 +20,8 @@ import com.example.cafefidelidaqrdemo.ui.admin.FragmentBeneficiosAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentClientesAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentSucursalesAdmin;
 import com.example.cafefidelidaqrdemo.ui.admin.FragmentResenasAdmin;
+import com.example.cafefidelidaqrdemo.ui.admin.FragmentScannerQr;
+
 
 /**
  * Fragment principal del módulo de administración
@@ -66,6 +68,7 @@ public class FragmentAdminDashboard extends Fragment {
         setupCardResenas();
         setupCardEstadisticas();
         setupCardConfiguracion();
+        setUpCardScanner();
     }
     
     private void setupCardProductos() {
@@ -115,6 +118,12 @@ public class FragmentAdminDashboard extends Fragment {
         binding.iconConfiguracion.setImageResource(R.drawable.ic_settings);
         binding.textTituloConfiguracion.setText("Configuración");
         binding.textDescripcionConfiguracion.setText("Ajustes del sistema");
+    }
+
+    private void setUpCardScanner() {
+        binding.cardEscaner.setOnClickListener(v -> navegarAScanner());
+        binding.iconEscaner.setImageResource(R.drawable.ic_qr_code_scanner);
+        binding.textTituloEscaner.setText("Escanner");
     }
     
     private void setupObservers() {
@@ -302,6 +311,18 @@ public class FragmentAdminDashboard extends Fragment {
             Toast.makeText(getContext(), "Configuración - Próximamente", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error al navegar a configuración", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void navegarAScanner() {
+        try {
+            FragmentScannerQr fragment = new FragmentScannerQr();
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragmentFL, fragment);
+            transaction.addToBackStack("ScannerQr");
+            transaction.commit();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error al navegar a sucursales", Toast.LENGTH_SHORT).show();
         }
     }
     

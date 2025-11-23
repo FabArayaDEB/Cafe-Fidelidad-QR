@@ -11,9 +11,10 @@ import java.util.concurrent.Executors;
  * Proporciona funcionalidades comunes como manejo de estados y threading
  */
 public abstract class BaseRepository {
-    
+
+    //Executor para operaciones asíncronas
     protected final ExecutorService executor;
-    
+
     // Estados comunes para todos los repositorios
     protected final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
     protected final MutableLiveData<String> _errorMessage = new MutableLiveData<>();

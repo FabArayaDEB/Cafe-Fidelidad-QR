@@ -115,10 +115,10 @@ public class Beneficio implements Serializable {
 
     // Métodos de utilidad
     public boolean esValido() {
-        long ahora = System.currentTimeMillis();
-        return activo && 
+        long  tiempo = System.currentTimeMillis();
+        return activo &&
                "disponible".equals(estado) &&
-               (fechaVencimiento == 0 || ahora < fechaVencimiento);
+               (fechaVencimiento == 0 || tiempo < fechaVencimiento);
     }
 
     public boolean estaVencido() {

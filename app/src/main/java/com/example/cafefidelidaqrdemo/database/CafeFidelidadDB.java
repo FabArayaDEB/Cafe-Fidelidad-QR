@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.cafefidelidaqrdemo.models.Beneficio;
 import com.example.cafefidelidaqrdemo.models.Canje;
 import com.example.cafefidelidaqrdemo.models.Cliente;
+import com.example.cafefidelidaqrdemo.models.CodigoQr;
 import com.example.cafefidelidaqrdemo.models.Producto;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.models.Visita;
@@ -34,6 +35,10 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String TABLE_BENEFICIOS = "beneficios";
     private static final String TABLE_VISITAS = "visitas";
     private static final String TABLE_CANJES = "canjes";
+
+    // Nombre de la tabla de QR
+    private static final String TABLE_QR = "codigoQr";
+
     // Tablas de reseñas
     private static final String TABLE_RESENAS_PRODUCTOS = "resenas_productos";
     private static final String TABLE_RESENAS_SUCURSALES = "resenas_sucursales";
@@ -96,7 +101,16 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String COLUMN_RESENA_COMENTARIO = "comentario";
     private static final String COLUMN_RESENA_FECHA_CREACION = "fecha_creacion";
     private static final String COLUMN_RESENA_FECHA_ACTUALIZACION = "fecha_actualizacion";
-    
+
+    // Columnas tabla QR
+    private static final String COLUMN_ID_QR = "IdCodigoQr";
+    private static final String COLUMN_ID_CLIENTE = "idCliente";
+    private static final String COLUMN_CONTENT_QR = "ContentQr";
+    private static final String COLUMN_IS_SCANNED = "isScanned";
+    private static final String COLUMN_GENERATION_TIME = "generationTime";
+    private static final String COLUMN_ESTADO = "estado";
+
+
     // Sentencias SQL para crear las tablas
     private static final String CREATE_TABLE_CLIENTES = "CREATE TABLE " + TABLE_CLIENTES + " (" +
             COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -106,6 +120,16 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             COLUMN_CLIENTE_PASSWORD + " TEXT NOT NULL, " +
             COLUMN_CLIENTE_PUNTOS + " INTEGER DEFAULT 0, " +
             COLUMN_CLIENTE_ACTIVO + " INTEGER DEFAULT 1" +
+            ");";
+
+    // Creacion de tabla QR.
+    private static final String CREATE_TABLE_QR = "CREATE TABLE " + TABLE_QR + " (" +
+            COLUMN_ID_QR + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_ID_CLIENTE + " TEXT NOT NULL, " + //String por el cliente de prueba
+            COLUMN_CONTENT_QR + " TEXT NOT NULL, " +
+            COLUMN_IS_SCANNED + " INTEGER DEFAULT 0, " +
+            COLUMN_GENERATION_TIME + " INTEGER NOT NULL, " +
+            COLUMN_ESTADO + " TEXT  NOT NULL DEFAULT 'ACTIVO'" +
             ");";
     
     private static final String CREATE_TABLE_PRODUCTOS = "CREATE TABLE " + TABLE_PRODUCTOS + " (" +
@@ -209,6 +233,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         // Crear tablas de reseñas
         db.execSQL(CREATE_TABLE_RESENAS_PRODUCTOS);
         db.execSQL(CREATE_TABLE_RESENAS_SUCURSALES);
+        //Crear tabla de QR.
+        db.execSQL(CREATE_TABLE_QR);
         // Índices para reseñas
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_producto ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_PRODUCTO_ID + ")");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_productos_usuario ON " + TABLE_RESENAS_PRODUCTOS + "(" + COLUMN_RESENA_USUARIO_ID + ")");
@@ -239,6 +265,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUCURSALES);
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTOS);
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_CLIENTES);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_QR);
                 onCreate(db);
             }
         }
@@ -298,6 +325,163 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         
         Log.d(TAG, "Datos de ejemplo insertados");
     }
+
+    // Metodos CRUD PARA QR.
+
+    // Insertar un nuevo codigo QR en la DB con contenido aleatorio y id del usuario registrado
+    public long insertarCodigoQr(CodigoQr codigoQr, String idCliente) {
+        Log.d(TAG, "Iniciando inserción de código QR.");
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COLUMN_ID_CLIENTE, idCliente);
+        values.put(COLUMN_CONTENT_QR, codigoQr.getContentQr());
+        values.put(COLUMN_GENERATION_TIME, codigoQr.getGenerationTime());
+
+        Log.d(TAG, "Datos del QR a insertar:");
+        Log.d(TAG, "idCliente: " + idCliente);
+        Log.d(TAG, "ContentQr: " + codigoQr.getContentQr());
+        Log.d(TAG, "GenerationTime: " + codigoQr.getGenerationTime());
+
+        Log.d(TAG, "Realizando consulta");
+        long id = db.insert(TABLE_QR, null, values);
+        if (id == -1) {
+            Log.e(TAG, "Error al insertar código QR en la base de datos");
+        } else {
+            Log.d(TAG, "Código QR insertado exitosamente con ID: " + id);
+        }
+
+        Log.d(TAG, "Insercion realizada con exito");
+        db.close();
+        return id;
+    }
+
+    // Actualizacion de codigo solamente del estado y de isScanned para cambiar al momento de escanear el QR
+    public int actualizarCodigoQr(CodigoQr codigoQr) {
+        Log.d(TAG, "Iniciando actualización de código QR.");
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        Log.d(TAG, "Datos del QR a actualizar:");
+        Log.d(TAG, "idCliente: " + codigoQr.getIdCliente());
+        Log.d(TAG, "ContentQr: " + codigoQr.getContentQr());
+        Log.d(TAG, "isScanned: " + codigoQr.isScanned());
+        Log.d(TAG, "GenerationTime: " + codigoQr.getGenerationTime());
+        Log.d(TAG, "Estado: " + codigoQr.getEstado());
+
+        values.put(COLUMN_IS_SCANNED, codigoQr.isScanned() ? 1 : 0);
+        values.put(COLUMN_ESTADO, codigoQr.getEstado());
+
+        Log.d(TAG, "Realizando consulta");
+        int rowsAffected = db.update(TABLE_QR, values, COLUMN_ID_QR + "=?",
+                new String[]{String.valueOf(codigoQr.getIdCodigoQr())});
+
+        if (rowsAffected <= 0) {
+            Log.e(TAG, "No se encontraron registros para actualizar");
+            return -1;
+        }
+        Log.d(TAG, "Modificacion realizada exitosamente");
+
+        db.close();
+        return rowsAffected;
+    }
+
+    // No utilizado ya que no tenemos listado de los QR
+    public List<CodigoQr> obtenerTodosLosCodigosQr() {
+        Log.d(TAG, "Iniciando obtención de todos los códigos QR");
+        List<CodigoQr> codigosQr = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Log.d(TAG, "Realizando consulta");
+        Cursor cursor = db.query(TABLE_QR, null, null, null, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                CodigoQr codigoQr = new CodigoQr();
+                codigoQr.setIdCodigoQr(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_QR)));
+                codigoQr.setIdCliente(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_CLIENTE))));
+                codigoQr.setContentQr(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT_QR)));
+                codigoQr.setIsScanned(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_SCANNED)) == 1);
+                codigoQr.setGenerationTime(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GENERATION_TIME)));
+                codigoQr.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ESTADO)));
+                codigosQr.add(codigoQr);
+            } while (cursor.moveToNext());
+            Log.d(TAG, "Todos los códigos QR obtenidos exitosamente");
+        }
+
+        cursor.close();
+        db.close();
+        return codigosQr;
+    }
+
+    // Buscar el QR por el contenido y no por el id ya que al momento de crear uno nuevo carecemos
+    // del saber la existencia de un QR
+    public CodigoQr obtenerCodigoQrPorContent(String content) {
+        Log.d(TAG, "Iniciando obtención de código QR por content: " + content);
+        SQLiteDatabase db = this.getReadableDatabase();
+        CodigoQr codigoQr = null;
+
+        Log.d(TAG, "Realizando consulta");
+        Cursor cursor = db.query(TABLE_QR, null, COLUMN_CONTENT_QR + "=?", new String[]{content}, null, null, null);
+
+        if(cursor != null && cursor.moveToFirst()) {
+            codigoQr = new CodigoQr();
+            codigoQr.setIdCodigoQr(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_QR)));
+            codigoQr.setIdCliente(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_CLIENTE))));
+            codigoQr.setContentQr(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT_QR)));
+            codigoQr.setIsScanned(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_SCANNED)) == 1);
+            codigoQr.setGenerationTime(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GENERATION_TIME)));
+            codigoQr.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ESTADO)));
+        }
+        Log.d(TAG, "Código QR obtenido exitosamente");
+
+
+        cursor.close();
+        db.close();
+        return codigoQr;
+    }
+
+    // Buscar por id y content para cuando se lea el codigo QR desde la camara del admin
+    public CodigoQr obtenerCodigoQrPorIdAndContent(int idCodigoQr, String content) {
+        Log.d(TAG, "Iniciando obtención de código QR por id: " + idCodigoQr);
+        SQLiteDatabase db = this.getReadableDatabase();
+        CodigoQr codigoQr = null;
+
+        Log.d(TAG, "Realizando consulta");
+        Cursor cursor = db.query(TABLE_QR, null, COLUMN_ID_QR + "=? AND " + COLUMN_CONTENT_QR + "=?", new String[]{String.valueOf(idCodigoQr), content}, null, null, null);
+
+        if(cursor != null && cursor.moveToFirst()) {
+            codigoQr = new CodigoQr();
+            codigoQr.setIdCodigoQr(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_QR)));
+            codigoQr.setIdCliente(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID_CLIENTE))));
+            codigoQr.setContentQr(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT_QR)));
+            codigoQr.setIsScanned(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_SCANNED)) == 1);
+            codigoQr.setGenerationTime(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GENERATION_TIME)));
+            codigoQr.setEstado(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ESTADO)));
+        }
+        Log.d(TAG, "Código QR obtenido exitosamente");
+
+        cursor.close();
+        db.close();
+        return codigoQr;
+    }
+
+    // Buscar existencia del codigo al momento de crear uno nuevo
+    public boolean existeCodigoQr(String contentQr, String idCliente) {
+         Log.d(TAG, "Iniciando verificación de código QR existente: " + contentQr);
+         SQLiteDatabase db = this.getReadableDatabase();
+
+         Log.d(TAG, "Realizando consulta");
+         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_QR + " WHERE " + COLUMN_CONTENT_QR + "=?" + " AND " + COLUMN_ID_CLIENTE + "=?", new String[]{contentQr, idCliente});
+         if (cursor != null && cursor.moveToFirst()) {
+             int count = cursor.getInt(0);
+             cursor.close();
+             Log.d(TAG, "Verificacion ralizada correctamente");
+             return count > 0;
+         }
+        Log.d(TAG, "Verificacion exitosa: false");
+         return false;
+     }
     
     // MÉTODOS CRUD PARA CLIENTES
     
@@ -337,7 +521,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cliente cliente = null;
         
-        Cursor cursor = db.query(TABLE_CLIENTES, null, COLUMN_ID + "=?", 
+        Cursor cursor = db.query(TABLE_CLIENTES, null, COLUMN_ID + "=?",
                 new String[]{String.valueOf(id)}, null, null, null);
         
         if (cursor != null && cursor.moveToFirst()) {
@@ -441,7 +625,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_CLIENTE_PUNTOS, cliente.getPuntosAcumulados());
         values.put(COLUMN_CLIENTE_ACTIVO, cliente.isActivo() ? 1 : 0);
         
-        int rowsAffected = db.update(TABLE_CLIENTES, values, COLUMN_ID + "=?", 
+        int rowsAffected = db.update(TABLE_CLIENTES, values, COLUMN_ID + "=?",
                 new String[]{String.valueOf(cliente.getId())});
         db.close();
         

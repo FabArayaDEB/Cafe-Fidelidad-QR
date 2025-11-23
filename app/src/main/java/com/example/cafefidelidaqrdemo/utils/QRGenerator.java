@@ -9,6 +9,7 @@ import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -126,6 +127,43 @@ public class QRGenerator {
         }
     }
 
+    //Crear un String aleatorio para crear un qr unico para el cliente
+    public static String generarcontenidoQrVisitaAleatorio() {
+        return UUID.randomUUID().toString();
+    }
+
+    //Crear el codigo qr para la visita del cliente
+    public static Bitmap generarQrVisita(String content, String idCodigoQr) throws WriterException {
+
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        String datosBitMatrix = content + "|" + idCodigoQr;
+
+        BitMatrix bitMatrix = multiFormatWriter.encode(
+                datosBitMatrix,
+                BarcodeFormat.QR_CODE,
+                QR_SIZE,
+                QR_SIZE
+        );
+
+        int matrixWidth = bitMatrix.getWidth();
+        int matrixHeight = bitMatrix.getHeight();
+
+        int[] pixels = new int[matrixWidth * matrixHeight];
+
+        for (int y = 0; y < matrixHeight; y++) {
+            int offset = y * matrixWidth;
+            for (int x = 0; x < matrixWidth; x++) {
+                pixels[offset + x] = bitMatrix.get(x, y) ?
+                        Color.BLACK :
+                        Color.WHITE;
+            }
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, matrixWidth, 0, 0, matrixWidth, matrixHeight);
+
+        return bitmap;
+    }
     private static String nombrar(String s) {
         return s == null ? "" : s;
     }

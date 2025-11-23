@@ -235,7 +235,7 @@
                             android:layout_height="wrap_content"
                             android:text="Gestionar catálogo de productos"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                         <TextView
                             android:id="@+id/textContadorProductos"
@@ -298,7 +298,7 @@
                             android:layout_height="wrap_content"
                             android:text="Administrar promociones y ofertas"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                         <TextView
                             android:id="@+id/textContadorBeneficios"
@@ -362,7 +362,7 @@
                             android:layout_height="wrap_content"
                             android:text="Administrar usuarios y fidelización"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                         <TextView
                             android:id="@+id/textContadorClientes"
@@ -426,7 +426,7 @@
                             android:layout_height="wrap_content"
                             android:text="Gestionar ubicaciones y horarios"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                         <TextView
                             android:id="@+id/textContadorSucursales"
@@ -490,7 +490,7 @@
                             android:layout_height="wrap_content"
                             android:text="Ver reportes y análisis"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                     </LinearLayout>
 
@@ -503,6 +503,7 @@
                 android:id="@+id/cardConfiguracion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
                 android:clickable="true"
@@ -543,7 +544,7 @@
                             android:layout_height="wrap_content"
                             android:text="Ajustes del sistema"
                             android:textSize="14sp"
-                            android:textColor="@color/color_on_surface_variant" />
+                            android:textColor="@android:color/darker_gray" />
 
                     </LinearLayout>
 
@@ -596,6 +597,60 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Ver comentarios de productos y sucursales"
+                            android:textSize="14sp"
+                            android:textColor="@android:color/darker_gray" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Carta de escaneo para admin -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardEscaner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/iconEscaner"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_qr_code_scanner" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/textTituloEscaner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Escáner de Visitas"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/color_primary" />
+
+                        <TextView
+                            android:id="@+id/textDescripcionEscaner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Registrar visita de cliente mediante QR"
                             android:textSize="14sp"
                             android:textColor="@android:color/darker_gray" />
 

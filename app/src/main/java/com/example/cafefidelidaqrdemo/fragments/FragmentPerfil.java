@@ -36,19 +36,6 @@ public class FragmentPerfil extends Fragment {
     private Context mContext;
     private AuthRepository authRepository;
     private ClienteQRViewModel clienteQRViewModel;
-    private Handler refreshHandler;
-    private final long REFRESH_INTERVAL_MS = 60_000; // 60 segundos
-    private final Runnable refreshRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (clienteQRViewModel != null) {
-                clienteQRViewModel.refreshQR();
-            }
-            if (refreshHandler != null) {
-                refreshHandler.postDelayed(this, REFRESH_INTERVAL_MS);
-            }
-        }
-    };
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -61,8 +48,7 @@ public class FragmentPerfil extends Fragment {
     }
     
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentPerfilBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -200,16 +186,11 @@ public class FragmentPerfil extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (refreshHandler == null) refreshHandler = new Handler(Looper.getMainLooper());
-        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL_MS);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (refreshHandler != null) {
-            refreshHandler.removeCallbacks(refreshRunnable);
-        }
     }
     
     @Override
