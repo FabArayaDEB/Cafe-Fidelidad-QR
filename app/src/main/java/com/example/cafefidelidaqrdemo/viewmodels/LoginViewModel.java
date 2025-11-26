@@ -89,15 +89,17 @@ public class LoginViewModel extends ViewModel {
             @Override
             public void onSuccess(String userId) {
                 android.util.Log.d("LoginViewModel", "Login exitoso - userId: " + userId);
-                isLoading.setValue(false);
-                loginSuccess.setValue(true);
+                // El callback puede ejecutarse en background; usar postValue
+                isLoading.postValue(false);
+                loginSuccess.postValue(true);
             }
             
             @Override
             public void onError(String errorMsg) {
                 android.util.Log.d("LoginViewModel", "Login error: " + errorMsg);
-                isLoading.setValue(false);
-                error.setValue(errorMsg);
+                // El callback puede ejecutarse en background; usar postValue
+                isLoading.postValue(false);
+                error.postValue(errorMsg);
             }
         });
     }

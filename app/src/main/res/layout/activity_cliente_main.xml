@@ -21,6 +21,18 @@
             android:layout_width="match_parent"
             android:layout_height="55dp">
             
+            <ImageView
+                android:id="@+id/btn_sucursales"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_location"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp"
+                android:contentDescription="@string/sucursales" />
+            
             <TextView
                 android:id="@+id/tv_Titulo"
                 android:text="@{viewModel.toolbarTitleLiveData ?? @string/tv_Titulo}"

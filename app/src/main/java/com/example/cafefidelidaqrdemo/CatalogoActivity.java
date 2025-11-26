@@ -80,7 +80,7 @@ public class CatalogoActivity extends AppCompatActivity {
      * Redirige al usuario a la pantalla de login
      */
     private void redirectToLogin() {
-        android.content.Intent intent = new android.content.Intent(this, OpcionesLoginActivity.class);
+        android.content.Intent intent = new android.content.Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
     }

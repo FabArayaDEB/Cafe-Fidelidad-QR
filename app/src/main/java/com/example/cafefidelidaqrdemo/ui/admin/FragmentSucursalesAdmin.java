@@ -337,7 +337,10 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
     private void toggleFiltroActivas() {
         mostrarSoloActivas = !mostrarSoloActivas;
         actualizarTextoFiltro();
-        
+        // Evitar acumulación de múltiples observers al alternar el filtro
+        viewModel.getSucursalesActivas().removeObservers(getViewLifecycleOwner());
+        viewModel.getAllSucursales().removeObservers(getViewLifecycleOwner());
+
         if (mostrarSoloActivas) {
             viewModel.getSucursalesActivas().observe(getViewLifecycleOwner(), this::actualizarListaSucursales);
         } else {

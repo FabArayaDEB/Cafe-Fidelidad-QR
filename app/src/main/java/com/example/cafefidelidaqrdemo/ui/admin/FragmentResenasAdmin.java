@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,7 @@ import com.example.cafefidelidaqrdemo.ui.admin.adapters.ResenasProductoAdminAdap
 import com.example.cafefidelidaqrdemo.ui.admin.adapters.ResenasSucursalAdminAdapter;
 import com.example.cafefidelidaqrdemo.ui.admin.viewmodels.ResenasAdminViewModel;
 import com.google.android.material.tabs.TabLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +52,33 @@ public class FragmentResenasAdmin extends Fragment {
         setupTabs();
         setupLists();
         setupObservers();
+
+        // Configurar SwipeRefresh
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            TabLayout.Tab tab = binding.tabLayout.getTabAt(binding.tabLayout.getSelectedTabPosition());
+            if (tab != null && tab.getPosition() == 0) {
+                viewModel.refreshProductoResenas();
+            } else {
+                viewModel.refreshSucursalResenas();
+            }
+        });
+
+        // Cerrar el indicador al terminar la carga
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            if (binding != null) {
+                binding.swipeRefresh.setRefreshing(Boolean.TRUE.equals(isLoading));
+            }
+        });
+
+        // Botón Cargar más según pestaña actual
+        binding.btnCargarMas.setOnClickListener(v -> {
+            TabLayout.Tab tab = binding.tabLayout.getTabAt(binding.tabLayout.getSelectedTabPosition());
+            if (tab != null && tab.getPosition() == 0) {
+                viewModel.loadMoreProducto();
+            } else {
+                viewModel.loadMoreSucursal();
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -71,10 +100,14 @@ public class FragmentResenasAdmin extends Fragment {
                     binding.spinnerProductos.setVisibility(View.VISIBLE);
                     binding.spinnerSucursales.setVisibility(View.GONE);
                     binding.recyclerView.setAdapter(productoAdapter);
+                    Boolean more = viewModel.getHasMoreProducto().getValue();
+                    binding.btnCargarMas.setVisibility(Boolean.TRUE.equals(more) ? View.VISIBLE : View.GONE);
                 } else {
                     binding.spinnerProductos.setVisibility(View.GONE);
                     binding.spinnerSucursales.setVisibility(View.VISIBLE);
                     binding.recyclerView.setAdapter(sucursalAdapter);
+                    Boolean more = viewModel.getHasMoreSucursal().getValue();
+                    binding.btnCargarMas.setVisibility(Boolean.TRUE.equals(more) ? View.VISIBLE : View.GONE);
                 }
             }
 
@@ -93,7 +126,11 @@ public class FragmentResenasAdmin extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Producto p = (Producto) parent.getItemAtPosition(position);
-                viewModel.setSelectedProductoId(p != null ? Integer.parseInt(p.getId()) : -1);
+                int pid = -1;
+                if (p != null && p.getId() != null) {
+                    try { pid = Integer.parseInt(p.getId()); } catch (NumberFormatException ignored) { pid = -1; }
+                }
+                viewModel.setSelectedProductoId(pid);
                 if (p != null) {
                     productoAdapter.setProductoNombre(p.getNombre());
                 } else {
@@ -107,7 +144,11 @@ public class FragmentResenasAdmin extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Sucursal s = (Sucursal) parent.getItemAtPosition(position);
-                viewModel.setSelectedSucursalId(s != null ? Integer.parseInt(s.getId()) : -1);
+                int sid = -1;
+                if (s != null && s.getId() != null) {
+                    try { sid = Integer.parseInt(s.getId()); } catch (NumberFormatException ignored) { sid = -1; }
+                }
+                viewModel.setSelectedSucursalId(sid);
                 if (s != null) {
                     sucursalAdapter.setSucursalNombre(s.getNombre());
                 } else {
@@ -122,17 +163,95 @@ public class FragmentResenasAdmin extends Fragment {
         // Productos y sucursales para spinners
         viewModel.getAllProductos().observe(getViewLifecycleOwner(), productos -> {
             if (productos != null) {
-                ArrayAdapter<Producto> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, productos);
+                ArrayAdapter<Producto> adapter = new ArrayAdapter<Producto>(requireContext(), android.R.layout.simple_spinner_item, productos) {
+                    @NonNull
+                    @Override
+                    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        View v = super.getView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        if (tv == null && v instanceof TextView) {
+                            tv = (TextView) v;
+                        }
+                        Producto p = getItem(position);
+                        if (p != null && tv != null) {
+                            tv.setText(p.getId() + " - " + p.getNombre());
+                        }
+                        return v;
+                    }
+
+                    @Override
+                    public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        View v = super.getDropDownView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        if (tv == null && v instanceof TextView) {
+                            tv = (TextView) v;
+                        }
+                        Producto p = getItem(position);
+                        if (p != null && tv != null) {
+                            tv.setText(p.getId() + " - " + p.getNombre());
+                        }
+                        return v;
+                    }
+                };
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 binding.spinnerProductos.setAdapter(adapter);
+                // Seleccionar el primero por defecto y cargar reseñas
+                if (!productos.isEmpty()) {
+                    Producto p0 = productos.get(0);
+                    productoAdapter.setProductoNombre(p0.getNombre());
+                    binding.spinnerProductos.post(() -> binding.spinnerProductos.setSelection(0));
+                    try {
+                        int id = Integer.parseInt(p0.getId());
+                        viewModel.setSelectedProductoId(id);
+                    } catch (Exception ignored) {}
+                }
             }
         });
 
         viewModel.getAllSucursales().observe(getViewLifecycleOwner(), sucursales -> {
             if (sucursales != null) {
-                ArrayAdapter<Sucursal> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, sucursales);
+                ArrayAdapter<Sucursal> adapter = new ArrayAdapter<Sucursal>(requireContext(), android.R.layout.simple_spinner_item, sucursales) {
+                    @NonNull
+                    @Override
+                    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        View v = super.getView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        if (tv == null && v instanceof TextView) {
+                            tv = (TextView) v;
+                        }
+                        Sucursal s = getItem(position);
+                        if (s != null && tv != null) {
+                            tv.setText(s.getId() + " - " + s.getNombre());
+                        }
+                        return v;
+                    }
+
+                    @Override
+                    public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                        View v = super.getDropDownView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        if (tv == null && v instanceof TextView) {
+                            tv = (TextView) v;
+                        }
+                        Sucursal s = getItem(position);
+                        if (s != null && tv != null) {
+                            tv.setText(s.getId() + " - " + s.getNombre());
+                        }
+                        return v;
+                    }
+                };
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 binding.spinnerSucursales.setAdapter(adapter);
+                // Seleccionar la primera por defecto y cargar reseñas
+                if (!sucursales.isEmpty()) {
+                    Sucursal s0 = sucursales.get(0);
+                    sucursalAdapter.setSucursalNombre(s0.getNombre());
+                    binding.spinnerSucursales.post(() -> binding.spinnerSucursales.setSelection(0));
+                    try {
+                        int id = Integer.parseInt(s0.getId());
+                        viewModel.setSelectedSucursalId(id);
+                    } catch (Exception ignored) {}
+                }
             }
         });
 
@@ -168,7 +287,23 @@ public class FragmentResenasAdmin extends Fragment {
                 viewModel.clearErrorMessage();
             }
         });
+
+        // Control de visibilidad del botón Cargar más
+        viewModel.getHasMoreProducto().observe(getViewLifecycleOwner(), more -> {
+            TabLayout.Tab tab = binding.tabLayout.getTabAt(binding.tabLayout.getSelectedTabPosition());
+            if (tab != null && tab.getPosition() == 0) {
+                binding.btnCargarMas.setVisibility(Boolean.TRUE.equals(more) ? View.VISIBLE : View.GONE);
+            }
+        });
+        viewModel.getHasMoreSucursal().observe(getViewLifecycleOwner(), more -> {
+            TabLayout.Tab tab = binding.tabLayout.getTabAt(binding.tabLayout.getSelectedTabPosition());
+            if (tab != null && tab.getPosition() == 1) {
+                binding.btnCargarMas.setVisibility(Boolean.TRUE.equals(more) ? View.VISIBLE : View.GONE);
+            }
+        });
     }
+
+    
 
     private void volverAlMenuPrincipal() {
         if (getParentFragmentManager().getBackStackEntryCount() > 0) {

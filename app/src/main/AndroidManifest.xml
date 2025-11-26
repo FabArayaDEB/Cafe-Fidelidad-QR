@@ -45,6 +45,9 @@
             android:name=".DetalleProductoActivity"
             android:exported="false" />
         <activity
+            android:name=".DetalleSucursalActivity"
+            android:exported="false" />
+        <activity
             android:name=".BeneficiosActivity"
             android:exported="false" />
         <activity

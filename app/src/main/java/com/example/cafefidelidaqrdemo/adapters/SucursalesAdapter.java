@@ -72,15 +72,13 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     
     // Método para actualizar lista con distancias
     public void submitListWithDistance(List<SucursalItem> list) {
-        submitList(list);
+        super.submitList(list);
     }
     
     // Método para actualizar lista sin distancias
     public void submitList(List<SucursalItem> sucursales) {
-        List<SucursalItem> items = sucursales.stream()
-            .map(sucursal -> new SucursalItem(sucursal.getSucursal(), null))
-            .collect(Collectors.toList());
-        submitList(items);
+        // Simplemente delegar al ListAdapter original
+        super.submitList(sucursales);
     }
     
     // Interfaces para callbacks
@@ -242,31 +240,37 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
     }
     
     // DiffUtil callback para optimizar actualizaciones
-    private static final DiffUtil.ItemCallback<SucursalItem> DIFF_CALLBACK = 
+    private static final DiffUtil.ItemCallback<SucursalItem> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<SucursalItem>() {
-            
+
             @Override
             public boolean areItemsTheSame(@NonNull SucursalItem oldItem, @NonNull SucursalItem newItem) {
-                return oldItem.getSucursal().getId() == newItem.getSucursal().getId();
+                String oldId = oldItem.getSucursal() != null ? oldItem.getSucursal().getId() : null;
+                String newId = newItem.getSucursal() != null ? newItem.getSucursal().getId() : null;
+                return java.util.Objects.equals(oldId, newId);
             }
-            
+
             @Override
             public boolean areContentsTheSame(@NonNull SucursalItem oldItem, @NonNull SucursalItem newItem) {
                 Sucursal oldSucursal = oldItem.getSucursal();
                 Sucursal newSucursal = newItem.getSucursal();
-                
-                boolean sucursalSame = oldSucursal.getNombre().equals(newSucursal.getNombre()) &&
-                    oldSucursal.getDireccion().equals(newSucursal.getDireccion()) &&
-                    oldSucursal.getHorarioApertura().equals(newSucursal.getHorarioApertura()) &&
-                    oldSucursal.getHorarioCierre().equals(newSucursal.getHorarioCierre()) &&
+
+                if (oldSucursal == null && newSucursal == null) return true;
+                if (oldSucursal == null || newSucursal == null) return false;
+
+                boolean sucursalSame =
+                    java.util.Objects.equals(oldSucursal.getNombre(), newSucursal.getNombre()) &&
+                    java.util.Objects.equals(oldSucursal.getDireccion(), newSucursal.getDireccion()) &&
+                    java.util.Objects.equals(oldSucursal.getHorarioApertura(), newSucursal.getHorarioApertura()) &&
+                    java.util.Objects.equals(oldSucursal.getHorarioCierre(), newSucursal.getHorarioCierre()) &&
                     oldSucursal.isActiva() == newSucursal.isActiva() &&
                     Double.compare(oldSucursal.getLatitud(), newSucursal.getLatitud()) == 0 &&
                     Double.compare(oldSucursal.getLongitud(), newSucursal.getLongitud()) == 0;
-                
+
                 boolean distanciaSame = (oldItem.getDistancia() == null && newItem.getDistancia() == null) ||
                     (oldItem.getDistancia() != null && newItem.getDistancia() != null &&
-                     Double.compare(oldItem.getDistancia(), newItem.getDistancia()) == 0);
-                
+                        Double.compare(oldItem.getDistancia(), newItem.getDistancia()) == 0);
+
                 return sucursalSame && distanciaSame;
             }
         };

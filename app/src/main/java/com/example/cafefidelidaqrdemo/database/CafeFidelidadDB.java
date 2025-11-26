@@ -1193,10 +1193,15 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     public List<ResenaProducto> obtenerResenasProducto(int productoId, int limit, int offset) {
         List<ResenaProducto> lista = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-                "SELECT * FROM " + TABLE_RESENAS_PRODUCTOS + " WHERE " + COLUMN_RESENA_PRODUCTO_ID + " = ? ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC LIMIT ? OFFSET ?",
-                new String[]{String.valueOf(productoId), String.valueOf(limit), String.valueOf(offset)}
-        );
+        // Nota: En algunas versiones de SQLite en Android, los parámetros enlazados no se 
+        // manejan bien en LIMIT/OFFSET. Para asegurar compatibilidad, incrustamos los
+        // valores de paginación directamente en la consulta.
+        String sql = "SELECT * FROM " + TABLE_RESENAS_PRODUCTOS +
+                " WHERE " + COLUMN_RESENA_PRODUCTO_ID + " = ?" +
+                " ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC" +
+                " LIMIT " + Math.max(0, limit) +
+                " OFFSET " + Math.max(0, offset);
+        Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(productoId)});
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 ResenaProducto r = new ResenaProducto();
@@ -1270,10 +1275,13 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     public List<ResenaSucursal> obtenerResenasSucursal(int sucursalId, int limit, int offset) {
         List<ResenaSucursal> lista = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-                "SELECT * FROM " + TABLE_RESENAS_SUCURSALES + " WHERE " + COLUMN_RESENA_SUCURSAL_ID + " = ? ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC LIMIT ? OFFSET ?",
-                new String[]{String.valueOf(sucursalId), String.valueOf(limit), String.valueOf(offset)}
-        );
+        // Igual que en productos, evitamos parámetros enlazados para LIMIT/OFFSET
+        String sql = "SELECT * FROM " + TABLE_RESENAS_SUCURSALES +
+                " WHERE " + COLUMN_RESENA_SUCURSAL_ID + " = ?" +
+                " ORDER BY " + COLUMN_RESENA_FECHA_CREACION + " DESC" +
+                " LIMIT " + Math.max(0, limit) +
+                " OFFSET " + Math.max(0, offset);
+        Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(sucursalId)});
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 ResenaSucursal r = new ResenaSucursal();

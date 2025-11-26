@@ -64,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d("MainActivity", "Observador de autenticación ejecutado. isAuthenticated: " + isAuthenticated);
             if (isAuthenticated != null) {
                 if (!isAuthenticated) {
-                    Log.d("MainActivity", "Usuario NO autenticado - redirigiendo a OpcionesLoginActivity");
-                    // Redirigir a OpcionesLoginActivity si no está autenticado
-                    Intent intent = new Intent(this, OpcionesLoginActivity.class);
+                    Log.d("MainActivity", "Usuario NO autenticado - redirigiendo a LoginActivity");
+                    // Redirigir a LoginActivity si no está autenticado
+                    Intent intent = new Intent(this, LoginActivity.class);
                     startActivity(intent);
                     finish();
                 } else {
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getErrorLiveData().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 // Si hay error en autenticación, redirigir a login
-                Intent intent = new Intent(this, OpcionesLoginActivity.class);
+                Intent intent = new Intent(this, LoginActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void setLogin() {
-        startActivity(new Intent(this, OpcionesLoginActivity.class));
+        startActivity(new Intent(this, LoginActivity.class));
         finishAffinity();
     }
 

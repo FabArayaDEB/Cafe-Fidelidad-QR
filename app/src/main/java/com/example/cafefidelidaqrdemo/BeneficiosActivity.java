@@ -69,7 +69,7 @@ public class BeneficiosActivity extends AppCompatActivity implements BeneficioAd
      * Redirige al usuario a la pantalla de login
      */
     private void redirectToLogin() {
-        Intent intent = new Intent(this, OpcionesLoginActivity.class);
+        Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
     }

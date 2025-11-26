@@ -22,10 +22,10 @@ import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.HistorialActivity;
 import com.example.cafefidelidaqrdemo.models.Cliente;
 import com.example.cafefidelidaqrdemo.databinding.FragmentPerfilBinding;
-import com.example.cafefidelidaqrdemo.OpcionesLoginActivity;
 import com.example.cafefidelidaqrdemo.DatosPersonalesActivity;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.example.cafefidelidaqrdemo.viewmodels.ClienteQRViewModel;
+import com.example.cafefidelidaqrdemo.LoginActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -108,8 +108,8 @@ public class FragmentPerfil extends Fragment {
             // Cerrar sesión usando AuthRepository
             authRepository.logout();
             
-            // Redirigir a la pantalla de login
-            Intent intent = new Intent(mContext, OpcionesLoginActivity.class);
+            // Redirigir a la pantalla de login local
+            Intent intent = new Intent(mContext, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });

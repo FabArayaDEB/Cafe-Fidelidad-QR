@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import com.example.cafefidelidaqrdemo.repository.AdminRepository;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
@@ -74,8 +75,18 @@ public class SucursalesAdminViewModel extends AndroidViewModel {
         
         // Inicializar LiveData observables
         allSucursales = adminRepository.getAllSucursales();
-        // sucursalesActivas = adminRepository.getSucursalesActivas(); // Método no implementado en AdminRepository
-        sucursalesActivas = new MutableLiveData<>(new ArrayList<>());
+        // Derivar lista de activas a partir de todas las sucursales
+        sucursalesActivas = Transformations.map(allSucursales, sucursales -> {
+            List<Sucursal> activas = new ArrayList<>();
+            if (sucursales != null) {
+                for (Sucursal s : sucursales) {
+                    if (s != null && s.isActiva()) {
+                        activas.add(s);
+                    }
+                }
+            }
+            return activas;
+        });
         countSucursalesActivas = adminRepository.getCountSucursalesActivas();
         countSucursalesInactivas = adminRepository.getCountSucursalesInactivas();
     }

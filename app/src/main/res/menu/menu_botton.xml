@@ -6,9 +6,9 @@
         android:title="@string/item_perfil"
         android:icon="@drawable/ic_perfil"/>
     <item
-        android:id="@+id/item_puntos"
-        android:title="@string/item_puntos"
-        android:icon="@drawable/ic_puntos"/>
+        android:id="@+id/item_sucursales"
+        android:title="@string/sucursales"
+        android:icon="@drawable/ic_location"/>
     <item
         android:id="@+id/item_catalogo"
         android:title="@string/catalogo"

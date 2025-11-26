@@ -45,16 +45,25 @@ public class LoginActivity extends AppCompatActivity {
         // Configurar observadores
         setupObservers();
         
-        // INFO: Mostrar credenciales de ejemplo (demo y SQLite)
+        //Mostrar credenciales de ejemplo
         Toast.makeText(this, "Ejemplos de acceso:\n" +
-                "• Cliente demo: cliente@test.com / cliente123\n" +
-                "• Admin demo: admin@test.com / admin123\n" +
-                "• Cliente SQLite: juan@email.com / 123456", 
+                "• cliente@test.com / 123456\n" +
+                "• admin@test.com / 123456\n" +
+                "• juan@email.com / 123456",
                 Toast.LENGTH_LONG).show();
 
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Ocultar teclado para evitar problemas de IME durante redirección
+                try {
+                    android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+                    android.view.View focused = getCurrentFocus();
+                    if (imm != null && focused != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                } catch (Exception ignored) {}
+
                 // Obtener datos de los campos
                 String email = binding.lbEmail.getText().toString().trim();
                 String password = binding.lbPass.getText().toString().trim();
@@ -77,9 +86,16 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, RegistroActivity.class));
         });
 
-        binding.txtForgotPass.setOnClickListener(view -> {
-            startActivity(new Intent(LoginActivity.this, RecuperarPassActivity.class));
-        });
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+        } catch (Exception ignored) {}
     }
     
     /**
@@ -108,12 +124,30 @@ public class LoginActivity extends AppCompatActivity {
         viewModel.getLoginSuccess().observe(this, success -> {
             android.util.Log.d("LoginActivity", "LoginSuccess observed: " + success);
             if (success != null && success) {
-                android.util.Log.d("LoginActivity", "Login successful, redirecting to MainActivity");
-                // Redirigir a MainActivity
-                Intent intent = new Intent(this, MainActivity.class);
+                // Asegurar que el ProgressDialog esté cerrado para evitar WindowLeaked
+                try {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                } catch (Exception ignored) {}
+
+                // Determinar rol del usuario y redirigir a la actividad correcta
+                com.example.cafefidelidaqrdemo.repository.AuthRepository authRepo = com.example.cafefidelidaqrdemo.repository.AuthRepository.getInstance();
+                com.example.cafefidelidaqrdemo.repository.AuthRepository.LocalUser currentUser = authRepo.getCurrentUser();
+
+                Intent intent;
+                if (currentUser != null && currentUser.isAdmin()) {
+                    android.util.Log.d("LoginActivity", "Login exitoso como ADMIN, redirigiendo a AdminMainActivity");
+                    intent = new Intent(this, AdminMainActivity.class);
+                } else {
+                    android.util.Log.d("LoginActivity", "Login exitoso como CLIENTE, redirigiendo a ClienteMainActivity");
+                    intent = new Intent(this, ClienteMainActivity.class);
+                }
+
                 startActivity(intent);
-                finish();
+                // Limpiar flags y cerrar actividad con el diálogo ya descartado
                 viewModel.clearLoginSuccess();
+                finish();
             }
         });
         

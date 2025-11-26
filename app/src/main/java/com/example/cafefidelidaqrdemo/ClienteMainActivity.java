@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.cafefidelidaqrdemo.databinding.ActivityClienteMainBinding;
 import com.example.cafefidelidaqrdemo.ui.cliente.FragmentProgresoFidelizacion;
+import com.example.cafefidelidaqrdemo.fragments.FragmentSucursales;
 import com.example.cafefidelidaqrdemo.viewmodels.MainViewModel;
 import com.example.cafefidelidaqrdemo.fragments.FragmentPerfil;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
@@ -57,6 +58,11 @@ public class ClienteMainActivity extends AppCompatActivity {
         
         // Configurar botón de logout
         binding.btnLogout.setOnClickListener(v -> logout());
+
+        // Botón de acceso rápido a sucursales en la toolbar
+        if (binding.btnSucursales != null) {
+            binding.btnSucursales.setOnClickListener(v -> abrirSucursales());
+        }
         
         // Funcionalidad offline removida para simplificación
     }
@@ -89,9 +95,8 @@ public class ClienteMainActivity extends AppCompatActivity {
                     verFragPerfil();
                     viewModel.setToolbarTitle("Mi Perfil");
                     return true;
-                } else if (itemId == R.id.item_puntos) {
-                    verFragPuntos();
-                    viewModel.setToolbarTitle("Mis Sellos");
+                } else if (itemId == R.id.item_sucursales) {
+                    abrirSucursales();
                     return true;
                 } else if (itemId == R.id.item_catalogo) {
                     verCatalogo();
@@ -158,6 +163,17 @@ public class ClienteMainActivity extends AppCompatActivity {
         fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentPerfil");
         fragmentTransaction.commit();
     }
+
+    /**
+     * Abre el listado de sucursales
+     */
+    private void abrirSucursales() {
+        viewModel.setToolbarTitle("Sucursales");
+        FragmentSucursales fragment = new FragmentSucursales();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(binding.fragmentFL.getId(), fragment, "FragmentSucursales");
+        fragmentTransaction.commit();
+    }
     
     // Métodos de sincronización offline removidos para simplificación
     
@@ -175,7 +191,7 @@ public class ClienteMainActivity extends AppCompatActivity {
      * Redirige al usuario a la pantalla de login
      */
     private void redirectToLogin() {
-        Intent intent = new Intent(this, OpcionesLoginActivity.class);
+        Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

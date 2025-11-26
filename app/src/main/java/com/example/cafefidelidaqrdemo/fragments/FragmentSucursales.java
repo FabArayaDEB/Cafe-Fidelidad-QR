@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ import androidx.appcompat.widget.SearchView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.adapters.SucursalesAdapter;
+import com.example.cafefidelidaqrdemo.DetalleSucursalActivity;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
 import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
 import com.example.cafefidelidaqrdemo.viewmodels.SucursalesViewModel;
@@ -125,7 +127,13 @@ public class FragmentSucursales extends Fragment {
         
         // Listener para clicks en sucursales
         adapter.setOnSucursalClickListener(sucursal -> {
-            showSucursalDetails(sucursal);
+            try {
+                Intent intent = new Intent(getContext(), DetalleSucursalActivity.class);
+                intent.putExtra("sucursal_id", sucursal.getId());
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "No se pudo abrir el detalle: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
         
         adapter.setOnSucursalLongClickListener(sucursal -> {
