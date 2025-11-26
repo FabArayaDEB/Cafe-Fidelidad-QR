@@ -26,3 +26,6 @@
 **/caches/
 **/daemon/
 **/wrapper/dists/
+# --- Reglas para Ignorar Backups de Editor ---
+*~
+*.tmp
