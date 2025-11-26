@@ -34,7 +34,7 @@ public class CanjeRepository {
         loadCanjes();
     }
 
-    // 🔹 Getters para LiveData
+    // Getters para LiveData
     public LiveData<Boolean> getIsLoading() {
         return isLoadingLiveData;
     }
@@ -99,7 +99,7 @@ public class CanjeRepository {
         return canjeLiveData;
     }
 
-    // 🔹 Métodos CRUD
+    // Métodos CRUD
     public void insertCanje(Canje canje, OnResultCallback<Boolean> callback) {
         isLoadingLiveData.postValue(true);
         executor.execute(() -> {
@@ -205,7 +205,7 @@ public class CanjeRepository {
     }
 
     /**
-     * 🔹 Nuevo método: Registrar un canje basado en el sistema de sellos digitales
+     * Nuevo método: Registrar un canje basado en el sistema de sellos digitales
      * Verifica si el cliente tiene suficientes visitas (sellos) y aplica el beneficio.
      */
     public void registrarCanjePorSellos(String clienteId, String beneficioId, int sellosRequeridos, OnResultCallback<Boolean> callback) {
@@ -250,7 +250,7 @@ public class CanjeRepository {
     }
 
     /**
-     * 🔹 Nuevo método: Registrar un canje directamente desde un Beneficio disponible
+     * Nuevo método: Registrar un canje directamente desde un Beneficio disponible
      * Crea el registro de canje y marca el beneficio como usado (sin reiniciar visitas).
      */
     public void registrarCanjeDesdeBeneficio(Beneficio beneficio, String clienteId, String sucursalId, OnResultCallback<Boolean> callback) {
@@ -321,7 +321,7 @@ public class CanjeRepository {
         });
     }
 
-    // 🔹 Cargar todos los canjes almacenados
+    // Cargar todos los canjes almacenados
     private void loadCanjes() {
         executor.execute(() -> {
             try {
@@ -334,18 +334,18 @@ public class CanjeRepository {
         });
     }
 
-    // 🔹 Callback genérico
+    // Callback genérico
     public interface OnResultCallback<T> {
         void onResult(T result);
     }
 
-    // 🔹 Sincronización (simplificada)
+    // Sincronización (simplificada)
     public void refreshCanjes(OnResultCallback<Boolean> callback) {
         loadCanjes();
         callback.onResult(true);
     }
 
-    // 🔹 Simulación de solicitud de OTP (a mantener como referencia)
+    // Simulación de solicitud de OTP (a mantener como referencia)
     public void solicitarOtp(String clienteId, String beneficioId, String sucursalId) {
         Log.d(TAG, "Solicitando OTP (mock) - Cliente: " + clienteId + ", Beneficio: " + beneficioId + ", Sucursal: " + sucursalId);
     }
