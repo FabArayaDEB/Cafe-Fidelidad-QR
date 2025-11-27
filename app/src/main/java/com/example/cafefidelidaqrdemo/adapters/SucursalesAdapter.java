@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.models.Sucursal;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 
@@ -191,13 +193,24 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
         }
         
         private void configurarIcono(Sucursal sucursal) {
-            // Configurar icono según el estado de la sucursal
-            if (sucursal.isActiva()) {
-                imageViewIcon.setImageResource(R.drawable.ic_store);
-                imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.primary));
+            String url = sucursal.getImagenUrl();
+            if (url != null && !url.trim().isEmpty()) {
+                Glide.with(imageViewIcon.getContext())
+                        .load(url)
+                        .placeholder(R.drawable.ic_store)
+                        .error(R.drawable.ic_store_empty)
+                        .centerCrop()
+                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                        .into(imageViewIcon);
+                imageViewIcon.clearColorFilter();
             } else {
-                imageViewIcon.setImageResource(R.drawable.ic_store_empty);
-                imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.on_surface_variant));
+                if (sucursal.isActiva()) {
+                    imageViewIcon.setImageResource(R.drawable.ic_store);
+                    imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.primary));
+                } else {
+                    imageViewIcon.setImageResource(R.drawable.ic_store_empty);
+                    imageViewIcon.setColorFilter(itemView.getContext().getColor(R.color.on_surface_variant));
+                }
             }
         }
         
@@ -263,6 +276,7 @@ public class SucursalesAdapter extends ListAdapter<SucursalesAdapter.SucursalIte
                     java.util.Objects.equals(oldSucursal.getDireccion(), newSucursal.getDireccion()) &&
                     java.util.Objects.equals(oldSucursal.getHorarioApertura(), newSucursal.getHorarioApertura()) &&
                     java.util.Objects.equals(oldSucursal.getHorarioCierre(), newSucursal.getHorarioCierre()) &&
+                    java.util.Objects.equals(oldSucursal.getImagenUrl(), newSucursal.getImagenUrl()) &&
                     oldSucursal.isActiva() == newSucursal.isActiva() &&
                     Double.compare(oldSucursal.getLatitud(), newSucursal.getLatitud()) == 0 &&
                     Double.compare(oldSucursal.getLongitud(), newSucursal.getLongitud()) == 0;

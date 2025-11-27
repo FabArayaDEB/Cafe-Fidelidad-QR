@@ -420,6 +420,7 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
             // Modo edición
             dialogBinding.editTextNombre.setText(sucursal.getNombre());
             dialogBinding.editTextDireccion.setText(sucursal.getDireccion());
+            dialogBinding.editTextImagenUrl.setText(sucursal.getImagenUrl());
             // editTextCiudad, editTextTelefono, editTextEmail, editTextGerente,
             // editTextCapacidad, editTextDescripcion y switchActivo no están disponibles en el layout
             
@@ -631,6 +632,10 @@ public class FragmentSucursalesAdmin extends Fragment /* implements OnMapReadyCa
         
         sucursal.setNombre(dialogBinding.editTextNombre.getText().toString().trim());
         sucursal.setDireccion(dialogBinding.editTextDireccion.getText().toString().trim());
+        String imagenUrl = dialogBinding.editTextImagenUrl.getText() != null
+                ? dialogBinding.editTextImagenUrl.getText().toString().trim()
+                : "";
+        sucursal.setImagenUrl(imagenUrl);
         // Campos ciudad, telefono y email no disponibles en database.entities.SucursalEntity
         sucursal.setLatitud(latitudSeleccionada);
         sucursal.setLongitud(longitudSeleccionada);

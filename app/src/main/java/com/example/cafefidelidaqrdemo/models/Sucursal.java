@@ -8,6 +8,7 @@ public class Sucursal {
     private String nombre;
     private String direccion;
     private String telefono;
+    private String imagenUrl;
     private double latitud;
     private double longitud;
     private String horarioApertura;
@@ -48,6 +49,9 @@ public class Sucursal {
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
 
+    public String getImagenUrl() { return imagenUrl; }
+    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+
     public double getLatitud() { return latitud; }
     public void setLatitud(double latitud) { this.latitud = latitud; }
 
@@ -84,6 +88,7 @@ public class Sucursal {
                 ", nombre='" + nombre + '\'' +
                 ", direccion='" + direccion + '\'' +
                 ", telefono='" + telefono + '\'' +
+                ", imagenUrl='" + imagenUrl + '\'' +
                 ", abierto=" + abierto +
                 ", activa=" + activa +
                 '}';

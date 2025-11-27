@@ -2,6 +2,7 @@ package com.example.cafefidelidaqrdemo;
 
 import android.os.Bundle;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,11 +17,13 @@ import com.example.cafefidelidaqrdemo.repository.SucursalRepository;
 import com.example.cafefidelidaqrdemo.repository.ResenasSucursalRepository;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.google.android.material.button.MaterialButton;
+import com.bumptech.glide.Glide;
 
 public class DetalleSucursalActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
     private TextView tvNombre, tvDireccion, tvTelefono, tvHorario;
+    private ImageView ivImagenSucursal;
 
     // Reseñas UI
     private RatingBar rbResena;
@@ -72,6 +75,7 @@ public class DetalleSucursalActivity extends AppCompatActivity {
         tvDireccion = findViewById(R.id.tv_direccion_sucursal);
         tvTelefono = findViewById(R.id.tv_telefono_sucursal);
         tvHorario = findViewById(R.id.tv_horario_sucursal);
+        ivImagenSucursal = findViewById(R.id.image_sucursal);
 
         rbResena = findViewById(R.id.rb_resena);
         etComentarioResena = findViewById(R.id.et_comentario_resena);
@@ -197,6 +201,20 @@ public class DetalleSucursalActivity extends AppCompatActivity {
         String horario = (sucursal.getHorarioApertura() != null ? sucursal.getHorarioApertura() : "?") +
                 " - " + (sucursal.getHorarioCierre() != null ? sucursal.getHorarioCierre() : "?");
         tvHorario.setText("Horario: " + horario);
+
+        String url = sucursal.getImagenUrl();
+        if (ivImagenSucursal != null) {
+            if (url != null && !url.trim().isEmpty()) {
+                Glide.with(this)
+                        .load(url)
+                        .placeholder(R.drawable.ic_store)
+                        .error(R.drawable.ic_store_empty)
+                        .centerCrop()
+                        .into(ivImagenSucursal);
+            } else {
+                ivImagenSucursal.setImageResource(sucursal.isActiva() ? R.drawable.ic_store : R.drawable.ic_store_empty);
+            }
+        }
     }
 
     @Override
@@ -205,4 +223,3 @@ public class DetalleSucursalActivity extends AppCompatActivity {
         return true;
     }
 }
-

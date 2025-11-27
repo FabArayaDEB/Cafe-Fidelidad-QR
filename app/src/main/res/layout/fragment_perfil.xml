@@ -154,180 +154,288 @@
 
          </LinearLayout>
 
-        <!-- Información del Usuario -->
+        <!-- Información del Usuario: reestructurada para mayor legibilidad -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="16dp">
 
-            <!-- Nombres -->
+            <!-- Título sección: Datos del usuario -->
             <TextView
-                android:id="@+id/txt_nombres"
-                android:text="@string/txt_nombres"
-                android:layout_marginTop="30dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Datos del usuario"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_nombres"
-                android:text="@string/tv_nombres"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- Email -->
-            <TextView
-                android:id="@+id/txt_email"
-                android:text="@string/txt_email"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_email"
-                android:text="--"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- Teléfono -->
-            <TextView
-                android:id="@+id/txt_telefono"
-                android:text="@string/txt_telefono"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_telefono"
-                android:text="--"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- Fecha de Nacimiento -->
-            <TextView
-                android:id="@+id/txt_fecha_nacimiento"
-                android:text="@string/txt_fecha_nacimiento"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_fecha_nacimiento"
-                android:text="--"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <!-- Puntos Actuales -->
-            <TextView
-                android:id="@+id/txt_puntos"
-                android:text="@string/txt_puntos_actuales"
-                android:layout_marginTop="20dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="@color/coffee_primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_puntos"
-                android:text="0"
-                android:layout_marginTop="5dp"
                 android:textSize="18sp"
+                android:textColor="@color/black"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"/>
+
+            <!-- Fila: Nombre -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_nombres"
+                    android:text="@string/txt_nombres"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_nombres"
+                    android:text="@string/tv_nombres"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- Fila: Email -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_email"
+                    android:text="@string/txt_email"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_email"
+                    android:text="--"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- Fila: Teléfono -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_telefono"
+                    android:text="@string/txt_telefono"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_telefono"
+                    android:text="--"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- Fila: Fecha de Nacimiento -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_fecha_nacimiento"
+                    android:text="@string/txt_fecha_nacimiento"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_fecha_nacimiento"
+                    android:text="--"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- Separador -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_light"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="4dp"/>
+
+            <!-- Título sección: Actividad -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Actividad"
                 android:textStyle="bold"
-                android:textColor="@color/coffee_primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"/>
+
+            <!-- Fila: Sellos actuales -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_puntos"
+                    android:text="@string/txt_puntos_actuales"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/coffee_primary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_puntos"
+                    android:text="0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/coffee_primary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
 
             <!-- Sistema de niveles eliminado -->
 
-            <!-- Compras Totales -->
-            <TextView
-                android:id="@+id/txt_compras_totales"
-                android:text="@string/txt_compras_totales"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_compras_totales"
-                android:text="$0"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <!-- Fila: Compras Totales -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_compras_totales"
+                    android:text="@string/txt_compras_totales"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_compras_totales"
+                    android:text="$0"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
 
             <!-- Sellos para siguiente nivel eliminados -->
 
-            <!-- Última Visita -->
-            <TextView
-                android:id="@+id/txt_ultima_visita"
-                android:text="@string/txt_ultima_visita"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_ultima_visita"
-                android:text="--"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <!-- Fila: Última Visita -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
 
-            <!-- Tiempo de registro -->
-            <TextView
-                android:id="@+id/txt_registro"
-                android:text="@string/txt_registro"
-                android:layout_marginTop="15dp"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/tv_registro"
-                android:text="@string/tv_registro"
-                android:layout_marginTop="5dp"
-                android:textSize="14sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/txt_ultima_visita"
+                    android:text="@string/txt_ultima_visita"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_ultima_visita"
+                    android:text="--"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- Fila: Cuenta Creada -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/txt_registro"
+                    android:text="@string/txt_registro"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/tv_registro"
+                    android:text="@string/tv_registro"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"/>
+            </LinearLayout>
 
         </LinearLayout>
         
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_historial"
-            android:text="@string/historial"
-            android:textAllCaps="true"
-            app:cornerRadius="30dp"
-            android:layout_below="@+id/tv_registro"
-            android:layout_centerInParent="true"
-            android:layout_marginTop="25dp"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content" />
+        <!-- Botones centrados y alineados de forma consistente -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginTop="20dp">
 
-        <com.google.android.material.button.MaterialButton
-            app:cornerRadius="30dp"
-            android:id="@+id/btn_Logout"
-            android:text="@string/btn_Logout"
-            android:textAllCaps="true"
-            android:layout_below="@+id/btn_historial"
-            android:layout_marginTop="15dp"
-            android:layout_centerInParent="true"
-            android:layout_gravity="center"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_historial"
+                android:text="@string/historial"
+                android:textAllCaps="true"
+                app:cornerRadius="30dp"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"/>
+
+            <com.google.android.material.button.MaterialButton
+                app:cornerRadius="30dp"
+                android:id="@+id/btn_Logout"
+                android:text="@string/btn_Logout"
+                android:textAllCaps="true"
+                android:layout_marginTop="12dp"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

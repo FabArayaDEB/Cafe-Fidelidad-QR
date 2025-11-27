@@ -25,7 +25,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     
     // Información de la base de datos
     private static final String DATABASE_NAME = "cafe_fidelidad.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
     
     // Nombres de las tablas
     private static final String TABLE_CLIENTES = "clientes";
@@ -67,6 +67,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
     private static final String COLUMN_SUCURSAL_LONGITUD = "longitud";
     private static final String COLUMN_SUCURSAL_ESTADO = "estado";
     private static final String COLUMN_SUCURSAL_ACTIVA = "activa";
+    private static final String COLUMN_SUCURSAL_IMAGEN_URL = "imagen_url";
     
     // Columnas tabla beneficios
     private static final String COLUMN_BENEFICIO_NOMBRE = "nombre";
@@ -127,7 +128,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             COLUMN_SUCURSAL_HORARIO_CIERRE + " TEXT, " +
             COLUMN_SUCURSAL_LATITUD + " REAL, " +
             COLUMN_SUCURSAL_LONGITUD + " REAL, " +
-            COLUMN_SUCURSAL_ESTADO + " TEXT DEFAULT 'activo'" +
+            COLUMN_SUCURSAL_ESTADO + " TEXT DEFAULT 'activo', " +
+            COLUMN_SUCURSAL_IMAGEN_URL + " TEXT" +
             ");";
     
     private static final String CREATE_TABLE_BENEFICIOS = "CREATE TABLE " + TABLE_BENEFICIOS + " (" +
@@ -251,6 +253,29 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_sucursal ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_SUCURSAL_ID + ")");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_resenas_sucursales_usuario ON " + TABLE_RESENAS_SUCURSALES + "(" + COLUMN_RESENA_USUARIO_ID + ")");
         }
+        if (oldVersion < 4) {
+            // Migración v4: Establecer imagen_url para productos que no la tienen
+            try {
+                String defaultImage = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop";
+                db.execSQL("UPDATE " + TABLE_PRODUCTOS + " SET " + COLUMN_PRODUCTO_IMAGEN_URL + "='" + defaultImage + "' " +
+                        "WHERE " + COLUMN_PRODUCTO_IMAGEN_URL + " IS NULL OR " + COLUMN_PRODUCTO_IMAGEN_URL + "='' ");
+                Log.d(TAG, "Migración v4: imagen_url actualizada para productos sin URL");
+            } catch (Exception e) {
+                Log.e(TAG, "Error en migración v4 (imagen_url): " + e.getMessage());
+            }
+        }
+        if (oldVersion < 5) {
+            // Migración v5: Agregar imagen_url a sucursales y asignar un valor por defecto
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_SUCURSALES + " ADD COLUMN " + COLUMN_SUCURSAL_IMAGEN_URL + " TEXT");
+                String defaultSucursalImage = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop";
+                db.execSQL("UPDATE " + TABLE_SUCURSALES + " SET " + COLUMN_SUCURSAL_IMAGEN_URL + "='" + defaultSucursalImage + "' " +
+                        "WHERE " + COLUMN_SUCURSAL_IMAGEN_URL + " IS NULL OR " + COLUMN_SUCURSAL_IMAGEN_URL + "='' ");
+                Log.d(TAG, "Migración v5: imagen_url agregada y establecida para sucursales");
+            } catch (Exception e) {
+                Log.e(TAG, "Error en migración v5 (sucursales.imagen_url): " + e.getMessage());
+            }
+        }
     }
     
     private void insertarDatosEjemplo(SQLiteDatabase db) {
@@ -273,7 +298,8 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         productoValues.put(COLUMN_PRODUCTO_PRECIO, 2500.0);
         productoValues.put(COLUMN_PRODUCTO_CATEGORIA, "Bebidas Calientes");
         productoValues.put(COLUMN_PRODUCTO_DISPONIBLE, 1);
-        productoValues.put(COLUMN_PRODUCTO_IMAGEN_URL, "");
+        // URL pública de imagen para validar carga en cliente y admin
+        productoValues.put(COLUMN_PRODUCTO_IMAGEN_URL, "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop");
         db.insert(TABLE_PRODUCTOS, null, productoValues);
         
         // Insertar sucursales de ejemplo
@@ -285,6 +311,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         sucursalValues.put(COLUMN_SUCURSAL_HORARIO_CIERRE, "22:00");
         sucursalValues.put(COLUMN_SUCURSAL_LATITUD, -12.0464);
         sucursalValues.put(COLUMN_SUCURSAL_LONGITUD, -77.0428);
+        sucursalValues.put(COLUMN_SUCURSAL_IMAGEN_URL, "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop");
         db.insert(TABLE_SUCURSALES, null, sucursalValues);
         
         // Insertar beneficios de ejemplo
@@ -869,6 +896,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_SUCURSAL_HORARIO_CIERRE, sucursal.getHorarioCierre());
         values.put(COLUMN_SUCURSAL_LATITUD, sucursal.getLatitud());
         values.put(COLUMN_SUCURSAL_LONGITUD, sucursal.getLongitud());
+        values.put(COLUMN_SUCURSAL_IMAGEN_URL, sucursal.getImagenUrl());
         // Alinear estado con flag de activa del modelo
         values.put(COLUMN_SUCURSAL_ESTADO, sucursal.isActiva() ? "activo" : "inactivo");
         
@@ -896,6 +924,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
             sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
             sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
             sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
+            sucursal.setImagenUrl(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_IMAGEN_URL)));
             // Mapear estado a bandera activa
             String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
             sucursal.setActiva("activo".equalsIgnoreCase(estado));
@@ -923,6 +952,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
                 sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
                 sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
+                sucursal.setImagenUrl(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_IMAGEN_URL)));
                 // Mapear estado a bandera activa
                 String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
                 sucursal.setActiva("activo".equalsIgnoreCase(estado));
@@ -956,6 +986,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
                 sucursal.setHorarioCierre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_HORARIO_CIERRE)));
                 sucursal.setLatitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LATITUD)));
                 sucursal.setLongitud(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_LONGITUD)));
+                sucursal.setImagenUrl(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_IMAGEN_URL)));
                 // Mapear estado a bandera activa
                 String estado = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SUCURSAL_ESTADO));
                 sucursal.setActiva("activo".equalsIgnoreCase(estado));
@@ -979,6 +1010,7 @@ public class CafeFidelidadDB extends SQLiteOpenHelper {
         values.put(COLUMN_SUCURSAL_HORARIO_CIERRE, sucursal.getHorarioCierre());
         values.put(COLUMN_SUCURSAL_LATITUD, sucursal.getLatitud());
         values.put(COLUMN_SUCURSAL_LONGITUD, sucursal.getLongitud());
+        values.put(COLUMN_SUCURSAL_IMAGEN_URL, sucursal.getImagenUrl());
         
         int rowsAffected = db.update(TABLE_SUCURSALES, values, COLUMN_ID + "=?", 
                 new String[]{String.valueOf(sucursal.getId())});

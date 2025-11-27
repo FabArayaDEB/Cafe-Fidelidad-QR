@@ -229,8 +229,17 @@ public class DetalleProductoActivity extends AppCompatActivity {
     }
 
     private void displayProductoDetails() {
-        // Configurar imagen del producto - ProductoEntity no tiene imagen
-        ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
+        // Configurar imagen del producto con Glide usando imagenUrl
+        String url = producto.getImagenUrl();
+        if (url != null && !url.trim().isEmpty()) {
+            Glide.with(DetalleProductoActivity.this)
+                    .load(url)
+                    .placeholder(R.drawable.ic_coffee_placeholder)
+                    .error(R.drawable.ic_coffee_placeholder)
+                    .into(ivProducto);
+        } else {
+            ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
+        }
 
         // Configurar información básica
         tvNombre.setText(producto.getNombre());

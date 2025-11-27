@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafefidelidaqrdemo.R;
 import com.example.cafefidelidaqrdemo.models.Producto;
+import com.bumptech.glide.Glide;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -105,8 +106,17 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
             tvNombre.setText(producto.getNombre());
             tvDescripcion.setText(producto.getDescripcion());
             
-            // Configurar imagen del producto (placeholder por ahora)
-            ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
+            // Cargar imagen del producto usando Glide (URL o data URI)
+            String url = producto.getImagenUrl();
+            if (url != null && !url.trim().isEmpty()) {
+                Glide.with(context)
+                        .load(url)
+                        .placeholder(R.drawable.ic_coffee_placeholder)
+                        .error(R.drawable.ic_coffee_placeholder)
+                        .into(ivProducto);
+            } else {
+                ivProducto.setImageResource(R.drawable.ic_coffee_placeholder);
+            }
             
             // Configurar precio
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
@@ -133,6 +143,7 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
     // ViewHolder para vista de administrador
     class AdminViewHolder extends RecyclerView.ViewHolder {
         private TextView tvNombre, tvDescripcion, tvPrecio, tvPuntos, tvCategoria, tvEstado;
+        private ImageView ivImagenAdmin;
         private ImageButton btnEditar, btnEliminar, btnToggleActivo, btnToggleDisponibilidad;
         
         public AdminViewHolder(@NonNull View itemView) {
@@ -144,6 +155,7 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
             tvPuntos = itemView.findViewById(R.id.tv_puntos_producto);
             tvCategoria = itemView.findViewById(R.id.tv_categoria_producto);
             tvEstado = itemView.findViewById(R.id.tv_estado_producto);
+            ivImagenAdmin = itemView.findViewById(R.id.iv_imagen_admin);
             btnEditar = itemView.findViewById(R.id.btn_editar_producto);
             btnEliminar = itemView.findViewById(R.id.btn_eliminar_producto);
             btnToggleActivo = itemView.findViewById(R.id.btn_toggle_activo);
@@ -189,6 +201,20 @@ public class ProductosAdapter extends ListAdapter<Producto, RecyclerView.ViewHol
             tvNombre.setText(producto.getNombre());
             tvDescripcion.setText(producto.getDescripcion());
             tvCategoria.setText(producto.getCategoria());
+
+            // Cargar miniatura
+            String url = producto.getImagenUrl();
+            if (ivImagenAdmin != null) {
+                if (url != null && !url.trim().isEmpty()) {
+                    Glide.with(context)
+                            .load(url)
+                            .placeholder(R.drawable.ic_coffee_placeholder)
+                            .error(R.drawable.ic_coffee_placeholder)
+                            .into(ivImagenAdmin);
+                } else {
+                    ivImagenAdmin.setImageResource(R.drawable.ic_coffee_placeholder);
+                }
+            }
             
             // Configurar precio
             tvPrecio.setText(String.format("$%s", decimalFormat.format(producto.getPrecio())));
