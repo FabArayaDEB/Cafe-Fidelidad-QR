@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".DetalleSucursalActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -69,13 +70,23 @@
                         android:layout_marginTop="8dp"
                         android:text="Dirección: " />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_ver_mapa"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Cómo llegar"
+                        android:textSize="12sp"
+                        app:icon="@drawable/ic_map"
+                        app:iconSize="16dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
                     <TextView
                         android:id="@+id/tv_telefono_sucursal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="8dp"
                         android:text="Teléfono: " />
-
                     <TextView
                         android:id="@+id/tv_horario_sucursal"
                         android:layout_width="match_parent"

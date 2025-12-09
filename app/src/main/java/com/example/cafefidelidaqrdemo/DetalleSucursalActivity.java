@@ -18,6 +18,8 @@ import com.example.cafefidelidaqrdemo.repository.ResenasSucursalRepository;
 import com.example.cafefidelidaqrdemo.repository.AuthRepository;
 import com.google.android.material.button.MaterialButton;
 import com.bumptech.glide.Glide;
+import android.content.Intent;
+import android.net.Uri;
 
 public class DetalleSucursalActivity extends AppCompatActivity {
 
@@ -33,6 +35,8 @@ public class DetalleSucursalActivity extends AppCompatActivity {
 
     private String sucursalIdStr;
     private int sucursalIdInt = -1;
+    private MaterialButton btnVerMapa;
+    private Sucursal currentSucursal;
 
     // Repositorios
     private SucursalRepository sucursalRepository;
@@ -82,6 +86,7 @@ public class DetalleSucursalActivity extends AppCompatActivity {
         btnEnviarResena = findViewById(R.id.btn_enviar_resena);
         tvPromedioResenas = findViewById(R.id.tv_promedio_resenas);
         tvConteoResenas = findViewById(R.id.tv_conteo_resenas);
+        btnVerMapa = findViewById(R.id.btn_ver_mapa);
     }
 
     private void setupToolbar() {
@@ -196,6 +201,7 @@ public class DetalleSucursalActivity extends AppCompatActivity {
 
     private void displaySucursalDetails(Sucursal sucursal) {
         tvNombre.setText(sucursal.getNombre());
+        this.currentSucursal = sucursal;
         tvDireccion.setText("Dirección: " + (sucursal.getDireccion() != null ? sucursal.getDireccion() : "Sin dirección"));
         tvTelefono.setText("Teléfono: " + (sucursal.getTelefono() != null ? sucursal.getTelefono() : "No disponible"));
         String horario = (sucursal.getHorarioApertura() != null ? sucursal.getHorarioApertura() : "?") +
@@ -213,6 +219,36 @@ public class DetalleSucursalActivity extends AppCompatActivity {
                         .into(ivImagenSucursal);
             } else {
                 ivImagenSucursal.setImageResource(sucursal.isActiva() ? R.drawable.ic_store : R.drawable.ic_store_empty);
+            }
+        }
+        // logica de boton para abrir googlemaps
+        if (btnVerMapa != null) {
+            btnVerMapa.setOnClickListener(v -> abrirGoogleMaps());
+        }
+    }
+    private void abrirGoogleMaps() {
+        if (currentSucursal == null) return;
+
+        double lat = currentSucursal.getLatitud();
+        double lon = currentSucursal.getLongitud();
+        String label = Uri.encode(currentSucursal.getNombre());
+
+        // Esto pone un marcador en la posición exacta con el nombre de la sucursal
+        Uri gmmIntentUri = Uri.parse("geo:" + lat + "," + lon + "?q=" + lat + "," + lon + "(" + label + ")");
+
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps"); // Intentar forzar Google Maps
+
+        // Verificar si hay una app que pueda manejar el intent (Maps o navegador)
+        if (mapIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(mapIntent);
+        } else {
+            // Si no tiene Google Maps instalado, intentar abrir en navegador sin el setPackage
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            if (browserIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(browserIntent);
+            } else {
+                Toast.makeText(this, "no se encontro una aplicación de mapas", Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -8,6 +8,7 @@
     app:cardElevation="2dp"
     android:clickable="true"
     android:focusable="true"
+    android:fitsSystemWindows="true"
     android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout

@@ -9,6 +9,7 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
     app:strokeWidth="1dp"
+    android:fitsSystemWindows="true"
     app:strokeColor="@color/color_outline">
 
     <LinearLayout

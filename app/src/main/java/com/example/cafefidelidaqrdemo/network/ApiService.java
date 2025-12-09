@@ -8,6 +8,7 @@ import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.*;
+import retrofit2.http.GET;
 
 /**
  * Interfaz de servicios API simplificada
